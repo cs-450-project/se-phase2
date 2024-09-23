@@ -1,4 +1,5 @@
 export class Calculate {
+
     private URL: string;
     private netScore: number;
     private netScoreLatency: number;
@@ -13,8 +14,20 @@ export class Calculate {
     private license: number;
     private licenseLatency: number;
 
-    private rampUpWeight: number;
-    
+    private rampUpWeight: number = 0.2;
+    private corrrectnessWeight: number = 0.1;
+    private busFactorWeight: number = 0.2;
+    private responsiveMaintainerWeight: number = 0.2;
+    private licenseWeight: number = 0.3;
+
+    private rampUpMax: number = 20;
+    private corrrectnessMax: number = 20;
+    private busFactorMax: number = 20;
+    private responsiveMaintainerMax: number = 15;
+    private licenseMax: number = 1;
+
+
+
     constructor(){
         this.URL = "none";
         this.netScore = -1;
@@ -31,10 +44,11 @@ export class Calculate {
         this.licenseLatency = -1;
     }
 
-    public Normalize(): number {
-        let num: number = 0;
-
-        
+    private Normalize(value: number, max: number): number {
+        let num: number = value/max;
+        if(num > 1){
+            num = 1;
+        }
         return num;
     }
 
@@ -48,6 +62,12 @@ export class Calculate {
     }
 
     get GetNetScore(): number {
+        this.netScore = (this.rampUp * this.rampUpWeight) + (this.correctness * this.corrrectnessWeight) 
+        + (this.busFactor * this.busFactorWeight) + (this.responsiveMaintainer * this.responsiveMaintainerWeight) 
+        + (this.license * this.licenseWeight)
+        if(this.netScore > 1){
+            this.netScore = 1;
+        }
         return this.netScore;
     }
 
@@ -64,7 +84,7 @@ export class Calculate {
     }
 
     set SetRampUp(value: number) {
-        this.rampUp = value;
+        this.rampUp = this.Normalize(value, this.rampUpMax);
     }
 
     get GetRampUpLatency(): number {
@@ -80,7 +100,7 @@ export class Calculate {
     }
 
     set SetCorrectness(value: number) {
-        this.correctness = value;
+        this.correctness = this.Normalize(value, this.corrrectnessMax);
     }
 
     get GetCorrectnessLatency(): number {
@@ -96,7 +116,7 @@ export class Calculate {
     }
 
     set SetBusFactor(value: number) {
-        this.busFactor = value;
+        this.busFactor = this.Normalize(value, this.busFactorMax);
     }
 
     get GetBusFactorLatency(): number {
@@ -112,7 +132,7 @@ export class Calculate {
     }
 
     set SetResponsiveMaintainer(value: number) {
-        this.responsiveMaintainer = value;
+        this.responsiveMaintainer = this.Normalize(value, this.responsiveMaintainerMax);
     }
 
     get GetResponsiveMaintainerLatency(): number {
@@ -128,7 +148,7 @@ export class Calculate {
     }
 
     set SetLicense(value: number) {
-        this.license = value;
+        this.license = this.Normalize(value, this.licenseMax);
     }
 
     get GetLicenseLatency(): number {
@@ -140,3 +160,17 @@ export class Calculate {
     }
 
 }
+
+const x = new Calculate();
+x.SetBusFactor = Math.random() * (30 - 1) + 1;
+x.SetCorrectness = Math.random() * (30 - 1) + 1;
+x.SetLicense = Math.random() < 0.5 ? 0 : 1;
+x.SetRampUp = Math.random() * (30 - 1) + 1;
+x.SetResponsiveMaintainer = Math.random() * (30 - 1) + 1;
+
+console.log(x.GetBusFactor);
+console.log(x.GetCorrectness);
+console.log(x.GetLicense);
+console.log(x.GetRampUp);
+console.log(x.GetResponsiveMaintainer);
+console.log(x.GetNetScore);
