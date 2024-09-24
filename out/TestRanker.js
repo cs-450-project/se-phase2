@@ -116,17 +116,35 @@ class Calculate {
     set SetLicenseLatency(value) {
         this.licenseLatency = value;
     }
+    Clear() {
+        this.URL = "none";
+        this.netScore = -1;
+        this.netScoreLatency = -1;
+        this.rampUp = -1;
+        this.rampUpLatency = -1;
+        this.correctness = -1;
+        this.correctnessLatency = -1;
+        this.busFactor = -1;
+        this.busFactorLatency = -1;
+        this.responsiveMaintainer = -1;
+        this.responsiveMaintainerLatency = -1;
+        this.license = -1;
+        this.licenseLatency = -1;
+    }
 }
 exports.Calculate = Calculate;
+/*
 const x = new Calculate();
 x.SetBusFactor = Math.random() * (30 - 1) + 1;
 x.SetCorrectness = Math.random() * (30 - 1) + 1;
 x.SetLicense = Math.random() < 0.5 ? 0 : 1;
 x.SetRampUp = Math.random() * (30 - 1) + 1;
 x.SetResponsiveMaintainer = Math.random() * (30 - 1) + 1;
+
 console.log(x.GetBusFactor);
 console.log(x.GetCorrectness);
 console.log(x.GetLicense);
 console.log(x.GetRampUp);
 console.log(x.GetResponsiveMaintainer);
 console.log(x.GetNetScore);
+*/ 

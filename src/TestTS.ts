@@ -5,9 +5,10 @@ import * as path from 'path';
 function logUrl(url: string): void {
     console.log('Processing URL:', url);
 }
-
+/*
 // Example usage
 const filePath = path.join(__dirname, 'TestURLs.txt');
 const processor = new UrlProcessor();
 
 processor.processUrlsFromFile(filePath, logUrl);
+*/
