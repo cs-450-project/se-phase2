@@ -3,38 +3,43 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const TestParser_1 = require("./TestParser");
 const TestOutput_1 = require("./TestOutput");
 const TestRanker_1 = require("./TestRanker");
+const Timer_1 = require("./Timer");
 const fs = require("fs");
 function ProcessURL(url) {
     const ranker = new TestRanker_1.Calculate();
-    //Start NetScore Timer
+    const totalTime = new Timer_1.Timer();
+    const factorTime = new Timer_1.Timer();
+    totalTime.StartTime();
     ranker.SetURL = url;
-    //Start BusFactor Timer
+    factorTime.StartTime();
     //Check BusFactor
     ranker.SetBusFactor = Math.random() * (30 - 1) + 1;
-    //End Timer Bus
-    ranker.SetBusFactorLatency = Math.random() * (30 - 1) + 1;
-    //Start Timer Correctness
+    ranker.SetBusFactorLatency = factorTime.GetTime();
+    factorTime.Reset();
+    factorTime.StartTime();
     //Check Correctness
     ranker.SetCorrectness = Math.random() * (30 - 1) + 1;
-    //End Timer Correctness
-    ranker.SetCorrectnessLatency = Math.random() * (30 - 1) + 1;
-    //Start Timer License
+    ranker.SetCorrectnessLatency = factorTime.GetTime();
+    factorTime.Reset();
+    factorTime.StartTime();
     //Check License
     ranker.SetLicense = Math.random() < 0.5 ? 0 : 1;
-    //End Timer License
-    ranker.SetLicenseLatency = Math.random() * (30 - 1) + 1;
-    //Start RampUp Timer
+    ranker.SetLicenseLatency = factorTime.GetTime();
+    factorTime.Reset();
+    //PUT IF STATEMENT HERE FOR REPO CLONE
+    factorTime.StartTime();
     //Check Rampup
     ranker.SetRampUp = Math.random() * (30 - 1) + 1;
-    //End Timer RampUp
-    ranker.SetRampUpLatency = Math.random() * (30 - 1) + 1;
-    //Start ResponsiveMaintainer Timer
+    ranker.SetRampUpLatency = factorTime.GetTime();
+    factorTime.Reset();
+    factorTime.StartTime();
     //Check ResponsiveMaintainer
     ranker.SetResponsiveMaintainer = Math.random() * (30 - 1) + 1;
-    //End ResponsiveMaintienr Timer
-    ranker.SetResponsiveMaintainerLatency = Math.random() * (30 - 1) + 1;
-    //End NetScore timer
-    ranker.SetNetScoreLatency = Math.random() * (30 - 1) + 1;
+    ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
+    factorTime.Reset();
+    //Ends the NetScore timer and sends the time to the ranker
+    ranker.SetNetScoreLatency = totalTime.GetTime();
+    totalTime.Reset();
     TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
         RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
         BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency,
@@ -46,7 +51,7 @@ const fileLocation = process.argv[2]; //Gives argument three, which *should* be 
 //console.log('File Path:',fileLocation);   
 //Outputs file
 fs.stat(fileLocation, (err, stats) => {
-    if (stats.isFile()) {
+    if (stats.isFile() == true) {
         const parser = new TestParser_1.UrlProcessor();
         parser.processUrlsFromFile(fileLocation, ProcessURL);
     }
