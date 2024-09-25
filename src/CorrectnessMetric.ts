@@ -81,8 +81,8 @@ async function getTestCoverageReport(owner: string, repo: string) {
     const coverageReport = await getTestCoverageReport(owner, repo);
   
     if (!coverageReport) {
-      console.log('No coverage report found, cannot calculate correctness.');
-      return;
+     // console.log('No coverage report found, cannot calculate correctness.');
+      return 0;
     }
   
     // Assuming the report has totalTests and passedTests fields
