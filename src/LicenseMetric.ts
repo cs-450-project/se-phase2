@@ -40,10 +40,14 @@ export async function checkLicenseCompatibility(owner: string, repo: string) {
 
   const licenseKey = license.spdx_id.toLowerCase(); // Get the SPDX ID of the license
 
-  if (compatibleLicenses.includes(licenseKey)) {
-    console.log(`The repository uses ${license.name}, which is compatible with LGPL-2.1.`);
+  if (compatibleLicenses.includes(licenseKey)) {\
+    //Output a 1 if the repo license is compatible with LGPL-2.1
+    //console.log(`The repository uses ${license.name}, which is compatible with LGPL-2.1.`);
+    return 1;
   } else {
-    console.log(`The repository uses ${license.name}, which is NOT compatible with LGPL-2.1.`);
+    //Output a 0 if the repo license is not compatible with LGPL-2.1
+    //console.log(`The repository uses ${license.name}, which is NOT compatible with LGPL-2.1.`);
+    return 0;
   }
 }
 
