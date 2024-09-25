@@ -101,18 +101,19 @@ async function getPullRequests(owner: string, repo: string) {
       (issueDurations.length || 1);
   
     // Output results
-    console.log(`--- Responsive Maintainer Metrics for ${owner}/${repo} ---`);
-    if (lastPRUpdateDate) {
-      console.log(`Last Pull Request Updated: ${lastPRUpdateDate}`);
-      console.log(
-        `Days Since Last Update: ${
-          daysSinceLastUpdate !== null ? daysSinceLastUpdate : 'N/A'
-        }`
-      );
-    }
-    console.log(`Open Issues: ${openIssuesCount}`);
+    //console.log(`--- Responsive Maintainer Metrics for ${owner}/${repo} ---`);
+    //if (lastPRUpdateDate) {
+    //  console.log(`Last Pull Request Updated: ${lastPRUpdateDate}`);
+    //  console.log(
+    //    `Days Since Last Update: ${
+    //      daysSinceLastUpdate !== null ? daysSinceLastUpdate : 'N/A'
+    //    }`
+    //  );
+    //}
+    //console.log(`Open Issues: ${openIssuesCount}`);
+    //Only ouput we care about is the average issue open duration. 
     console.log(`Average Issue Open Duration: ${averageIssueDuration.toFixed(2)} days`);
-    console.log('--- End of Report ---');
+    //console.log('--- End of Report ---');
   }
   
   // Example usage
