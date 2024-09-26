@@ -28,3 +28,4 @@ var elapsedTime = Date.now() - startTime;
 var time = (elapsedTime / 1000).toFixed(3);
 console.log("function took " + time + " seconds");
 */ 
+//# sourceMappingURL=Timer.js.map

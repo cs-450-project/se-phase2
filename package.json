@@ -6,37 +6,29 @@
     "path": "^0.12.7",
     "simple-git": "^3.27.0"
   },
-  "devDependencies": {
-    "@types/jest": "^29.5.13",
-    "@types/node": "^22.5.4",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5"
-  },
   "scripts": {
-    "test": "jest"
-  }
-
-    "dotenv": "^16.4.5"
-  },
-  "name": "cs45000-ece46100",
-  "version": "1.0.0",
-  "description": "Brayden Devenport\r Jacob Esparza\r Derek Owen",
-  "main": "dist/RetrieveMetrics.js",
-  "devDependencies": {
-    "@types/node": "^22.5.4",
-    "@typescript-eslint/eslint-plugin": "^8.5.0",
-    "@typescript-eslint/parser": "^8.5.0",
-    "eslint": "^9.10.0",
-    "typescript": "^5.6.2"
-  },
-  "scripts": {
+    "test": "jest",
     "build": "tsc",
     "start-Retrieve": "node dist/RetrieveMetrics.js",
     "start-BusFactor": "node dist/BusFactor.js",
     "start-CorrectnessMetric": "node dist/CorrectnessMetric.js",
     "start-ResponsiveMaintainer": "node dist/ResponsiveMaintainer.js",
     "start-LicenseMetric": "node dist/LicenseMetric.js"
-   
+  },
+  "dotenv": "^16.4.5",
+  "name": "cs45000-ece46100",
+  "version": "1.0.0",
+  "description": "Brayden Devenport\r Jacob Esparza\r Derek Owen",
+  "main": "dist/RetrieveMetrics.js",
+  "devDependencies": {
+    "@types/jest": "^29.5.13",
+    "@types/node": "^22.5.4",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^9.10.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.2"
   },
   "keywords": [],
   "author": "",

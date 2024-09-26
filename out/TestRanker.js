@@ -148,3 +148,4 @@ console.log(x.GetRampUp);
 console.log(x.GetResponsiveMaintainer);
 console.log(x.GetNetScore);
 */ 
+//# sourceMappingURL=TestRanker.js.map

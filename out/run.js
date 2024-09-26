@@ -24,12 +24,12 @@ function runMaster(file, urlFile) {
     }
 }
 var n = 0;
-while (n < 3) {
-    n++;
-    console.log(`\n argument ${n} is ${process.argv[n]}`);
-    //        if (n>5){       console.error(`Failed to run self`) ;
-    //process.exit(1);
-}
+//while(n<3){
+//n++;
+//        console.log(`\n argument ${n} is ${process.argv[n]}`);
+//        if (n>5){       console.error(`Failed to run self`) ;
+//process.exit(1);
+//}
 //}
 n = 2;
 const commandString = process.argv[n];
@@ -47,3 +47,4 @@ else {
     const url = process.argv[n];
     runMaster('Master.js', url);
 }
+//# sourceMappingURL=run.js.map

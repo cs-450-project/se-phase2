@@ -14,3 +14,4 @@ exports.SendToOutput = {
 /*
 SendToOutput.writeToStdout({ URL: "", NetScore: "", NetScore_Latency: "", RampUp: "", RampUp_Latency: "", Correctness: "", Correctness_Latency: "", BusFactor: "", BusFactor_Latency: "", ResponsiveMaintainer: "", ResponsiveMaintainer_Latency: "", License: "", Liscense_Latency: ""});
 */ 
+//# sourceMappingURL=TestOutput.js.map
