@@ -94,9 +94,11 @@ function ProcessURL(url: string): void {
 const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
 //Outputs file
 fs.stat(fileLocation, (err, stats) => {
-    if (stats.isFile() == true){
-        const parser = new UrlProcessor()
+    if (err==null){
+        if(stats.isFile()){
+        const parser = new UrlProcessor();
         parser.processUrlsFromFile(fileLocation, ProcessURL);
+        }
     }
     else{
         console.log('\nNot a File');
