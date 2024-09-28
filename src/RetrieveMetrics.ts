@@ -12,24 +12,23 @@ import {checkLicenseCompatibility} from './LicenseMetric'
 // Example usage of getBusFactor in RetrieveMetrics.ts
 async function retrieveMetrics() {
   //Example repo
-  const owner = 'IAmDarkMeadow'; 
-  const repo = 'CS45000-ECE46100';     
+  const owner = 'git'; 
+  const repo = 'git';     
 
-  console.log(`Calculating bus factor for ${owner}/${repo}...`);
+  //console.log(`Calculating bus factor for ${owner}/${repo}...`);
 
   // Call getBusFactor to calculate and log the bus factor
-  await getBusFactor(owner, repo);
+  //await getBusFactor(owner, repo);
 
- // await calculateResponsiveMaintainer(owner, repo);
+  //await calculateResponsiveMaintainer(owner, repo);
 
-  console.log(`Calculating Correctness for ${owner}/${repo}...`);
+ //console.log(`Calculating Correctness for ${owner}/${repo}...`);
   
-  await evaluateCorrectness(owner, repo);
+  //await evaluateCorrectness(owner, repo);
 
   console.log(`Figuring out License compatibility for ${owner}/${repo}... `);
 
   await checkLicenseCompatibility(owner, repo);
 }
 
-
-//retrieveMetrics()
+retrieveMetrics()
