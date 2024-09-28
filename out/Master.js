@@ -22,6 +22,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const TestParser_1 = require("./TestParser");
 const TestOutput_1 = require("./TestOutput");
@@ -43,57 +52,59 @@ function GetRepoInfo(url) {
     return null; // Return null if the URL doesn't match
 }
 function ProcessURL(url) {
-    const ranker = new TestRanker_1.Calculate();
-    const totalTime = new Timer_1.Timer();
-    const factorTime = new Timer_1.Timer();
-    const repoInfo = GetRepoInfo(url);
-    if (repoInfo) {
-        const { owner, repo } = repoInfo;
-        if (owner && repo) {
-            totalTime.StartTime();
-            ranker.SetURL = url;
-            factorTime.StartTime();
-            //Check Bus Factor
-            ranker.SetBusFactor = Number((0, BusFactor_1.getBusFactor)(owner, repo));
-            ranker.SetBusFactorLatency = factorTime.GetTime();
-            factorTime.Reset();
-            factorTime.StartTime();
-            //Check Correctness
-            ranker.SetCorrectness = Number((0, CorrectnessMetric_1.evaluateCorrectness)(owner, repo));
-            ranker.SetCorrectnessLatency = factorTime.GetTime();
-            factorTime.Reset();
-            factorTime.StartTime();
-            //Check License
-            ranker.SetLicense = Number((0, LicenseMetric_1.checkLicenseCompatibility)(owner, repo));
-            ranker.SetLicenseLatency = factorTime.GetTime();
-            factorTime.Reset();
-            //PUT IF STATEMENT HERE FOR REPO CLONE
-            factorTime.StartTime();
-            //Check Rampup
-            ranker.SetRampUp = Math.random() * (30 - 1) + 1;
-            ranker.SetRampUpLatency = factorTime.GetTime();
-            factorTime.Reset();
-            factorTime.StartTime();
-            //Check ResponsiveMaintainer
-            ranker.SetResponsiveMaintainer = Number((0, ResponsiveMaintainer_1.calculateResponsiveMaintainer)(owner, repo));
-            ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
-            factorTime.Reset();
-            //Ends the NetScore timer and sends the time to the ranker
-            ranker.SetNetScoreLatency = totalTime.GetTime();
-            totalTime.Reset();
+    return __awaiter(this, void 0, void 0, function* () {
+        const ranker = new TestRanker_1.Calculate();
+        const totalTime = new Timer_1.Timer();
+        const factorTime = new Timer_1.Timer();
+        const repoInfo = GetRepoInfo(url);
+        if (repoInfo) {
+            const { owner, repo } = repoInfo;
+            if (owner && repo) {
+                totalTime.StartTime();
+                ranker.SetURL = url;
+                factorTime.StartTime();
+                //Check Bus Factor
+                ranker.SetBusFactor = Number(yield (0, BusFactor_1.getBusFactor)(owner, repo));
+                ranker.SetBusFactorLatency = factorTime.GetTime();
+                factorTime.Reset();
+                factorTime.StartTime();
+                //Check Correctness
+                ranker.SetCorrectness = Number(yield (0, CorrectnessMetric_1.evaluateCorrectness)(owner, repo));
+                ranker.SetCorrectnessLatency = factorTime.GetTime();
+                factorTime.Reset();
+                factorTime.StartTime();
+                //Check License
+                ranker.SetLicense = Number(yield (0, LicenseMetric_1.checkLicenseCompatibility)(owner, repo));
+                ranker.SetLicenseLatency = factorTime.GetTime();
+                factorTime.Reset();
+                //PUT IF STATEMENT HERE FOR REPO CLONE
+                factorTime.StartTime();
+                //Check Rampup
+                ranker.SetRampUp = Math.random() * (30 - 1) + 1;
+                ranker.SetRampUpLatency = factorTime.GetTime();
+                factorTime.Reset();
+                factorTime.StartTime();
+                //Check ResponsiveMaintainer
+                ranker.SetResponsiveMaintainer = Number(yield (0, ResponsiveMaintainer_1.calculateResponsiveMaintainer)(owner, repo));
+                ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
+                factorTime.Reset();
+                //Ends the NetScore timer and sends the time to the ranker
+                ranker.SetNetScoreLatency = totalTime.GetTime();
+                totalTime.Reset();
+            }
+            else {
+                console.log("Unable to connecto to repo");
+            }
         }
         else {
             console.log("Unable to connecto to repo");
         }
-    }
-    else {
-        console.log("Unable to connecto to repo");
-    }
-    TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
-        RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
-        BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency,
-        License: ranker.GetLicense, Liscense_Latency: ranker.GetLicenseLatency });
-    ranker.Clear();
+        TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
+            RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
+            BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency,
+            License: ranker.GetLicense, Liscense_Latency: ranker.GetLicenseLatency });
+        ranker.Clear();
+    });
 }
 //Read Input
 const fileLocation = process.argv[2]; //Gives argument three, which *should* be the file location

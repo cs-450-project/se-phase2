@@ -112,7 +112,7 @@ async function getPullRequests(owner: string, repo: string) {
     //}
     //console.log(`Open Issues: ${openIssuesCount}`);
     //Only ouput we care about is the average issue open duration. 
-    console.log(`Average Issue Open Duration: ${averageIssueDuration.toFixed(2)} days`);
+    return averageIssueDuration;
     //console.log('--- End of Report ---');
   }
   

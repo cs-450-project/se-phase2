@@ -20,8 +20,8 @@ const LicenseMetric_1 = require("./LicenseMetric");
 function retrieveMetrics() {
     return __awaiter(this, void 0, void 0, function* () {
         //Example repo
-        const owner = 'facebook';
-        const repo = 'react';
+        const owner = 'IAmDarkMeadow';
+        const repo = 'CS45000-ECE46100';
         console.log(`Calculating bus factor for ${owner}/${repo}...`);
         // Call getBusFactor to calculate and log the bus factor
         yield (0, BusFactor_1.getBusFactor)(owner, repo);
@@ -32,5 +32,5 @@ function retrieveMetrics() {
         yield (0, LicenseMetric_1.checkLicenseCompatibility)(owner, repo);
     });
 }
-retrieveMetrics();
+//retrieveMetrics()
 //# sourceMappingURL=RetrieveMetrics.js.map

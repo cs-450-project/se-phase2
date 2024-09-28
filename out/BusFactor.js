@@ -82,11 +82,11 @@ function getBusFactor(owner, repo) {
         const moduleDeveloperMap = yield getCommits(owner, repo);
         if (!moduleDeveloperMap) {
             console.log('Failed to retrieve module-developer mapping.');
-            return;
+            return 0;
         }
         // Calculate the Bus Factor based on non-overlapping developer work
         const busFactor = calculateBusFactor(moduleDeveloperMap);
-        console.log(busFactor);
+        return busFactor;
     });
 }
 //getBusFactor('facebook', 'react');

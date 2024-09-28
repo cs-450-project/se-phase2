@@ -9,17 +9,18 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "start-Retrieve": "node dist/RetrieveMetrics.js",
-    "start-BusFactor": "node dist/BusFactor.js",
-    "start-CorrectnessMetric": "node dist/CorrectnessMetric.js",
-    "start-ResponsiveMaintainer": "node dist/ResponsiveMaintainer.js",
-    "start-LicenseMetric": "node dist/LicenseMetric.js"
+    "start-Retrieve": "node out/RetrieveMetrics.js",
+    "start-BusFactor": "node out/BusFactor.js",
+    "start-CorrectnessMetric": "node out/CorrectnessMetric.js",
+    "start-ResponsiveMaintainer": "node out/ResponsiveMaintainer.js",
+    "start-LicenseMetric": "node out/LicenseMetric.js"
   },
+
   "dotenv": "^16.4.5",
   "name": "cs45000-ece46100",
   "version": "1.0.0",
   "description": "Brayden Devenport\r Jacob Esparza\r Derek Owen",
-  "main": "dist/RetrieveMetrics.js",
+  "main": "out/RetrieveMetrics.js",
   "devDependencies": {
     "@types/jest": "^29.5.13",
     "@types/node": "^22.5.4",

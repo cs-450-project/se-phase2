@@ -57,7 +57,7 @@ function getRepoLicense(owner, repo) {
         }
         catch (error) {
             console.error(`Error fetching license: ${error}`);
-            return null;
+            return 0;
         }
     });
 }
@@ -67,7 +67,7 @@ function checkLicenseCompatibility(owner, repo) {
         const license = yield getRepoLicense(owner, repo);
         if (!license) {
             console.log('License information could not be retrieved.');
-            return;
+            return 0;
         }
         const licenseKey = license.spdx_id.toLowerCase(); // Get the SPDX ID of the license
         if (compatibleLicenses.includes(licenseKey)) {

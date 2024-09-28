@@ -1,1 +1,4 @@
 https://github.com/cloudinary/cloudinary_npm
+https://github.com/nullivex/nodist
+https://github.com/lodash/lodash
+https://github.com/IAmDarkMeadow/CS45000-ECE46100

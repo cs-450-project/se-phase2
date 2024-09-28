@@ -25,7 +25,7 @@ async function getRepoLicense(owner: string, repo: string) {
     return response.data.license;
   } catch (error) {
     console.error(`Error fetching license: ${error}`);
-    return null;
+    return 0;
   }
 }
 
@@ -35,7 +35,7 @@ export async function checkLicenseCompatibility(owner: string, repo: string) {
 
   if (!license) {
     console.log('License information could not be retrieved.');
-    return;
+    return 0;
   }
 
   const licenseKey = license.spdx_id.toLowerCase(); // Get the SPDX ID of the license
