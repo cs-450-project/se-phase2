@@ -82,7 +82,7 @@ async function ProcessURL(url: string){
     SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
         RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency, 
         BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency, 
-        License: ranker.GetLicense, Liscense_Latency: ranker.GetLicenseLatency});
+        License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency});
 
 
     ranker.Clear();
