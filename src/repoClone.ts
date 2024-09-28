@@ -5,9 +5,6 @@ import * as path from 'path';
 // Initialize simple-git
 const git = simpleGit();
 
-// Repository URL
-const repoUrl = 'https://github.com/lkurker/TestRepository';
-
 //We will now clone the repository to the directory of wherever the user is currently located
 const currentDir = process.cwd();
 const newDir: string = "testingRepo";
@@ -23,13 +20,18 @@ var readmeContent: string = "";
 
 
 
-async function cloneRepository() {
+async function cloneRepository(repoUrl: string) {
     try {
         console.log("Attempting to clone repository...");
 
         await git.clone(repoUrl, newDirectory);
 
-        console.log("Repository successfully cloned!!!!");
+        await checkFiles(newDirectory);
+
+        analyzeReadme(readmeContent);
+
+        return rampScore;
+        
     }//end try statement
 
     catch (error) {
@@ -107,11 +109,3 @@ async function analyzeReadme(readmeContent: string) {
 
 }//end analyzeReadme function
 
-cloneRepository();
-
-checkFiles(newDirectory);
-
-//Now we will analyze the README file to determine the ramp-up score
-analyzeReadme(readmeContent);
-
-console.log(rampScore);

@@ -11,6 +11,9 @@ var rampScore: number = 0;
 //load the environment variables
 dotenv.config();
 
+// Base URL for GitHub API
+const GITHUB_API_BASE_URL = 'https://api.github.com';
+
 //Get the environment variables as a constant
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -107,6 +110,8 @@ async function displayRampupScore() {
     await analyzeReadmeContent();
 
     console.log("Ramp-up score: ", rampScore);
+
+    return rampScore;
 
 }//end displayRampupScore function
 
