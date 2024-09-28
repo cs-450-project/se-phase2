@@ -27,42 +27,68 @@ const TestParser_1 = require("./TestParser");
 const TestOutput_1 = require("./TestOutput");
 const TestRanker_1 = require("./TestRanker");
 const Timer_1 = require("./Timer");
+const BusFactor_1 = require("./BusFactor");
+const ResponsiveMaintainer_1 = require("./ResponsiveMaintainer");
+const CorrectnessMetric_1 = require("./CorrectnessMetric");
+const LicenseMetric_1 = require("./LicenseMetric");
 const fs = __importStar(require("fs"));
+function GetRepoInfo(url) {
+    const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
+    const match = url.match(regex);
+    if (match) {
+        const owner = match[1];
+        const repo = match[2];
+        return { owner, repo };
+    }
+    return null; // Return null if the URL doesn't match
+}
 function ProcessURL(url) {
     const ranker = new TestRanker_1.Calculate();
     const totalTime = new Timer_1.Timer();
     const factorTime = new Timer_1.Timer();
-    totalTime.StartTime();
-    ranker.SetURL = url;
-    factorTime.StartTime();
-    //Check BusFactor
-    ranker.SetBusFactor = Math.random() * (30 - 1) + 1;
-    ranker.SetBusFactorLatency = factorTime.GetTime();
-    factorTime.Reset();
-    factorTime.StartTime();
-    //Check Correctness
-    ranker.SetCorrectness = Math.random() * (30 - 1) + 1;
-    ranker.SetCorrectnessLatency = factorTime.GetTime();
-    factorTime.Reset();
-    factorTime.StartTime();
-    //Check License
-    ranker.SetLicense = Math.random() < 0.5 ? 0 : 1;
-    ranker.SetLicenseLatency = factorTime.GetTime();
-    factorTime.Reset();
-    //PUT IF STATEMENT HERE FOR REPO CLONE
-    factorTime.StartTime();
-    //Check Rampup
-    ranker.SetRampUp = Math.random() * (30 - 1) + 1;
-    ranker.SetRampUpLatency = factorTime.GetTime();
-    factorTime.Reset();
-    factorTime.StartTime();
-    //Check ResponsiveMaintainer
-    ranker.SetResponsiveMaintainer = Math.random() * (30 - 1) + 1;
-    ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
-    factorTime.Reset();
-    //Ends the NetScore timer and sends the time to the ranker
-    ranker.SetNetScoreLatency = totalTime.GetTime();
-    totalTime.Reset();
+    const repoInfo = GetRepoInfo(url);
+    if (repoInfo) {
+        const { owner, repo } = repoInfo;
+        if (owner && repo) {
+            totalTime.StartTime();
+            ranker.SetURL = url;
+            factorTime.StartTime();
+            //Check Bus Factor
+            ranker.SetBusFactor = Number((0, BusFactor_1.getBusFactor)(owner, repo));
+            ranker.SetBusFactorLatency = factorTime.GetTime();
+            factorTime.Reset();
+            factorTime.StartTime();
+            //Check Correctness
+            ranker.SetCorrectness = Number((0, CorrectnessMetric_1.evaluateCorrectness)(owner, repo));
+            ranker.SetCorrectnessLatency = factorTime.GetTime();
+            factorTime.Reset();
+            factorTime.StartTime();
+            //Check License
+            ranker.SetLicense = Number((0, LicenseMetric_1.checkLicenseCompatibility)(owner, repo));
+            ranker.SetLicenseLatency = factorTime.GetTime();
+            factorTime.Reset();
+            //PUT IF STATEMENT HERE FOR REPO CLONE
+            factorTime.StartTime();
+            //Check Rampup
+            ranker.SetRampUp = Math.random() * (30 - 1) + 1;
+            ranker.SetRampUpLatency = factorTime.GetTime();
+            factorTime.Reset();
+            factorTime.StartTime();
+            //Check ResponsiveMaintainer
+            ranker.SetResponsiveMaintainer = Number((0, ResponsiveMaintainer_1.calculateResponsiveMaintainer)(owner, repo));
+            ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
+            factorTime.Reset();
+            //Ends the NetScore timer and sends the time to the ranker
+            ranker.SetNetScoreLatency = totalTime.GetTime();
+            totalTime.Reset();
+        }
+        else {
+            console.log("Unable to connecto to repo");
+        }
+    }
+    else {
+        console.log("Unable to connecto to repo");
+    }
     TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
         RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
         BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency,
@@ -71,7 +97,6 @@ function ProcessURL(url) {
 }
 //Read Input
 const fileLocation = process.argv[2]; //Gives argument three, which *should* be the file location
-//console.log('File Path:',fileLocation);   
 //Outputs file
 fs.stat(fileLocation, (err, stats) => {
     if (stats.isFile() == true) {
@@ -84,12 +109,4 @@ fs.stat(fileLocation, (err, stats) => {
     }
     //close error things etc etc    
 });
-//output is pure string
-//Get URLs
-//FORMAT OF CONSOLE: node Master.js (file string) 
-//batch checks for install/test and if not either, runs above command (running this file)
-/*
-const filePath = path.join(__dirname, 'TestURLs.txt');
-
-*/ 
 //# sourceMappingURL=Master.js.map

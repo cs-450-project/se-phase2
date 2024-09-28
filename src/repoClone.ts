@@ -107,11 +107,11 @@ async function analyzeReadme(readmeContent: string) {
 
 }//end analyzeReadme function
 
-cloneRepository();
+//cloneRepository();
 
-checkFiles(newDirectory);
+//checkFiles(newDirectory);
 
 //Now we will analyze the README file to determine the ramp-up score
-analyzeReadme(readmeContent);
+////analyzeReadme(readmeContent);
 
-console.log(rampScore);
+//console.log(rampScore);

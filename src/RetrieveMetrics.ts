@@ -20,7 +20,7 @@ async function retrieveMetrics() {
   // Call getBusFactor to calculate and log the bus factor
   await getBusFactor(owner, repo);
 
-  await calculateResponsiveMaintainer(owner, repo);
+ // await calculateResponsiveMaintainer(owner, repo);
 
   console.log(`Calculating Correctness for ${owner}/${repo}...`);
   
@@ -30,5 +30,6 @@ async function retrieveMetrics() {
 
   await checkLicenseCompatibility(owner, repo);
 }
+
 
 retrieveMetrics()
