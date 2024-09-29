@@ -23,10 +23,10 @@ if (!GITHUB_TOKEN) {
 }//end if statement
 
 //Function that will get the README file from the repository
-async function getReadme() {
+async function getReadme(owner: string, repo: string) {
     try {
         //Get the README file from the repository
-        const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}, {
+        const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}`, {
 
             headers: {
 
@@ -90,10 +90,10 @@ async function analyzeReadme(readmeContent: string) {
 
 
 //Analyze the content of the README file
-async function analyzeReadmeContent() {
+async function analyzeReadmeContent(owner:string, repo:string) {
 
     //Get the content of the README file
-    const readmeContent = await getReadme();
+    const readmeContent = await getReadme(owner, repo);
 
     //now we need to decode the content of the README file
     const buff = Buffer.from(readmeContent, 'base64');
@@ -105,14 +105,13 @@ async function analyzeReadmeContent() {
 
 }//end analyzeReadmeContent function
 
-async function displayRampupScore() {
+async function displayRampupScore(owner: string, repo: string) {
 
-    await analyzeReadmeContent();
+    await analyzeReadmeContent(owner, repo);
 
-    console.log("Ramp-up score: ", rampScore);
 
     return rampScore;
 
 }//end displayRampupScore function
 
-//displayRampupScore();
+
