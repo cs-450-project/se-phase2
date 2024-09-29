@@ -1,7 +1,8 @@
 //const { execSync } = require('child_process');
 import { execSync } from "node:child_process";
 //execSync(Command, { stdio: 'inherit' });
-function runCommand(file:string){
+function runCommand(fname:string){
+    let file:string = __dirname+'//'+fname;
     const command = `node ${file}`
     try{
     execSync(command, { stdio: 'inherit' });
@@ -10,8 +11,10 @@ function runCommand(file:string){
       console.error(`Failed to run ${file}`)  ;
     }
 }
-    function runMaster(file:string, urlFile:string){
+    function runMaster(fname:string, urlFile:string){
+        let file:string = __dirname+`//`+fname;
         const command = `node ${file} ${urlFile}`
+        console.log(`running subprogram ${file} to test ${urlFile}`);
         try{
         execSync(command, { stdio: 'inherit' });
         console.log(`Successfully ran ${urlFile}`);
@@ -20,7 +23,7 @@ function runCommand(file:string){
         }
     
  }
-var n = 0;
+var n = 0; //root command loc
 //while(n<3){
 //n++;
 //        console.log(`\n argument ${n} is ${process.argv[n]}`);
@@ -28,11 +31,18 @@ var n = 0;
 //process.exit(1);
 //}
 //}
-n = 2
+try{
+while (process.argv[n] != __filename){
+    n++;
+}
+ n=n+1
+} catch(error){
+    console.error(`Failed to run program`);
+}
 const commandString:string = process.argv[n];
 if (commandString == null){
-    console.error(`Failed to run`);
-    process.exit(1) ;
+    console.error(`Failed to run, invalid arguments`);
+    process.exit(0) ;
 }
 if (commandString == 'install'){
     runCommand('Install.js');
@@ -42,6 +52,7 @@ if (commandString == 'test'){
     runCommand('TestRun.js');
 }
 else {
+    
     const url:string = process.argv[n];
     runMaster('Master.js',url);
 }
