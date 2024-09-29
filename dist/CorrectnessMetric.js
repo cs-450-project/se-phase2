@@ -72,8 +72,8 @@ function evaluateCorrectness(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         const coverageReport = yield getTestCoverageReport(owner, repo);
         if (!coverageReport) {
-            console.log('No coverage report found, cannot calculate correctness.');
-            return;
+            // console.log('No coverage report found, cannot calculate correctness.');
+            return 0;
         }
         // Assuming the report has totalTests and passedTests fields
         calculateCorrectness({

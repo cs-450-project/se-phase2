@@ -16,4 +16,3 @@ installPak('path');
 installPak('simple-git');
 installPak('axios');
 installPak('dotenv');
-//# sourceMappingURL=Install.js.map

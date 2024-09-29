@@ -23,11 +23,13 @@ async function isPackageOnGitHub(packageName: string) {
         else {
 
             console.log(`No repository information found for package: ${packageName}`);
+            return null;
 
 
         }
     } catch (error) {
         console.error(`Failed to fetch package information for ${packageName}:`, error);
+        return null;
 
     }
 }

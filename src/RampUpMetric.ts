@@ -26,7 +26,7 @@ if (!GITHUB_TOKEN) {
 async function getReadme() {
     try {
         //Get the README file from the repository
-        const response = await axios.get('https://api.github.com/repos/lkurker/TestRepository/readme', {
+        const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}, {
 
             headers: {
 
@@ -115,4 +115,4 @@ async function displayRampupScore() {
 
 }//end displayRampupScore function
 
-displayRampupScore();
+//displayRampupScore();

@@ -84,13 +84,13 @@ export async function getBusFactor(owner: string, repo: string) {
 
   if (!moduleDeveloperMap) {
     console.log('Failed to retrieve module-developer mapping.');
-    return;
+    return 0;
   }
 
   // Calculate the Bus Factor based on non-overlapping developer work
   const busFactor = calculateBusFactor(moduleDeveloperMap);
 
-  console.log(busFactor);
+  return busFactor;
 
 }
 

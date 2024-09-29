@@ -13,7 +13,7 @@ module.exports = {
     rules: {
       '@typescript-eslint/no-unused-vars': 'error',
     },
-    ignorePatterns: ['dist/', 'node_modules/'],
+    ignorePatterns: ['out/', 'node_modules/'],
     overrides: [
       {
         files: ['**/*.ts'],
