@@ -15,14 +15,14 @@ const LicenseMetric_1 = require("./LicenseMetric");
 function retrieveMetrics() {
     return __awaiter(this, void 0, void 0, function* () {
         //Example repo
-        const owner = 'git';
-        const repo = 'git';
+        const owner = 'KSXGitHub';
+        const repo = 'GPL-3.0';
         //console.log(`Calculating bus factor for ${owner}/${repo}...`);
-        // Call getBusFactor to calculate and log the bus factor
-        //await getBusFactor(owner, repo);
-        //await calculateResponsiveMaintainer(owner, repo);
-        //console.log(`Calculating Correctness for ${owner}/${repo}...`);
-        //await evaluateCorrectness(owner, repo);
+        //Call getBusFactor to calculate and log the bus factor
+        // await getBusFactor(owner, repo);
+        // await calculateResponsiveMaintainer(owner, repo);
+        // console.log(`Calculating Correctness for ${owner}/${repo}...`);
+        // await evaluateCorrectness(owner, repo);
         console.log(`Figuring out License compatibility for ${owner}/${repo}... `);
         yield (0, LicenseMetric_1.checkLicenseCompatibility)(owner, repo);
     });
