@@ -20,11 +20,38 @@ var readmeContent: string = "";
 
 
 
-async function cloneRepository(repoUrl: string) {
+export async function cloneRepository(repoUrl: string) {
     try {
         console.log("Attempting to clone repository...");
 
-        await git.clone(repoUrl, newDirectory);
+        //Only clone if the directory does not exist
+        if(!fs.existsSync(newDirectory)){
+
+            await git.clone(repoUrl, newDirectory);
+
+        }//end if statement
+
+        //If the directory already exists, delete the contents and then clone again
+        else{
+
+            const files = await fs.readdirSync(newDirectory);
+
+            //Delete all of the files in the directory
+            for(const file of files){
+
+                const filePath = path.join(newDirectory, file);
+                
+
+                await fs.unlinkSync(filePath);
+
+            }//end for loop
+
+            await fs.rmdirSync(newDirectory);
+            await git.clone(repoUrl, newDirectory);
+
+        }//end else statement
+
+        
 
         await checkFiles(newDirectory);
 
@@ -38,6 +65,7 @@ async function cloneRepository(repoUrl: string) {
 
         //In case the repository fails to clone
         console.error('Failed to clone repository :(');
+        return -1;
     }//end catch statement
 }//end cloneRepository function
 
@@ -64,9 +92,7 @@ async function checkFiles(directory: string) {
             break;
         }//end if statement
 
-        else {
-            console.log("The current file we're looking at isn't what we need. Moving on to the next file...")
-        }
+        
 
     }//end for loop
 

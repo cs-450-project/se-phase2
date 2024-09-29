@@ -30,7 +30,7 @@ async function getReadme(owner: string, repo: string) {
 
             headers: {
 
-                Authorization: `token ${GITHUB_TOKEN}`
+                Authorization: `Bearer ${GITHUB_TOKEN}`
 
             }//end headers
 
@@ -94,6 +94,12 @@ async function analyzeReadmeContent(owner:string, repo:string) {
     //Get the content of the README file
     const readmeContent = await getReadme(owner, repo);
 
+     // Check if the readmeContent is null before decoding
+     if (!readmeContent) {
+        console.error('No README content found to analyze.');
+        return; // Exit if there's no content
+    }
+
     //now we need to decode the content of the README file
     const buff = Buffer.from(readmeContent, 'base64');
     const decodedReadmeContent = buff.toString('utf-8');
@@ -104,10 +110,11 @@ async function analyzeReadmeContent(owner:string, repo:string) {
 
 }//end analyzeReadmeContent function
 
-async function displayRampupScore(owner: string, repo: string) {
+export async function displayRampupScore(owner: string, repo: string) {
+
+    rampScore = 0;
 
     await analyzeReadmeContent(owner, repo);
-
 
     return rampScore;
 

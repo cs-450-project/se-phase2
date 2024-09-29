@@ -3,15 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Calculate = void 0;
 class Calculate {
     constructor() {
-        this.rampUpWeight = 0.2;
+        this.rampUpWeight = 0.15;
         this.corrrectnessWeight = 0.1;
-        this.busFactorWeight = 0.2;
-        this.responsiveMaintainerWeight = 0.2;
+        this.busFactorWeight = 0.15;
+        this.responsiveMaintainerWeight = 0.3;
         this.licenseWeight = 0.3;
-        this.rampUpMax = 20;
+        this.rampUpMax = 50;
         this.corrrectnessMax = 20;
         this.busFactorMax = 20;
-        this.responsiveMaintainerMax = 15;
+        this.responsiveMaintainerMax = 10;
         this.licenseMax = 1;
         this.URL = "none";
         this.netScore = -1;

@@ -53,7 +53,22 @@ function getRepoLicense(owner, repo) {
                     Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, // GitHub API token from .env file
                 },
             });
-            return response.data.license;
+            if (response.data.license.spdx_id === 'NOASSERTION') {
+                // Try to fetch the LICENSE file manually
+                const licenseFileResponse = yield axios_1.default.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents/COPYING`, // Adjust the path based on where the license is located
+                {
+                    headers: {
+                        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                    },
+                });
+                const licenseContent = Buffer.from(licenseFileResponse.data.content, 'base64').toString('utf-8');
+                console.log("License File Content:", licenseContent);
+                // Check if the license file contains 'GPL-2.0' or other relevant license information
+                if (licenseContent.includes('GNU GENERAL PUBLIC LICENSE') && licenseContent.includes('Version 2')) {
+                    return 'gpl-2.0'; // Return the GPL-2.0 identifier manually
+                }
+            }
+            return response.data.license.spdx_id;
         }
         catch (error) {
             console.error(`Error fetching license: ${error}`);
@@ -64,24 +79,19 @@ function getRepoLicense(owner, repo) {
 // Function to check if the repository license is compatible with LGPL-2.1
 function checkLicenseCompatibility(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        const license = yield getRepoLicense(owner, repo);
-        if (!license) {
+        const licenseKey = yield getRepoLicense(owner, repo);
+        if (!licenseKey) {
             console.log('License information could not be retrieved.');
             return 0;
         }
-        const licenseKey = license.spdx_id.toLowerCase(); // Get the SPDX ID of the license
-        if (compatibleLicenses.includes(licenseKey)) {
-            //Output a 1 if the repo license is compatible with LGPL-2.1
-            //console.log(`The repository uses ${license.name}, which is compatible with LGPL-2.1.`);
-            return 1;
+        if (compatibleLicenses.includes(licenseKey.toLowerCase())) {
+            return 1; // Output 1 for compatible license
         }
         else {
-            //Output a 0 if the repo license is not compatible with LGPL-2.1
-            //console.log(`The repository uses ${license.name}, which is NOT compatible with LGPL-2.1.`);
-            return 0;
+            return 0; // Output 0 for non-compatible license
         }
     });
 }
 // Example usage: Check the license compatibility for a repository
-//checkLicenseCompatibility('facebook', 'react'); 
+//checkLicenseCompatibility('nodists', 'nodist');
 //# sourceMappingURL=LicenseMetric.js.map

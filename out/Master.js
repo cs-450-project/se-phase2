@@ -40,6 +40,9 @@ const BusFactor_1 = require("./BusFactor");
 const ResponsiveMaintainer_1 = require("./ResponsiveMaintainer");
 const CorrectnessMetric_1 = require("./CorrectnessMetric");
 const LicenseMetric_1 = require("./LicenseMetric");
+const RampUpMetric_1 = require("./RampUpMetric");
+const verifyURL_1 = require("./verifyURL");
+const repoClone_1 = require("./repoClone");
 const fs = __importStar(require("fs"));
 function GetRepoInfo(url) {
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
@@ -51,12 +54,31 @@ function GetRepoInfo(url) {
     }
     return null; // Return null if the URL doesn't match
 }
-function ProcessURL(url) {
+function isNpmLink(url) {
+    const npmRegex = /^(https?:\/\/(www\.)?npmjs\.com\/|npm:\/\/)/;
+    return npmRegex.test(url);
+}
+function ProcessURL(url, urlNum) {
     return __awaiter(this, void 0, void 0, function* () {
         const ranker = new TestRanker_1.Calculate();
         const totalTime = new Timer_1.Timer();
         const factorTime = new Timer_1.Timer();
-        const repoInfo = GetRepoInfo(url);
+        let repoInfo;
+        console.log(urlNum);
+        if (isNpmLink(url)) {
+            console.log("Checking for NPM link");
+            let newURL = yield (0, verifyURL_1.isPackageOnGitHub)(url);
+            if (newURL) {
+                url = newURL;
+                repoInfo = GetRepoInfo(url);
+            }
+            else {
+                repoInfo = null;
+            }
+        }
+        else {
+            repoInfo = GetRepoInfo(url);
+        }
         if (repoInfo) {
             const { owner, repo } = repoInfo;
             if (owner && repo) {
@@ -77,10 +99,16 @@ function ProcessURL(url) {
                 ranker.SetLicense = Number(yield (0, LicenseMetric_1.checkLicenseCompatibility)(owner, repo));
                 ranker.SetLicenseLatency = factorTime.GetTime();
                 factorTime.Reset();
-                //PUT IF STATEMENT HERE FOR REPO CLONE
                 factorTime.StartTime();
-                //Check Rampup
-                ranker.SetRampUp = Math.random() * (30 - 1) + 1;
+                if (urlNum > 1) {
+                    console.log("Checking RampUp for URL: " + url);
+                    //Check Rampup
+                    ranker.SetRampUp = yield (0, RampUpMetric_1.displayRampupScore)(owner, repo);
+                }
+                else {
+                    console.log("Cloning Repo from Master");
+                    ranker.SetRampUp = yield (0, repoClone_1.cloneRepository)(url);
+                }
                 ranker.SetRampUpLatency = factorTime.GetTime();
                 factorTime.Reset();
                 factorTime.StartTime();
@@ -93,10 +121,12 @@ function ProcessURL(url) {
                 totalTime.Reset();
             }
             else {
-                console.log("Unable to connecto to repo");
+                ranker.SetURL = url;
+                console.log("Unable to connecto to repo, could not find the owner name and the repo name");
             }
         }
         else {
+            ranker.SetURL = url;
             console.log("Unable to connecto to repo");
         }
         TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,

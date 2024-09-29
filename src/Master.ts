@@ -6,6 +6,9 @@ import {getBusFactor} from './BusFactor';
 import {calculateResponsiveMaintainer} from './ResponsiveMaintainer'
 import {evaluateCorrectness} from './CorrectnessMetric'
 import {checkLicenseCompatibility} from './LicenseMetric'
+import {displayRampupScore} from './RampUpMetric'
+import {isPackageOnGitHub} from './verifyURL'
+import {cloneRepository} from './repoClone'
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -21,11 +24,35 @@ function GetRepoInfo(url: string): {owner: string; repo: string} | null{
     return null; // Return null if the URL doesn't match
 }
 
-async function ProcessURL(url: string){
+function isNpmLink(url: string): boolean {
+    const npmRegex = /^(https?:\/\/(www\.)?npmjs\.com\/|npm:\/\/)/;
+    return npmRegex.test(url);
+}
+
+
+async function ProcessURL(url: string, urlNum: number){
     const ranker = new Calculate();
     const totalTime = new Timer();
     const factorTime = new Timer();
-    const repoInfo = GetRepoInfo(url);
+    let repoInfo;
+    console.log(urlNum);
+    
+    if(isNpmLink(url)){
+        console.log("Checking for NPM link");
+        let newURL = await isPackageOnGitHub(url);
+        if(newURL){
+            url = newURL;
+            repoInfo = GetRepoInfo(url);
+            
+        }
+        else{
+            repoInfo = null;
+        }
+    }
+    else{
+        repoInfo = GetRepoInfo(url);
+        
+    }
 
     if(repoInfo){
 
@@ -53,11 +80,16 @@ async function ProcessURL(url: string){
             ranker.SetLicenseLatency = factorTime.GetTime();
             factorTime.Reset();
 
-            //PUT IF STATEMENT HERE FOR REPO CLONE
-
             factorTime.StartTime();
-            //Check Rampup
-            ranker.SetRampUp = Math.random() * (30 - 1) + 1;
+            if(urlNum > 1){
+                console.log("Checking RampUp for URL: " + url);
+                //Check Rampup
+                ranker.SetRampUp = await displayRampupScore(owner, repo);
+            }
+            else{
+                console.log("Cloning Repo from Master");
+                ranker.SetRampUp = await cloneRepository(url);
+            }
             ranker.SetRampUpLatency = factorTime.GetTime();
             factorTime.Reset();
 
@@ -72,10 +104,12 @@ async function ProcessURL(url: string){
             totalTime.Reset();
         }
         else{
-            console.log("Unable to connecto to repo");
+            ranker.SetURL = url;
+            console.log("Unable to connecto to repo, could not find the owner name and the repo name");
         }
     }
     else{
+        ranker.SetURL = url;
         console.log("Unable to connecto to repo");
     }
 

@@ -44,7 +44,9 @@ class UrlProcessor {
                 // Split the file content into lines (each line is a URL)
                 const urls = data.split('\n').map(line => line.trim()).filter(line => line.length > 0);
                 // Perform the provided operation on each URL
-                urls.forEach(operation);
+                urls.forEach((url, index) => {
+                    operation(url, index + 1);
+                });
             }
             catch (err) {
                 console.error('Error reading the file:', err);

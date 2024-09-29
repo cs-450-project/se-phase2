@@ -14,16 +14,16 @@ export class Calculate {
     private license: number;
     private licenseLatency: number;
 
-    private rampUpWeight: number = 0.2;
+    private rampUpWeight: number = 0.15;
     private corrrectnessWeight: number = 0.1;
-    private busFactorWeight: number = 0.2;
-    private responsiveMaintainerWeight: number = 0.2;
+    private busFactorWeight: number = 0.15;
+    private responsiveMaintainerWeight: number = 0.3;
     private licenseWeight: number = 0.3;
 
-    private rampUpMax: number = 20;
+    private rampUpMax: number = 50;
     private corrrectnessMax: number = 20;
     private busFactorMax: number = 20;
-    private responsiveMaintainerMax: number = 15;
+    private responsiveMaintainerMax: number = 10;
     private licenseMax: number = 1;
 
 

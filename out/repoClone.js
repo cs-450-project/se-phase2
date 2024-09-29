@@ -35,13 +35,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.cloneRepository = cloneRepository;
 const simple_git_1 = __importDefault(require("simple-git"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 // Initialize simple-git
 const git = (0, simple_git_1.default)();
-// Repository URL
-const repoUrl = 'https://github.com/lkurker/TestRepository';
 //We will now clone the repository to the directory of wherever the user is currently located
 const currentDir = process.cwd();
 const newDir = "testingRepo";
@@ -51,16 +50,33 @@ const newDirectory = currentDir.concat("/", newDir);
 var rampScore = 0;
 //String that will hold the content of the README file
 var readmeContent = "";
-function cloneRepository() {
+function cloneRepository(repoUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             console.log("Attempting to clone repository...");
-            yield git.clone(repoUrl, newDirectory);
-            console.log("Repository successfully cloned!!!!");
+            //Only clone if the directory does not exist
+            if (!fs.existsSync(newDirectory)) {
+                yield git.clone(repoUrl, newDirectory);
+            } //end if statement
+            //If the directory already exists, delete the contents and then clone again
+            else {
+                const files = yield fs.readdirSync(newDirectory);
+                //Delete all of the files in the directory
+                for (const file of files) {
+                    const filePath = path.join(newDirectory, file);
+                    yield fs.unlinkSync(filePath);
+                } //end for loop
+                yield fs.rmdirSync(newDirectory);
+                yield git.clone(repoUrl, newDirectory);
+            } //end else statement
+            yield checkFiles(newDirectory);
+            analyzeReadme(readmeContent);
+            return rampScore;
         } //end try statement
         catch (error) {
             //In case the repository fails to clone
             console.error('Failed to clone repository :(');
+            return -1;
         } //end catch statement
     });
 } //end cloneRepository function
@@ -79,9 +95,6 @@ function checkFiles(directory) {
                 readmeContent = fs.readFileSync(path.join(directory, dirFiles[i]), 'utf-8');
                 break;
             } //end if statement
-            else {
-                console.log("The current file we're looking at isn't what we need. Moving on to the next file...");
-            }
         } //end for loop
         console.log("testing");
     });
@@ -106,9 +119,4 @@ function analyzeReadme(readmeContent) {
         } //end if statement"
     });
 } //end analyzeReadme function
-//cloneRepository();
-//checkFiles(newDirectory);
-//Now we will analyze the README file to determine the ramp-up score
-////analyzeReadme(readmeContent);
-//console.log(rampScore);
 //# sourceMappingURL=repoClone.js.map

@@ -17,7 +17,7 @@ function runCommand(fname) {
 function runMaster(fname, urlFile) {
     let file = __dirname + `//` + fname;
     const command = `node ${file} ${urlFile}`;
-    console.log(`running subprogram ${file}`);
+    console.log(`running subprogram ${file} to test ${urlFile}`);
     try {
         (0, node_child_process_1.execSync)(command, { stdio: 'inherit' });
         console.log(`Successfully ran ${urlFile}`);
@@ -34,20 +34,19 @@ var n = 0; //root command loc
 //process.exit(1);
 //}
 //}
-console.log(`${process.argv[n]}`);
-try{
-while (process.argv[n] != __filename) {
-    n++;
-    console.log(`${process.argv[n]}`);
+try {
+    while (process.argv[n] != __filename) {
+        n++;
+    }
+    n = n + 1;
 }
-n = n + 1;
-} catch(error){
-    console.error(`Failed to run, invalid location or command parsing error`);
+catch (error) {
+    console.error(`Failed to run program`);
 }
 const commandString = process.argv[n];
 if (commandString == null) {
-    console.error(`Failed to run`);
-    process.exit(1);
+    console.error(`Failed to run, invalid arguments`);
+    process.exit(0);
 }
 if (commandString == 'install') {
     runCommand('Install.js');
