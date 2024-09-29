@@ -2,7 +2,7 @@
 
 //Ensure that we have the required libraries
 import axios from 'axios';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 
 
 //Variable that will keep track of how good the ramp-up score is
@@ -26,7 +26,7 @@ if (!GITHUB_TOKEN) {
 async function getReadme(owner: string, repo: string) {
     try {
         //Get the README file from the repository
-        const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}`, {
+        const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents/README.md`, {
 
             headers: {
 
@@ -56,7 +56,6 @@ async function analyzeReadme(readmeContent: string) {
     if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started")) {
 
         rampScore += 10;
-        console.log("Testing");
 
     }//end if statement
 
@@ -113,5 +112,7 @@ async function displayRampupScore(owner: string, repo: string) {
     return rampScore;
 
 }//end displayRampupScore function
+
+
 
 
