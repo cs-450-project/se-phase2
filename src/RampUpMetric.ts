@@ -53,19 +53,19 @@ async function getReadme(owner: string, repo: string) {
 async function analyzeReadme(readmeContent: string) {
 
     //Checking to see which sections are contained in the README file
-    if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started")) {
+    if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
 
         rampScore += 10;
 
     }//end if statement
 
-    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions")) {
+    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation")) {
 
         rampScore += 10;
 
     }//end if statement
 
-    if (readmeContent.includes("## Usage")) {
+    if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
 
         rampScore += 10;
 
@@ -77,7 +77,7 @@ async function analyzeReadme(readmeContent: string) {
 
     }//end if statement
 
-    if (readmeContent.includes("## Configuration")) {
+    if (readmeContent.includes("## Configuration") || readmeContent.includes("## configuration")) {
 
         rampScore += 10;
 

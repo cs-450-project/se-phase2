@@ -57,6 +57,7 @@ async function ProcessURL(url: string, urlNum: number){
     if(repoInfo){
 
         const { owner, repo } = repoInfo;
+        console.log("Git Repo Grabbed : " + owner + " " + repo + " " + urlNum);
 
         if(owner && repo){
             totalTime.StartTime();
@@ -81,7 +82,7 @@ async function ProcessURL(url: string, urlNum: number){
             factorTime.Reset();
 
             factorTime.StartTime();
-            if(urlNum > 1){
+            if(urlNum > 0){
                 console.log("Checking RampUp for URL: " + url);
                 //Check Rampup
                 ranker.SetRampUp = await displayRampupScore(owner, repo);

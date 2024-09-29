@@ -17,8 +17,14 @@ const axios_1 = __importDefault(require("axios"));
 function isPackageOnGitHub(packageName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            //Extract package name from URL
+            const regex = /npmjs\.com\/package\/([^\/]+)/;
+            const match = packageName.match(regex);
+            if (match && match[1]) {
+                packageName = match[1];
+            } //end if statement
             // Fetch package data from npm registry
-            const response = yield axios_1.default.get(packageName);
+            const response = yield axios_1.default.get(`https://registry.npmjs.org/${packageName}`);
             // Check if the repository field exists and points to GitHub
             const repository = response.data.repository;
             // If the repository is an object, use its URL
@@ -40,17 +46,27 @@ function isPackageOnGitHub(packageName) {
                     else if (repoUrl.startsWith('git@')) {
                         repoUrl = repoUrl.replace('git@', 'https://').replace(':', '/').replace('.git', '');
                     }
+                    else if (repoUrl.startsWith('git+')) {
+                        repoUrl = repoUrl.replace('git+', "");
+                    }
+                    else if (repoUrl.startsWith("https://git+")) {
+                        // Replace with "https://"
+                        repoUrl = repoUrl.replace("https://git+", "");
+                    }
                     else if (!repoUrl.startsWith('http://') && !repoUrl.startsWith('https://')) {
                         repoUrl = `https://${repoUrl}`; // Handle any other cases
                     }
+                    if (repoUrl.endsWith(".git")) {
+                        repoUrl = repoUrl.replace(".git", "");
+                    }
                     return repoUrl; // Return the formatted URL
-                } //end if statement
+                }
             }
             console.log("No GitHub repository found for package.");
             return null; // Return null if no repository URL is found
         }
         catch (error) {
-            console.error(`Failed to fetch package information for ${packageName}`, error);
+            console.log(`Failed to fetch package information for ${packageName}`);
             return null; // Return null in case of error
         }
     });

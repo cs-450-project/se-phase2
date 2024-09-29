@@ -81,6 +81,7 @@ function ProcessURL(url, urlNum) {
         }
         if (repoInfo) {
             const { owner, repo } = repoInfo;
+            console.log("Git Repo Grabbed : " + owner + " " + repo + " " + urlNum);
             if (owner && repo) {
                 totalTime.StartTime();
                 ranker.SetURL = url;
@@ -100,7 +101,7 @@ function ProcessURL(url, urlNum) {
                 ranker.SetLicenseLatency = factorTime.GetTime();
                 factorTime.Reset();
                 factorTime.StartTime();
-                if (urlNum > 1) {
+                if (urlNum > 0) {
                     console.log("Checking RampUp for URL: " + url);
                     //Check Rampup
                     ranker.SetRampUp = yield (0, RampUpMetric_1.displayRampupScore)(owner, repo);
