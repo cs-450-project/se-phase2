@@ -17,6 +17,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import dayjs from 'dayjs';
+import logger from './Logger';
 
 // Loads environment variables (GITHUB_TOKEN) from .env file
 dotenv.config();
@@ -74,6 +75,8 @@ async function getCommits(owner: string, repo: string): Promise<Set<string> | nu
 
   } catch (error) {
     //Error fetching commits
+    logger.info('Unable to fetch commits');
+    logger.info(error);
     return null;
   }
 }

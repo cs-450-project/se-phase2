@@ -30,6 +30,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isPackageOnGitHub = isPackageOnGitHub;
 const axios_1 = __importDefault(require("axios"));
+const Logger_1 = __importDefault(require("./Logger"));
 function isPackageOnGitHub(packageName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -81,6 +82,8 @@ function isPackageOnGitHub(packageName) {
             return null; // Return null if no repository URL is found
         }
         catch (error) {
+            Logger_1.default.info("Something went wrong connecting to the npmjs link " + packageName);
+            Logger_1.default.info(error);
             return null; // Return null in case of error
         }
     });

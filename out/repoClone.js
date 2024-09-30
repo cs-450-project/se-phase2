@@ -53,6 +53,7 @@ exports.cloneRepository = cloneRepository;
 const simple_git_1 = __importDefault(require("simple-git"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const Logger_1 = __importDefault(require("./Logger"));
 // Initialize simple-git
 const git = (0, simple_git_1.default)();
 //We will now clone the repository to the directory of wherever the user is currently located
@@ -88,6 +89,7 @@ function cloneRepository(repoUrl) {
         } //end try statement
         catch (error) {
             //In case the repository fails to clone
+            Logger_1.default.info('Failed to clone repository');
             return -1;
         } //end catch statement
     });

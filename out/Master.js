@@ -89,6 +89,7 @@ function ProcessURL(url, urlNum) {
                 repoInfo = GetRepoInfo(url);
             }
             else {
+                Logger_1.default.info('No github repo for URL ' + url);
                 repoInfo = null;
             }
         }
@@ -135,10 +136,12 @@ function ProcessURL(url, urlNum) {
                 totalTime.Reset();
             }
             else {
+                Logger_1.default.info("Could not get repo owner or name from URL" + url);
                 ranker.SetURL = url;
             }
         }
         else {
+            Logger_1.default.info("Could not get repo owner or name from URL" + url);
             ranker.SetURL = url;
         }
         Output_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
@@ -160,6 +163,7 @@ fs.stat(fileLocation, (err, stats) => {
         }
     }
     else {
+        Logger_1.default.info("File does not exist");
         process.exit(1);
     }
     //close error things etc etc    

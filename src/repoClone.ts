@@ -16,6 +16,7 @@
 import simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
+import logger from './Logger';
 
 // Initialize simple-git
 const git = simpleGit();
@@ -77,6 +78,7 @@ export async function cloneRepository(repoUrl: string) {
 
     catch (error) {
         //In case the repository fails to clone
+        logger.info('Failed to clone repository');
         return -1;
     }//end catch statement
 }//end cloneRepository function

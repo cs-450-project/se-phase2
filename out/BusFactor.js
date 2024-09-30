@@ -32,6 +32,7 @@ exports.getBusFactor = getBusFactor;
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const dayjs_1 = __importDefault(require("dayjs"));
+const Logger_1 = __importDefault(require("./Logger"));
 // Loads environment variables (GITHUB_TOKEN) from .env file
 dotenv_1.default.config();
 // Retrieves GitHub Token from .env file
@@ -77,6 +78,8 @@ function getCommits(owner, repo) {
         }
         catch (error) {
             //Error fetching commits
+            Logger_1.default.info('Unable to fetch commits');
+            Logger_1.default.info(error);
             return null;
         }
     });

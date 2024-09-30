@@ -49,6 +49,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkLicenseCompatibility = checkLicenseCompatibility;
 const axios_1 = __importDefault(require("axios"));
 const dotenv = __importStar(require("dotenv"));
+const Logger_1 = __importDefault(require("./Logger"));
 // Load environment variables from .env
 dotenv.config();
 // Base URL for GitHub API
@@ -81,6 +82,8 @@ function getRepoLicense(owner, repo) {
             return response.data.license.spdx_id;
         }
         catch (error) {
+            Logger_1.default.info('Failed to access GitHub API');
+            Logger_1.default.info(error);
             return 0;
         }
     });

@@ -27,6 +27,7 @@ exports.calculateResponsiveMaintainer = calculateResponsiveMaintainer;
 //Promised-based HTTP client to make requests to the GitHub API
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const Logger_1 = __importDefault(require("./Logger"));
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv_1.default.config();
 //Retrieves Github Token form .env (environment variable file)
@@ -60,6 +61,8 @@ function fetchPaginatedData(url) {
                 nextPageUrl = getNextPage(response.headers.link || null);
             }
             catch (error) {
+                Logger_1.default.info('Unable to fetch data');
+                Logger_1.default.info(error);
                 return results; // Return what we have in case of failure
             }
         }

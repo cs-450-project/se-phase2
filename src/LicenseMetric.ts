@@ -13,6 +13,7 @@
 
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import logger from './Logger';
 
 // Load environment variables from .env
 dotenv.config();
@@ -57,6 +58,8 @@ async function getRepoLicense(owner: string, repo: string) {
     return response.data.license.spdx_id;
 
   } catch (error) {
+    logger.info('Failed to access GitHub API');
+    logger.info(error);
     return 0;
   }
 }

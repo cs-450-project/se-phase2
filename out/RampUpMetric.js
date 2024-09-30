@@ -52,6 +52,7 @@ exports.displayRampupScore = displayRampupScore;
 //Ensure that we have the required libraries
 const axios_1 = __importDefault(require("axios"));
 const dotenv = __importStar(require("dotenv"));
+const Logger_1 = __importDefault(require("./Logger"));
 //Variable that will keep track of how good the ramp-up score is
 var rampScore = 0;
 //load the environment variables
@@ -78,6 +79,8 @@ function getReadme(owner, repo) {
             return response.data.content;
         } //end try statement
         catch (error) {
+            Logger_1.default.info('Failed to access GitHub API');
+            Logger_1.default.info(error);
         } //end catch statement
     });
 } //end getReadme function

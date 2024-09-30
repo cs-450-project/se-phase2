@@ -1,7 +1,7 @@
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
-
+import logger from './Logger';
 
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv.config();
@@ -24,6 +24,8 @@ async function fileExists(owner: string, repo: string, filePath: string): Promis
     );
     return response.status === 200;
   } catch (error) {
+    logger.info('Something went wrong with connecting to the github api');
+    logger.info(error);
     return false;
   }
 }
@@ -41,7 +43,8 @@ async function getContributorsCount(owner: string, repo: string): Promise<number
     );
     return response.data.length;
   } catch (error) {
-    //Error fetching contributors
+    logger.info('Something went wrong with connecting to the github api');
+    logger.info(error);
     return 0;
   }
 }

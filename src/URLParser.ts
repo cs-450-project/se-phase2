@@ -11,6 +11,7 @@
  */
 
 import * as fs from 'fs';
+import logger from './Logger';
 
 export class UrlProcessor {
     
@@ -29,7 +30,8 @@ export class UrlProcessor {
             });
         } 
         catch (err) {
-
+            logger.info("Something went wrong processing the file");
+            logger.info(err);
         }
     }
 }

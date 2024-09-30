@@ -42,9 +42,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UrlProcessor = void 0;
 const fs = __importStar(require("fs"));
+const Logger_1 = __importDefault(require("./Logger"));
 class UrlProcessor {
     // Function to read the file, parse URLs, and perform operations
     processUrlsFromFile(filePath, operation) {
@@ -60,6 +64,8 @@ class UrlProcessor {
                 });
             }
             catch (err) {
+                Logger_1.default.info("Something went wrong processing the file");
+                Logger_1.default.info(err);
             }
         });
     }

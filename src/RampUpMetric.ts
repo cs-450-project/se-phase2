@@ -15,6 +15,7 @@
 //Ensure that we have the required libraries
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import logger from './Logger';
 
 
 //Variable that will keep track of how good the ramp-up score is
@@ -55,6 +56,9 @@ async function getReadme(owner: string, repo: string) {
     }//end try statement
 
     catch (error) {
+
+        logger.info('Failed to access GitHub API');
+        logger.info(error);
 
     }//end catch statement
 

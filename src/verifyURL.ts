@@ -16,6 +16,7 @@
  */
 
 import axios from 'axios';
+import logger from './Logger';
 
 export async function isPackageOnGitHub(packageName: string): Promise<string | null> {
     try {
@@ -76,6 +77,8 @@ export async function isPackageOnGitHub(packageName: string): Promise<string | n
         return null; // Return null if no repository URL is found
 
     } catch (error) {
+        logger.info("Something went wrong connecting to the npmjs link " + packageName);
+        logger.info(error);
         return null; // Return null in case of error
     }
 }

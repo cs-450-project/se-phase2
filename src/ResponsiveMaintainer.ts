@@ -14,6 +14,7 @@
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
+import logger from './Logger';
 
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv.config();
@@ -53,6 +54,8 @@ async function fetchPaginatedData(url: string): Promise<any[]> {
         // Check for the "Link" header to see if there's a next page
         nextPageUrl = getNextPage(response.headers.link || null);
       } catch (error) {
+          logger.info('Unable to fetch data');
+          logger.info(error);
         return results; // Return what we have in case of failure
       }
     }

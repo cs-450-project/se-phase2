@@ -16,6 +16,7 @@ exports.calculateCorrectnessScore = calculateCorrectnessScore;
 //Promised-based HTTP client to make requests to the GitHub API
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const Logger_1 = __importDefault(require("./Logger"));
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv_1.default.config();
 //Retrieves Github Token form .env (environment variable file)
@@ -33,6 +34,8 @@ function fileExists(owner, repo, filePath) {
             return response.status === 200;
         }
         catch (error) {
+            Logger_1.default.info('Something went wrong with connecting to the github api');
+            Logger_1.default.info(error);
             return false;
         }
     });
@@ -49,7 +52,8 @@ function getContributorsCount(owner, repo) {
             return response.data.length;
         }
         catch (error) {
-            //Error fetching contributors
+            Logger_1.default.info('Something went wrong with connecting to the github api');
+            Logger_1.default.info(error);
             return 0;
         }
     });

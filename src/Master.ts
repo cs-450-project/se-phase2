@@ -58,6 +58,7 @@ async function ProcessURL(url: string, urlNum: number){
             
         }
         else{
+            logger.info('No github repo for URL ' + url);
             repoInfo = null;
         }
     }
@@ -114,10 +115,12 @@ async function ProcessURL(url: string, urlNum: number){
             totalTime.Reset();
         }
         else{
+            logger.info("Could not get repo owner or name from URL" + url);
             ranker.SetURL = url;
         }
     }
     else{
+        logger.info("Could not get repo owner or name from URL" + url);
         ranker.SetURL = url;
     }
 
@@ -143,6 +146,7 @@ fs.stat(fileLocation, (err, stats) => {
         }
     }
     else{
+        logger.info("File does not exist");
         process.exit(1);
     }
     //close error things etc etc    
