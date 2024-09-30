@@ -38,7 +38,7 @@ async function fileExists(owner: string, repo: string, filePath: string): Promis
     );
     return response.status === 200;
   } catch (error) {
-    logger.info('Something went wrong with connecting to the github api');
+    logger.info('Something went wrong with connecting to the github api from Correctness');
     logger.info(error);
     return false;
   }
@@ -57,7 +57,7 @@ async function getContributorsCount(owner: string, repo: string): Promise<number
     );
     return response.data.length;
   } catch (error) {
-    logger.info('Something went wrong with connecting to the github api');
+    logger.info('Something went wrong with connecting to the github api from Correctness');
     logger.info(error);
     return 0;
   }

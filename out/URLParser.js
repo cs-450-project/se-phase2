@@ -64,7 +64,7 @@ class UrlProcessor {
                 });
             }
             catch (err) {
-                Logger_1.default.info("Something went wrong processing the file");
+                Logger_1.default.info("Something went wrong processing the file from URLParser");
                 Logger_1.default.info(err);
             }
         });

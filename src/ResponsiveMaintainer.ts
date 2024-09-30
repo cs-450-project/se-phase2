@@ -56,7 +56,7 @@ async function fetchPaginatedData(url: string): Promise<any[]> {
         // Check for the "Link" header to see if there's a next page
         nextPageUrl = getNextPage(response.headers.link || null);
       } catch (error) {
-          logger.info('Unable to fetch data');
+          logger.info('Unable to fetch data from ResponsiveMaintainer');
           logger.info(error);
         return results; // Return what we have in case of failure
       }

@@ -144,7 +144,7 @@ export class Calculate {
     }
 
     get GetResponsiveMaintainer(): number {
-        return this.responsiveMaintainer;
+        return  1 - this.responsiveMaintainer;
     }
 
     set SetResponsiveMaintainer(value: number) {

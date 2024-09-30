@@ -106,7 +106,7 @@ class Calculate {
         this.busFactorLatency = value;
     }
     get GetResponsiveMaintainer() {
-        return this.responsiveMaintainer;
+        return 1 - this.responsiveMaintainer;
     }
     set SetResponsiveMaintainer(value) {
         this.responsiveMaintainer = this.Normalize(value, this.responsiveMaintainerMax);

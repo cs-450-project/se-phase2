@@ -78,8 +78,8 @@ export async function cloneRepository(repoUrl: string) {
 
     catch (error) {
         //In case the repository fails to clone
-        logger.info('Failed to clone repository');
-        return -1;
+        logger.info('Failed to clone repository from RepoClone');
+        return 0;
     }//end catch statement
 }//end cloneRepository function
 

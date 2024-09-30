@@ -3,7 +3,9 @@
  * Correctness.ts
  *
  * Description:
- * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues
+ * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues.
+ * We calculate this by adding up how long some of the issues took to be fixed and storing the total.
+ * Then we divide it by how many issues there were.
  *
  * Author: Brayden Devenport
  * Date: 9-29-2024
@@ -61,7 +63,7 @@ function fetchPaginatedData(url) {
                 nextPageUrl = getNextPage(response.headers.link || null);
             }
             catch (error) {
-                Logger_1.default.info('Unable to fetch data');
+                Logger_1.default.info('Unable to fetch data from ResponsiveMaintainer');
                 Logger_1.default.info(error);
                 return results; // Return what we have in case of failure
             }

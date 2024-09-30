@@ -30,7 +30,7 @@ export class UrlProcessor {
             });
         } 
         catch (err) {
-            logger.info("Something went wrong processing the file");
+            logger.info("Something went wrong processing the file from URLParser");
             logger.info(err);
         }
     }

@@ -89,8 +89,8 @@ function cloneRepository(repoUrl) {
         } //end try statement
         catch (error) {
             //In case the repository fails to clone
-            Logger_1.default.info('Failed to clone repository');
-            return -1;
+            Logger_1.default.info('Failed to clone repository from RepoClone');
+            return 0;
         } //end catch statement
     });
 } //end cloneRepository function

@@ -79,7 +79,7 @@ function getReadme(owner, repo) {
             return response.data.content;
         } //end try statement
         catch (error) {
-            Logger_1.default.info('Failed to access GitHub API');
+            Logger_1.default.info('Failed to access GitHub API from RampUp');
             Logger_1.default.info(error);
         } //end catch statement
     });

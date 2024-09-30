@@ -78,7 +78,7 @@ function getCommits(owner, repo) {
         }
         catch (error) {
             //Error fetching commits
-            Logger_1.default.info('Unable to fetch commits');
+            Logger_1.default.info('Unable to fetch commits for BusFactor');
             Logger_1.default.info(error);
             return null;
         }

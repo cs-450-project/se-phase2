@@ -75,7 +75,7 @@ async function getCommits(owner: string, repo: string): Promise<Set<string> | nu
 
   } catch (error) {
     //Error fetching commits
-    logger.info('Unable to fetch commits');
+    logger.info('Unable to fetch commits for BusFactor');
     logger.info(error);
     return null;
   }

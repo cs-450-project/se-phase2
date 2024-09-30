@@ -57,7 +57,7 @@ async function getReadme(owner: string, repo: string) {
 
     catch (error) {
 
-        logger.info('Failed to access GitHub API');
+        logger.info('Failed to access GitHub API from RampUp');
         logger.info(error);
 
     }//end catch statement

@@ -82,7 +82,7 @@ function isPackageOnGitHub(packageName) {
             return null; // Return null if no repository URL is found
         }
         catch (error) {
-            Logger_1.default.info("Something went wrong connecting to the npmjs link " + packageName);
+            Logger_1.default.info("Something went wrong connecting to the npmjs link " + packageName + " from VerifyURL");
             Logger_1.default.info(error);
             return null; // Return null in case of error
         }

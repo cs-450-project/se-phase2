@@ -61,7 +61,7 @@ async function getRepoLicense(owner: string, repo: string) {
     return response.data.license.spdx_id;
 
   } catch (error) {
-    logger.info('Failed to access GitHub API');
+    logger.info('Failed to access GitHub API from License');
     logger.info(error);
     return 0;
   }
