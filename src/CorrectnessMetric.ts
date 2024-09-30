@@ -1,3 +1,17 @@
+/*
+ * CorrectnessMetric.ts
+ * 
+ * Description:
+ * This file uses the GitHubAPI to calculate the CorrectnessMetric
+ * We have a score the max value is 100 and we check to see if there is a README file, test files, and how many contributors are in the repostitory. 
+ * We score that if there is a README file then we add 20 to the score. And if there are test files then we add 50 to the score. 
+ * We also add to the score how many contributors there are in the repository with a cap of 30. 
+ * 
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
