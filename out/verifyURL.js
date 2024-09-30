@@ -1,4 +1,15 @@
 "use strict";
+/*
+ * VerifyURL.ts
+ *
+ * Description:
+ * This file will take a NPMJS link, and find a github repo link to return. If it does not find one, then it returns null
+ *
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -69,4 +80,4 @@ function isPackageOnGitHub(packageName) {
         }
     });
 }
-//# sourceMappingURL=verifyURL.js.map
+//# sourceMappingURL=VerifyURL.js.map

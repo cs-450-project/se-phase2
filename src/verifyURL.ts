@@ -1,4 +1,16 @@
-﻿import axios from 'axios';
+﻿/*
+ * VerifyURL.ts
+ * 
+ * Description:
+ * This file will take a NPMJS link, and find a github repo link to return. If it does not find one, then it returns null
+ * 
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+import axios from 'axios';
 
 export async function isPackageOnGitHub(packageName: string): Promise<string | null> {
     try {

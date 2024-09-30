@@ -1,5 +1,16 @@
+/*
+ * URLParser.ts
+ * 
+ * Description:
+ * This file takes a text file and splits each line as it's own URL. Then it performs an operation on each one
+ * 
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
 import * as fs from 'fs';
-import * as path from 'path';
 
 export class UrlProcessor {
     

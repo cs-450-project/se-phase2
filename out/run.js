@@ -1,4 +1,15 @@
 "use strict";
+/*
+ * run.ts
+ *
+ * Description:
+ * This file assists in using and running the program
+ *
+ * Author: Grayson DeHerdt
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 //const { execSync } = require('child_process');
 const node_child_process_1 = require("node:child_process");

@@ -10,18 +10,17 @@
  * 
  */
 
-
-import { UrlProcessor } from "./TestParser";
-import { SendToOutput } from "./TestOutput";
-import { Calculate } from "./TestRanker";
+import { UrlProcessor } from "./URLParser";
+import { SendToOutput } from "./Output";
+import { Calculate } from "./Ranker";
 import { Timer } from "./Timer";
 import {getBusFactor} from './BusFactor';
 import {calculateResponsiveMaintainer} from './ResponsiveMaintainer'
 import {evaluateCorrectness} from './CorrectnessMetric'
 import {checkLicenseCompatibility} from './LicenseMetric'
 import {displayRampupScore} from './RampUpMetric'
-import {isPackageOnGitHub} from './verifyURL'
-import {cloneRepository} from './repoClone'
+import {isPackageOnGitHub} from './VerifyURL'
+import {cloneRepository} from './RepoClone'
 import * as path from 'path';
 import * as fs from 'fs';
 

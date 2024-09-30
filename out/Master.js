@@ -43,16 +43,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const TestParser_1 = require("./TestParser");
+const URLParser_1 = require("./URLParser");
 const TestOutput_1 = require("./TestOutput");
-const TestRanker_1 = require("./TestRanker");
+const Ranker_1 = require("./Ranker");
 const Timer_1 = require("./Timer");
 const BusFactor_1 = require("./BusFactor");
 const ResponsiveMaintainer_1 = require("./ResponsiveMaintainer");
 const CorrectnessMetric_1 = require("./CorrectnessMetric");
 const LicenseMetric_1 = require("./LicenseMetric");
 const RampUpMetric_1 = require("./RampUpMetric");
-const verifyURL_1 = require("./verifyURL");
+const VerifyURL_1 = require("./VerifyURL");
 const repoClone_1 = require("./repoClone");
 const fs = __importStar(require("fs"));
 function GetRepoInfo(url) {
@@ -71,12 +71,12 @@ function isNpmLink(url) {
 }
 function ProcessURL(url, urlNum) {
     return __awaiter(this, void 0, void 0, function* () {
-        const ranker = new TestRanker_1.Calculate();
+        const ranker = new Ranker_1.Calculate();
         const totalTime = new Timer_1.Timer();
         const factorTime = new Timer_1.Timer();
         let repoInfo;
         if (isNpmLink(url)) {
-            let newURL = yield (0, verifyURL_1.isPackageOnGitHub)(url);
+            let newURL = yield (0, VerifyURL_1.isPackageOnGitHub)(url);
             if (newURL) {
                 url = newURL;
                 repoInfo = GetRepoInfo(url);
@@ -147,7 +147,7 @@ const fileLocation = process.argv[2]; //Gives argument three, which *should* be 
 fs.stat(fileLocation, (err, stats) => {
     if (err == null) {
         if (stats.isFile()) {
-            const parser = new TestParser_1.UrlProcessor();
+            const parser = new URLParser_1.UrlProcessor();
             parser.processUrlsFromFile(fileLocation, ProcessURL);
         }
     }

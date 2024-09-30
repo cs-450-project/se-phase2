@@ -1,3 +1,16 @@
+/*
+ * run.ts
+ * 
+ * Description:
+ * This file assists in using and running the program
+ * 
+ * Author: Grayson DeHerdt
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+
 //const { execSync } = require('child_process');
 import { execSync } from "node:child_process";
 //execSync(Command, { stdio: 'inherit' });
