@@ -14,3 +14,5 @@ installPak('path');
 installPak('simple-git');
 installPak('axios');
 installPak('dotenv');
+
+process.exit(0);
