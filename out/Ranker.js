@@ -53,9 +53,11 @@ class Calculate {
         this.URL = value;
     }
     get GetNetScore() {
-        this.netScore = (this.rampUp * this.rampUpWeight) + (this.correctness * this.corrrectnessWeight)
-            + (this.busFactor * this.busFactorWeight) + ((1 - this.responsiveMaintainer) * this.responsiveMaintainerWeight)
-            + (this.license * this.licenseWeight);
+        this.netScore = (this.rampUp * this.rampUpWeight) +
+            (this.correctness * this.corrrectnessWeight) +
+            (this.busFactor * this.busFactorWeight) +
+            ((1 - this.responsiveMaintainer) * this.responsiveMaintainerWeight) +
+            (this.license * this.licenseWeight);
         if (this.netScore > 1) {
             this.netScore = 1;
         }

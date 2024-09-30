@@ -3,7 +3,9 @@
  * Correctness.ts
  *
  * Description:
- * Calculations of the Rampup metric will be done here by utilising the Github API
+ * Calculations of the Rampup metric will be done here by utilising the Github API. This file will first access the README file
+ * from the repository and then check for the presence of certain sections. If the sections are present, the rampup score will increase.
+ * Unlike the cloning
  *
  * Author: Logan Kurker
  * Date: 9-29-2024
@@ -117,7 +119,7 @@ function analyzeReadmeContent(owner, repo) {
 } //end analyzeReadmeContent function
 function displayRampupScore(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        //rampScore = 0;
+        rampScore = 0;
         yield analyzeReadmeContent(owner, repo);
         return rampScore;
     });

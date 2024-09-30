@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const verifyURL_1 = require("./verifyURL");
+const VerifyURL_1 = require("./VerifyURL");
 function GetRepoInfo(url) {
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
     const match = url.match(regex);
@@ -31,7 +31,7 @@ function Test() {
         let repoInfo;
         if (isNpmLink(url)) {
             console.log("Checking for NPM link");
-            let newURL = yield (0, verifyURL_1.isPackageOnGitHub)(url);
+            let newURL = yield (0, VerifyURL_1.isPackageOnGitHub)(url);
             if (newURL) {
                 url = newURL;
                 console.log("Attempting to get GitHub Link");

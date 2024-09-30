@@ -1,4 +1,4 @@
-import {isPackageOnGitHub} from './verifyURL'
+import {isPackageOnGitHub} from './VerifyURL'
 
 function GetRepoInfo(url: string): {owner: string; repo: string} | null{
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;

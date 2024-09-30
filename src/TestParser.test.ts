@@ -1,4 +1,4 @@
-import { UrlProcessor } from './TestParser'; // Adjust the import as necessary
+import { UrlProcessor } from './URLParser'; // Adjust the import as necessary
 
 const url = new UrlProcessor();
 

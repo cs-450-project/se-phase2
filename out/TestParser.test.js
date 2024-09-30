@@ -1,4 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-//import MockAdaptor from 'axios-mock-adaptor';
+const URLParser_1 = require("./URLParser"); // Adjust the import as necessary
+const url = new URLParser_1.UrlProcessor();
+test('tests for null', () => {
+    expect(url.processUrlsFromFile('./TestURLs.txt', () => { })).toBe(0);
+});
 //# sourceMappingURL=TestParser.test.js.map

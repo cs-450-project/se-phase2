@@ -24,7 +24,6 @@ import {checkLicenseCompatibility} from './LicenseMetric'
 import {displayRampupScore} from './RampUpMetric'
 import {isPackageOnGitHub} from './VerifyURL'
 import {cloneRepository} from './RepoClone'
-import * as path from 'path';
 import * as fs from 'fs';
 
 function GetRepoInfo(url: string): {owner: string; repo: string} | null{
