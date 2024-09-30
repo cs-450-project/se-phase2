@@ -1,3 +1,16 @@
+/*
+ * Correctness.ts
+ * 
+ * Description:
+ * This file uses the GitHubAPI to calculate the Correctness
+ * 
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -32,7 +45,6 @@ async function getTestCoverageReport(owner: string, repo: string) {
       
       //If there is no converage file
       if (!coverageFile) {
-        console.log('No coverage report found in the repository.');
         return null;
       }
   
@@ -47,9 +59,6 @@ async function getTestCoverageReport(owner: string, repo: string) {
 
       
     } catch (error) {
-
-      console.error(`Error fetching coverage report: ${error}`);
-
       return null;
     }
   }
@@ -66,13 +75,11 @@ async function getTestCoverageReport(owner: string, repo: string) {
 
     //If no test exsits 
     if (totalTests === 0) {
-      console.log('No tests were run.');
       return 0;
     }
   
     //Calculation
     const passRate = (passedTests / totalTests) * 100;
-    console.log(`Test Pass Rate: ${passRate.toFixed(2)}%`);
     return passRate;
   }
   

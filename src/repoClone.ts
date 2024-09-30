@@ -1,4 +1,16 @@
-﻿import simpleGit from 'simple-git';
+﻿/*
+ * Correctness.ts
+ * 
+ * Description:
+ * Clones the repo provided and then calculates the RampUp based on that repo
+ * 
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+import simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -22,7 +34,6 @@ var readmeContent: string = "";
 
 export async function cloneRepository(repoUrl: string) {
     try {
-        console.log("Attempting to clone repository...");
 
         //Only clone if the directory does not exist
         if(!fs.existsSync(newDirectory)){
@@ -62,9 +73,7 @@ export async function cloneRepository(repoUrl: string) {
     }//end try statement
 
     catch (error) {
-
         //In case the repository fails to clone
-        console.error('Failed to clone repository :(');
         return -1;
     }//end catch statement
 }//end cloneRepository function
@@ -77,45 +86,32 @@ async function checkFiles(directory: string) {
     //Get all the files in the directory
     const dirFiles = fs.readdirSync(directory);
 
-    //List all of the files that are in the directory
-    console.log("Files in the directory: ", dirFiles);
-
-    console.log(dirFiles.length);
-
     //Check if the files in the directory match the files that we want to check
     for (let i: number = 0; i < dirFiles.length; i++) {
-
         if (dirFiles[i] == "README.md") {
-
             //add the content of the README file to the readmeContent variable, which will be used to check the ramp-up score
             readmeContent = fs.readFileSync(path.join(directory, dirFiles[i]), 'utf-8');
             break;
         }//end if statement
-
-        
-
     }//end for loop
-
-    console.log("testing");
-
 }//end checkFiles function
 
 async function analyzeReadme(readmeContent: string) {
 
     //Checking to see which sections are contained in the README file
-    if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started")) {
+    if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
 
         rampScore += 10;
 
     }//end if statement
 
-    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions")) {
+    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
 
         rampScore += 10;
 
     }//end if statement
 
-    if (readmeContent.includes("## Usage")) {
+    if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
 
         rampScore += 10;
 
@@ -127,7 +123,7 @@ async function analyzeReadme(readmeContent: string) {
 
     }//end if statement
 
-    if (readmeContent.includes("## Configuration")) {
+    if (readmeContent.includes("## Configuration") || readmeContent.includes("## configuration")) {
 
         rampScore += 10;
 

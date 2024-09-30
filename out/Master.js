@@ -1,4 +1,15 @@
 "use strict";
+/*
+ * Master.ts
+ *
+ * Description:
+ * This file compiles all the necessary files for scoring the URLs
+ *
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -64,9 +75,7 @@ function ProcessURL(url, urlNum) {
         const totalTime = new Timer_1.Timer();
         const factorTime = new Timer_1.Timer();
         let repoInfo;
-        console.log(urlNum);
         if (isNpmLink(url)) {
-            console.log("Checking for NPM link");
             let newURL = yield (0, verifyURL_1.isPackageOnGitHub)(url);
             if (newURL) {
                 url = newURL;
@@ -81,7 +90,6 @@ function ProcessURL(url, urlNum) {
         }
         if (repoInfo) {
             const { owner, repo } = repoInfo;
-            console.log("Git Repo Grabbed : " + owner + " " + repo + " " + urlNum);
             if (owner && repo) {
                 totalTime.StartTime();
                 ranker.SetURL = url;
@@ -102,12 +110,10 @@ function ProcessURL(url, urlNum) {
                 factorTime.Reset();
                 factorTime.StartTime();
                 if (urlNum > 0) {
-                    console.log("Checking RampUp for URL: " + url);
                     //Check Rampup
                     ranker.SetRampUp = yield (0, RampUpMetric_1.displayRampupScore)(owner, repo);
                 }
                 else {
-                    console.log("Cloning Repo from Master");
                     ranker.SetRampUp = yield (0, repoClone_1.cloneRepository)(url);
                 }
                 ranker.SetRampUpLatency = factorTime.GetTime();
@@ -123,12 +129,10 @@ function ProcessURL(url, urlNum) {
             }
             else {
                 ranker.SetURL = url;
-                console.log("Unable to connecto to repo, could not find the owner name and the repo name");
             }
         }
         else {
             ranker.SetURL = url;
-            console.log("Unable to connecto to repo");
         }
         TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
             RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
@@ -148,7 +152,6 @@ fs.stat(fileLocation, (err, stats) => {
         }
     }
     else {
-        console.log('\nNot a File');
         process.exit(1);
     }
     //close error things etc etc    

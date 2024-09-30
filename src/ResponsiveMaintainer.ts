@@ -1,3 +1,16 @@
+/*
+ * Correctness.ts
+ * 
+ * Description:
+ * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues
+ * 
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -40,7 +53,6 @@ async function fetchPaginatedData(url: string): Promise<any[]> {
         // Check for the "Link" header to see if there's a next page
         nextPageUrl = getNextPage(response.headers.link || null);
       } catch (error) {
-        console.error(`Error fetching data from ${nextPageUrl}:`, error);
         return results; // Return what we have in case of failure
       }
     }
@@ -71,14 +83,12 @@ async function getPullRequests(owner: string, repo: string) {
   
   // Main function to calculate the "Responsive Maintainer" metric
   export async function calculateResponsiveMaintainer(owner: string, repo: string) {
-    console.log(`Fetching data for ${owner}/${repo}...`);
   
     // Fetch pull requests and issues
     const pullRequests = await getPullRequests(owner, repo);
     const issues = await getIssues(owner, repo);
   
     if (!pullRequests || !issues) {
-      console.error('Failed to fetch data from GitHub.');
       return;
     }
   

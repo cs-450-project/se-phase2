@@ -1,3 +1,16 @@
+/*
+ * Master.ts
+ * 
+ * Description:
+ * This file compiles all the necessary files for scoring the URLs
+ * 
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+
 import { UrlProcessor } from "./TestParser";
 import { SendToOutput } from "./TestOutput";
 import { Calculate } from "./TestRanker";
@@ -35,10 +48,8 @@ async function ProcessURL(url: string, urlNum: number){
     const totalTime = new Timer();
     const factorTime = new Timer();
     let repoInfo;
-    console.log(urlNum);
     
     if(isNpmLink(url)){
-        console.log("Checking for NPM link");
         let newURL = await isPackageOnGitHub(url);
         if(newURL){
             url = newURL;
@@ -57,7 +68,6 @@ async function ProcessURL(url: string, urlNum: number){
     if(repoInfo){
 
         const { owner, repo } = repoInfo;
-        console.log("Git Repo Grabbed : " + owner + " " + repo + " " + urlNum);
 
         if(owner && repo){
             totalTime.StartTime();
@@ -83,12 +93,10 @@ async function ProcessURL(url: string, urlNum: number){
 
             factorTime.StartTime();
             if(urlNum > 0){
-                console.log("Checking RampUp for URL: " + url);
                 //Check Rampup
                 ranker.SetRampUp = await displayRampupScore(owner, repo);
             }
             else{
-                console.log("Cloning Repo from Master");
                 ranker.SetRampUp = await cloneRepository(url);
             }
             ranker.SetRampUpLatency = factorTime.GetTime();
@@ -106,12 +114,10 @@ async function ProcessURL(url: string, urlNum: number){
         }
         else{
             ranker.SetURL = url;
-            console.log("Unable to connecto to repo, could not find the owner name and the repo name");
         }
     }
     else{
         ranker.SetURL = url;
-        console.log("Unable to connecto to repo");
     }
 
     SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
@@ -136,7 +142,6 @@ fs.stat(fileLocation, (err, stats) => {
         }
     }
     else{
-        console.log('\nNot a File');
         process.exit(1);
     }
     //close error things etc etc    

@@ -18,7 +18,7 @@ export class UrlProcessor {
             });
         } 
         catch (err) {
-            console.error('Error reading the file:', err);
+
         }
     }
 }

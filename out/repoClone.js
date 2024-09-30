@@ -1,4 +1,15 @@
 "use strict";
+/*
+ * Correctness.ts
+ *
+ * Description:
+ * Clones the repo provided and then calculates the RampUp based on that repo
+ *
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -53,7 +64,6 @@ var readmeContent = "";
 function cloneRepository(repoUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log("Attempting to clone repository...");
             //Only clone if the directory does not exist
             if (!fs.existsSync(newDirectory)) {
                 yield git.clone(repoUrl, newDirectory);
@@ -75,7 +85,6 @@ function cloneRepository(repoUrl) {
         } //end try statement
         catch (error) {
             //In case the repository fails to clone
-            console.error('Failed to clone repository :(');
             return -1;
         } //end catch statement
     });
@@ -85,9 +94,6 @@ function checkFiles(directory) {
     return __awaiter(this, void 0, void 0, function* () {
         //Get all the files in the directory
         const dirFiles = fs.readdirSync(directory);
-        //List all of the files that are in the directory
-        console.log("Files in the directory: ", dirFiles);
-        console.log(dirFiles.length);
         //Check if the files in the directory match the files that we want to check
         for (let i = 0; i < dirFiles.length; i++) {
             if (dirFiles[i] == "README.md") {
@@ -96,25 +102,24 @@ function checkFiles(directory) {
                 break;
             } //end if statement
         } //end for loop
-        console.log("testing");
     });
 } //end checkFiles function
 function analyzeReadme(readmeContent) {
     return __awaiter(this, void 0, void 0, function* () {
         //Checking to see which sections are contained in the README file
-        if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started")) {
+        if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions")) {
+        if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Usage")) {
+        if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
             rampScore += 10;
         } //end if statement
         if (readmeContent.includes("## Contact Information")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Configuration")) {
+        if (readmeContent.includes("## Configuration") || readmeContent.includes("## configuration")) {
             rampScore += 10;
         } //end if statement"
     });

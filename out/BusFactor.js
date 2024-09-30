@@ -1,4 +1,15 @@
 "use strict";
+/*
+ * BusFactor.ts
+ *
+ * Description:
+ * This file uses the GitHubAPI to calculate the BusFactor
+ *
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -58,7 +69,6 @@ function getCommits(owner, repo) {
             return moduleDeveloperMap;
         }
         catch (error) {
-            console.error(`Error fetching commits: ${error}`);
             return null;
         }
     });
@@ -81,7 +91,6 @@ function getBusFactor(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         const moduleDeveloperMap = yield getCommits(owner, repo);
         if (!moduleDeveloperMap) {
-            console.log('Failed to retrieve module-developer mapping.');
             return 0;
         }
         // Calculate the Bus Factor based on non-overlapping developer work

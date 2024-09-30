@@ -1,3 +1,16 @@
+/*
+ * BusFactor.ts
+ * 
+ * Description:
+ * This file uses the GitHubAPI to calculate the BusFactor
+ * 
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -57,7 +70,6 @@ async function getCommits(owner: string, repo: string) {
     return moduleDeveloperMap;
 
   } catch (error) {
-    console.error(`Error fetching commits: ${error}`);
     return null;
   }
 }
@@ -83,7 +95,6 @@ export async function getBusFactor(owner: string, repo: string) {
   const moduleDeveloperMap = await getCommits(owner, repo);
 
   if (!moduleDeveloperMap) {
-    console.log('Failed to retrieve module-developer mapping.');
     return 0;
   }
 

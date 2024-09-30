@@ -1,5 +1,15 @@
 "use strict";
-//Calculations of the Rampup metric will be done here by utilising the Github API
+/*
+ * Correctness.ts
+ *
+ * Description:
+ * Calculations of the Rampup metric will be done here by utilising the Github API
+ *
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -50,7 +60,7 @@ const GITHUB_API_BASE_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 //Throw an error if the token is not found
 if (!GITHUB_TOKEN) {
-    throw new Error("Github Token not found in environment variables.");
+    process.exit(1);
 } //end if statement
 //Function that will get the README file from the repository
 function getReadme(owner, repo) {
@@ -66,7 +76,6 @@ function getReadme(owner, repo) {
             return response.data.content;
         } //end try statement
         catch (error) {
-            console.error('Failed to get README file :(');
         } //end catch statement
     });
 } //end getReadme function
@@ -76,7 +85,7 @@ function analyzeReadme(readmeContent) {
         if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation")) {
+        if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
             rampScore += 10;
         } //end if statement
         if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
@@ -97,7 +106,6 @@ function analyzeReadmeContent(owner, repo) {
         const readmeContent = yield getReadme(owner, repo);
         // Check if the readmeContent is null before decoding
         if (!readmeContent) {
-            console.error('No README content found to analyze.');
             return; // Exit if there's no content
         }
         //now we need to decode the content of the README file
@@ -109,7 +117,7 @@ function analyzeReadmeContent(owner, repo) {
 } //end analyzeReadmeContent function
 function displayRampupScore(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        rampScore = 0;
+        //rampScore = 0;
         yield analyzeReadmeContent(owner, repo);
         return rampScore;
     });

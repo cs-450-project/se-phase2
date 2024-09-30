@@ -56,11 +56,9 @@ export async function isPackageOnGitHub(packageName: string): Promise<string | n
             }
         }
 
-        console.log("No GitHub repository found for package.");
         return null; // Return null if no repository URL is found
 
     } catch (error) {
-        console.log(`Failed to fetch package information for ${packageName}`);
         return null; // Return null in case of error
     }
 }

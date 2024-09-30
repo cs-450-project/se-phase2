@@ -1,4 +1,14 @@
-﻿//Calculations of the Rampup metric will be done here by utilising the Github API
+﻿/*
+ * Correctness.ts
+ * 
+ * Description:
+ * Calculations of the Rampup metric will be done here by utilising the Github API
+ * 
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
 
 //Ensure that we have the required libraries
 import axios from 'axios';
@@ -19,7 +29,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 //Throw an error if the token is not found
 if (!GITHUB_TOKEN) {
-    throw new Error("Github Token not found in environment variables.");
+    process.exit(1);
 }//end if statement
 
 //Function that will get the README file from the repository
@@ -44,8 +54,6 @@ async function getReadme(owner: string, repo: string) {
 
     catch (error) {
 
-        console.error('Failed to get README file :(');
-
     }//end catch statement
 
 }//end getReadme function
@@ -59,7 +67,7 @@ async function analyzeReadme(readmeContent: string) {
 
     }//end if statement
 
-    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation")) {
+    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
 
         rampScore += 10;
 
@@ -96,7 +104,6 @@ async function analyzeReadmeContent(owner:string, repo:string) {
 
      // Check if the readmeContent is null before decoding
      if (!readmeContent) {
-        console.error('No README content found to analyze.');
         return; // Exit if there's no content
     }
 
@@ -112,7 +119,7 @@ async function analyzeReadmeContent(owner:string, repo:string) {
 
 export async function displayRampupScore(owner: string, repo: string) {
 
-    rampScore = 0;
+    //rampScore = 0;
 
     await analyzeReadmeContent(owner, repo);
 

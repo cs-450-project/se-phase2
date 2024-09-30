@@ -176,18 +176,3 @@ export class Calculate {
     }
 
 }
-/*
-const x = new Calculate();
-x.SetBusFactor = Math.random() * (30 - 1) + 1;
-x.SetCorrectness = Math.random() * (30 - 1) + 1;
-x.SetLicense = Math.random() < 0.5 ? 0 : 1;
-x.SetRampUp = Math.random() * (30 - 1) + 1;
-x.SetResponsiveMaintainer = Math.random() * (30 - 1) + 1;
-
-console.log(x.GetBusFactor);
-console.log(x.GetCorrectness);
-console.log(x.GetLicense);
-console.log(x.GetRampUp);
-console.log(x.GetResponsiveMaintainer);
-console.log(x.GetNetScore);
-*/
