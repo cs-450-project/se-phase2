@@ -1,1 +1,10 @@
-node run.js $1
+
+if [ "$1" = "install" ]; then
+node install.js
+exit 
+fi
+if [ "$1" = "test" ]; then
+node test.js
+exit 
+fi
+node Master.js $1
