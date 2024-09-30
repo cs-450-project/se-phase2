@@ -3,8 +3,13 @@
  * 
  * Description:
  * This file will take a NPMJS link, and find a github repo link to return. If it does not find one, then it returns null
+ * It does this by first taking in an entire npm URL. It will extract the package name from said URL, and concatenate it to the npm registry URL.
+ * Once this has been done, the file will fetch the package data from the npm registry.
+ *  It will then check if the repository field exists and points to GitHub.
+ * If it exists, it will get the repository URL and convert it to HTTPS format.
+ * Finally, the system will return the formatted URL for use in the rest of the program.
  * 
- * Author: Jacob Esparza
+ * Author: Logan Kurker
  * Date: 9-29-2024
  * Version: 1.0
  * 

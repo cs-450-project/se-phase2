@@ -2,7 +2,10 @@
  * Correctness.ts
  * 
  * Description:
- * Clones the repo provided and then calculates the RampUp based on that repo
+ * Clones the repo provided and then calculates the RampUp based on that repo. 
+ * It will first check to see if the directory exists, and if it does, it will delete the contents and then clone the repo again.
+ * This is to ensure that the correct repository is cloned and that the ramp-up score is accurate.
+ * To calculate the ramp-up score, the program will check the README file for certain sections. If the sections are present, the score will increase.
  * 
  * Author: Logan Kurker
  * Date: 9-29-2024
