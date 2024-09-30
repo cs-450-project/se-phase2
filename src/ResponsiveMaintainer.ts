@@ -2,7 +2,9 @@
  * Correctness.ts
  * 
  * Description:
- * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues
+ * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues.
+ * We calculate this by adding up how long some of the issues took to be fixed and storing the total. 
+ * Then we divide it by how many issues there were. 
  * 
  * Author: Brayden Devenport
  * Date: 9-29-2024
