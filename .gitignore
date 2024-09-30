@@ -4,6 +4,7 @@ node_modules/
 # Compiled JavaScript files
 dist/
 build/
+coverage/
 
 # TypeScript compiler cache
 *.tsbuildinfo
