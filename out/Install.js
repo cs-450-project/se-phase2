@@ -27,5 +27,6 @@ installPak('path');
 installPak('simple-git');
 installPak('axios');
 installPak('dotenv');
+installPak('winston');
 process.exit(0);
 //# sourceMappingURL=Install.js.map

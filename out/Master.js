@@ -1,18 +1,4 @@
 "use strict";
-/*
- * Master.ts
- *
- * Description:
- * This file compiles all the necessary files for scoring the URLs
- * It will time each metric collected and collect the metric information.
- * It will then send it to the output method using JSON
- * It also does extra things to accomplish this, such as getting repo/owner names or testing if a link is from npmjs
- *
- * Author: Jacob Esparza
- * Date: 9-29-2024
- * Version: 1.0
- *
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -45,7 +31,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+/*
+ * Master.ts
+ *
+ * Description:
+ * This file compiles all the necessary files for scoring the URLs
+ * It will time each metric collected and collect the metric information.
+ * It will then send it to the output method using JSON
+ * It also does extra things to accomplish this, such as getting repo/owner names or testing if a link is from npmjs
+ *
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 const URLParser_1 = require("./URLParser");
 const Output_1 = require("./Output");
 const Ranker_1 = require("./Ranker");
@@ -57,6 +60,7 @@ const LicenseMetric_1 = require("./LicenseMetric");
 const RampUpMetric_1 = require("./RampUpMetric");
 const VerifyURL_1 = require("./VerifyURL");
 const RepoClone_1 = require("./RepoClone");
+const Logger_1 = __importDefault(require("./Logger"));
 const fs = __importStar(require("fs"));
 function GetRepoInfo(url) {
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
@@ -144,6 +148,7 @@ function ProcessURL(url, urlNum) {
         ranker.Clear();
     });
 }
+Logger_1.default.info('Program Started');
 //Read Input
 const fileLocation = process.argv[2]; //Gives argument three, which *should* be the file location
 //Outputs file

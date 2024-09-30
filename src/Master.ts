@@ -12,7 +12,6 @@
  * Version: 1.0
  * 
  */
-
 import { UrlProcessor } from "./URLParser";
 import { SendToOutput } from "./Output";
 import { Calculate } from "./Ranker";
@@ -24,6 +23,7 @@ import {checkLicenseCompatibility} from './LicenseMetric'
 import {displayRampupScore} from './RampUpMetric'
 import {isPackageOnGitHub} from './VerifyURL'
 import {cloneRepository} from './RepoClone'
+import logger from './Logger';
 import * as fs from 'fs';
 
 function GetRepoInfo(url: string): {owner: string; repo: string} | null{
@@ -131,7 +131,7 @@ async function ProcessURL(url: string, urlNum: number){
     
 }
 
-
+logger.info('Program Started');
 //Read Input
 const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
 //Outputs file
