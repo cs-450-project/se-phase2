@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "axios": "^1.7.7",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5"
   },
   "name": "cs45000-ece46100",
@@ -21,7 +22,6 @@
     "start-CorrectnessMetric": "node dist/CorrectnessMetric.js",
     "start-ResponsiveMaintainer": "node dist/ResponsiveMaintainer.js",
     "start-LicenseMetric": "node dist/LicenseMetric.js"
-   
   },
   "keywords": [],
   "author": "",
