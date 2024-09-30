@@ -2,7 +2,10 @@
  * Correctness.ts
  * 
  * Description:
- * This file uses the GitHubAPI to find the license compatability based on the requirements document
+ * This file uses the GitHubAPI to find the license compatibility based on the requirements document.
+ * We look to see if the repository contains a LICENSE file and if so we look to see if contains the compatible licenses list. 
+ * We look README files to see if the license is there if so then we compare it to compatiblelicenses list.
+ * If Compatible we output a 1 and if not then output a 0. 
  * 
  * Author: Brayden Devenport
  * Date: 9-29-2024
