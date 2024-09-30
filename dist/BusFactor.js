@@ -13,81 +13,90 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBusFactor = getBusFactor;
-//Promised-based HTTP client to make requests to the GitHub API
+/*
+ * BusFactor.ts
+ *
+ * Description:
+ * This file uses the GitHubAPI to calculate the BusFactor.
+ * The BusFactor calulation is made by going to the commits made in the repository seeing how manyy comtis have happend in the last year.
+ * Then looks at those commits made and counts how many people worked from the past year.
+ * It will output how many people have worked on it in a years time.
+ * If there are more than 16 people who have worked on it then just output the 16.
+ *
+ *
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
-//loads environment variables GITHUB_TOKEN from .env file
+const dayjs_1 = __importDefault(require("dayjs"));
+// Loads environment variables (GITHUB_TOKEN) from .env file
 dotenv_1.default.config();
-//Retrieves Github Token form .env (environment variable file)
+// Retrieves GitHub Token from .env file
 const token = process.env.GITHUB_TOKEN;
 const GITHUB_API_BASE_URL = 'https://api.github.com';
-// Function to fetch commits and map developers to modules (files/directories)
+const ONE_YEAR_AGO = (0, dayjs_1.default)().subtract(1, 'year').toISOString();
+// Cap for maximum contributors
+const CONTRIBUTOR_CAP = 16;
+// Fetches the list of commits from a GitHub repository in the last year
 function getCommits(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Send GET request to fetch commits (100 commits per page)
-            const response = yield axios_1.default.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/commits?per_page=100`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            // Extract commits data
-            const commits = response.data;
-            // Dictionary to map modules (files/directories) to developers
-            const moduleDeveloperMap = {};
-            // Process each commit to map developers to the files they've worked on
-            for (const commit of commits) {
-                const author = commit.commit.author.name;
-                const commitUrl = commit.url;
-                // Fetch the specific commit data to get the list of modified files
-                const commitDetails = yield axios_1.default.get(commitUrl, {
+            const contributors = new Set();
+            let page = 1;
+            // Fetch commits page by page (100 commits per page)
+            while (true) {
+                const response = yield axios_1.default.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/commits`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
+                    params: {
+                        per_page: 100,
+                        page: page,
+                        since: ONE_YEAR_AGO,
+                    },
                 });
-                const filesChanged = commitDetails.data.files;
-                // Map the developer to each file/module they've worked on
-                filesChanged.forEach((file) => {
-                    const module = file.filename.split('/')[0]; // First part of the file path, treat it as a module
-                    if (!moduleDeveloperMap[module]) {
-                        moduleDeveloperMap[module] = new Set();
+                const commits = response.data;
+                // If no more commits, break the loop
+                if (commits.length === 0)
+                    break;
+                // Collect contributors from each commit
+                commits.forEach((commit) => {
+                    if (commit.author && commit.author.login) {
+                        contributors.add(commit.author.login);
                     }
-                    moduleDeveloperMap[module].add(author);
                 });
+                // Stop if we've reached the contributor cap
+                if (contributors.size >= CONTRIBUTOR_CAP)
+                    break;
+                page++; // Move to the next page
             }
-            return moduleDeveloperMap;
+            return contributors;
         }
         catch (error) {
-            console.error(`Error fetching commits: ${error}`);
+            //Error fetching commits
             return null;
         }
     });
 }
-// Function to calculate the Bus Factor based on module-developer mapping
-function calculateBusFactor(moduleDeveloperMap) {
-    let busFactor = 0;
-    // Iterate over each module and count unique developers
-    for (const module in moduleDeveloperMap) {
-        const developers = moduleDeveloperMap[module];
-        // If only one developer is working on a module, increase the Bus Factor
-        if (developers.size === 1) {
-            busFactor++;
-        }
-    }
-    return busFactor;
+// Calculates the Bus Factor based on the number of contributors
+function calculateBusFactor(contributors) {
+    return Math.min(contributors.size, CONTRIBUTOR_CAP);
 }
-// Main function to calculate Bus Factor
+// Main function to calculate the Bus Factor of a GitHub repository
 function getBusFactor(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        const moduleDeveloperMap = yield getCommits(owner, repo);
-        if (!moduleDeveloperMap) {
-            console.log('Failed to retrieve module-developer mapping.');
-            return;
+        const contributors = yield getCommits(owner, repo);
+        if (!contributors) {
+            // Failed to retrieve contributors
+            return 0;
         }
-        // Calculate the Bus Factor based on non-overlapping developer work
-        const busFactor = calculateBusFactor(moduleDeveloperMap);
-        console.log(busFactor);
+        // Calculate Bus Factor
+        const busFactor = calculateBusFactor(contributors);
+        // Output the result
+        return busFactor;
     });
 }
-//getBusFactor('facebook', 'react');
 //# sourceMappingURL=BusFactor.js.map
