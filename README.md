@@ -19,10 +19,10 @@ This program runs through a text file of npmjs or github links and ranks them ba
 
 This following is a list of links you could test to get metrics. Simply copy and past them into a text file. Then, run the program as described above to score these packages
 
-https://github.com/cloudinary/cloudinary_npm
-https://www.npmjs.com/package/express
-https://github.com/nullivex/nodist
-https://github.com/lodash/lodash
-https://www.npmjs.com/package/browserify
+https://github.com/cloudinary/cloudinary_npm  
+https://www.npmjs.com/package/express  
+https://github.com/nullivex/nodist  
+https://github.com/lodash/lodash  
+https://www.npmjs.com/package/browserify  
 
 The program will send the output to the standard out in JSON format

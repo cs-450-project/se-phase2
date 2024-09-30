@@ -19,22 +19,22 @@ function runCommand(fname) {
     const command = `node ${file}`;
     try {
         (0, node_child_process_1.execSync)(command, { stdio: 'inherit' });
-        console.log(`Successfully ran ${file}`);
+        //console.log(`Successfully ran ${file}`);
     }
     catch (error) {
-        console.error(`Failed to run ${file}`);
+        // console.error(`Failed to run ${file}`)  ;
     }
 }
 function runMaster(fname, urlFile) {
     let file = __dirname + `//` + fname;
     const command = `node ${file} ${urlFile}`;
-    console.log(`running subprogram ${file} to test ${urlFile}`);
+    //console.log(`running subprogram ${file} to test ${urlFile}`);
     try {
         (0, node_child_process_1.execSync)(command, { stdio: 'inherit' });
-        console.log(`Successfully ran ${urlFile}`);
+        //console.log(`Successfully ran ${urlFile}`);
     }
     catch (error) {
-        console.error(`Failed to run ${urlFile}`);
+        //  console.error(`Failed to run ${urlFile}`) ; 
     }
 }
 var n = 0; //root command loc
@@ -52,11 +52,11 @@ try {
     n = n + 1;
 }
 catch (error) {
-    console.error(`Failed to run program`);
+    // console.error(`Failed to run program`);
 }
 const commandString = process.argv[n];
 if (commandString == null) {
-    console.error(`Failed to run, invalid arguments`);
+    // console.error(`Failed to run, invalid arguments`);
     process.exit(0);
 }
 if (commandString == 'install') {

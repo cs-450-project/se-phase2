@@ -44,7 +44,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const URLParser_1 = require("./URLParser");
-const TestOutput_1 = require("./TestOutput");
+const Output_1 = require("./Output");
 const Ranker_1 = require("./Ranker");
 const Timer_1 = require("./Timer");
 const BusFactor_1 = require("./BusFactor");
@@ -53,7 +53,7 @@ const CorrectnessMetric_1 = require("./CorrectnessMetric");
 const LicenseMetric_1 = require("./LicenseMetric");
 const RampUpMetric_1 = require("./RampUpMetric");
 const VerifyURL_1 = require("./VerifyURL");
-const repoClone_1 = require("./repoClone");
+const RepoClone_1 = require("./RepoClone");
 const fs = __importStar(require("fs"));
 function GetRepoInfo(url) {
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
@@ -100,7 +100,7 @@ function ProcessURL(url, urlNum) {
                 factorTime.Reset();
                 factorTime.StartTime();
                 //Check Correctness
-                ranker.SetCorrectness = Number(yield (0, CorrectnessMetric_1.evaluateCorrectness)(owner, repo));
+                ranker.SetCorrectness = Number(yield (0, CorrectnessMetric_1.calculateCorrectnessScore)(owner, repo));
                 ranker.SetCorrectnessLatency = factorTime.GetTime();
                 factorTime.Reset();
                 factorTime.StartTime();
@@ -114,7 +114,7 @@ function ProcessURL(url, urlNum) {
                     ranker.SetRampUp = yield (0, RampUpMetric_1.displayRampupScore)(owner, repo);
                 }
                 else {
-                    ranker.SetRampUp = yield (0, repoClone_1.cloneRepository)(url);
+                    ranker.SetRampUp = yield (0, RepoClone_1.cloneRepository)(url);
                 }
                 ranker.SetRampUpLatency = factorTime.GetTime();
                 factorTime.Reset();
@@ -134,7 +134,7 @@ function ProcessURL(url, urlNum) {
         else {
             ranker.SetURL = url;
         }
-        TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
+        Output_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
             RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
             BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency,
             License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency });

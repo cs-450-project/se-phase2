@@ -124,4 +124,4 @@ function analyzeReadme(readmeContent) {
         } //end if statement"
     });
 } //end analyzeReadme function
-//# sourceMappingURL=repoClone.js.map
+//# sourceMappingURL=RepoClone.js.map

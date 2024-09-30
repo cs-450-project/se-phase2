@@ -1,15 +1,4 @@
 "use strict";
-/*
- * Correctness.ts
- *
- * Description:
- * This file uses the GitHubAPI to calculate the Correctness
- *
- * Author: Brayden Devenport
- * Date: 9-29-2024
- * Version: 1.0
- *
- */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -23,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.evaluateCorrectness = evaluateCorrectness;
+exports.calculateCorrectnessScore = calculateCorrectnessScore;
 //Promised-based HTTP client to make requests to the GitHub API
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -32,63 +21,63 @@ dotenv_1.default.config();
 //Retrieves Github Token form .env (environment variable file)
 const token = process.env.GITHUB_TOKEN;
 const GITHUB_API_BASE_URL = 'https://api.github.com';
-function getTestCoverageReport(owner, repo) {
+// Helper function to check if a file exists in the repository
+function fileExists(owner, repo, filePath) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Search for test coverage report files in the repository
-            const response = yield axios_1.default.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents`, // This fetches the contents of the repo
-            {
+            const response = yield axios_1.default.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents/${filePath}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            // Look for a coverage file (e.g., coverage.json or coverage.xml)
-            const files = response.data;
-            //Looks for any files names that have coverage in them
-            const coverageFile = files.find((file) => file.name.includes('coverage'));
-            //If there is no converage file
-            if (!coverageFile) {
-                return null;
-            }
-            // Fetch the contents of the coverage file
-            const coverageResponse = yield axios_1.default.get(coverageFile.download_url, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return coverageResponse.data; // Return the content of the coverage report
+            return response.status === 200;
         }
         catch (error) {
-            return null;
+            return false;
         }
     });
 }
-//Function that calculates the score
-function calculateCorrectness(coverageReport) {
-    const { totalTests, passedTests } = coverageReport;
-    //If no test exsits 
-    if (totalTests === 0) {
-        return 0;
-    }
-    //Calculation
-    const passRate = (passedTests / totalTests) * 100;
-    return passRate;
-}
-// Main function to evaluate correctness of a repository
-function evaluateCorrectness(owner, repo) {
+// Function to get the number of contributors in the repo
+function getContributorsCount(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        const coverageReport = yield getTestCoverageReport(owner, repo);
-        if (!coverageReport) {
-            // console.log('No coverage report found, cannot calculate correctness.');
+        try {
+            const response = yield axios_1.default.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contributors`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return response.data.length;
+        }
+        catch (error) {
+            //Error fetching contributors
             return 0;
         }
-        // Assuming the report has totalTests and passedTests fields
-        calculateCorrectness({
-            totalTests: coverageReport.totalTests,
-            passedTests: coverageReport.passedTests,
-        });
     });
 }
-// Example usage (replace with your GitHub owner and repo)
-//evaluateCorrectness('gcovr', 'gcovr');
+// Function to calculate correctness score based on contributors, README, and test files
+function calculateCorrectnessScore(owner, repo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let score = 0;
+        // 1. Check number of contributors
+        const contributorsCount = yield getContributorsCount(owner, repo);
+        const contributorScore = Math.min(contributorsCount, 30); // Cap the score at 30
+        score += contributorScore;
+        // 2. Check if README file exists
+        const readmeExists = yield fileExists(owner, repo, 'README.md');
+        if (readmeExists) {
+            score += 20;
+        }
+        // 3. Check if test case files exist
+        const testFiles = ["test", "tests", "spec"]; // common test directories
+        for (const file of testFiles) {
+            const testFileExists = yield fileExists(owner, repo, file);
+            if (testFileExists) {
+                score += 50;
+                break; // Stop once we find any test file
+            }
+        }
+        //Correctness Score
+        return score;
+    });
+}
 //# sourceMappingURL=CorrectnessMetric.js.map

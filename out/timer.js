@@ -1,4 +1,15 @@
 "use strict";
+/*
+ * Timer.ts
+ *
+ * Description:
+ * This file will start a timer and return the time elapsed.
+ *
+ * Author: Kameran Parker
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Timer = void 0;
 class Timer {

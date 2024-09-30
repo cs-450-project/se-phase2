@@ -16,7 +16,7 @@ import { Calculate } from "./Ranker";
 import { Timer } from "./Timer";
 import {getBusFactor} from './BusFactor';
 import {calculateResponsiveMaintainer} from './ResponsiveMaintainer'
-import {evaluateCorrectness} from './CorrectnessMetric'
+import {calculateCorrectnessScore} from './CorrectnessMetric'
 import {checkLicenseCompatibility} from './LicenseMetric'
 import {displayRampupScore} from './RampUpMetric'
 import {isPackageOnGitHub} from './VerifyURL'
@@ -80,7 +80,7 @@ async function ProcessURL(url: string, urlNum: number){
 
             factorTime.StartTime();
             //Check Correctness
-            ranker.SetCorrectness = Number(await evaluateCorrectness(owner, repo));
+            ranker.SetCorrectness = Number(await calculateCorrectnessScore(owner, repo));
             ranker.SetCorrectnessLatency = factorTime.GetTime();
             factorTime.Reset();
             
