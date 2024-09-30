@@ -60,21 +60,21 @@ function getRepoLicense(owner, repo) {
             // Check if the license contains relevant GPL versions
             if (licenseContent.includes('GNU GENERAL PUBLIC LICENSE')) {
                 if (licenseContent.includes('Version 2')) {
-                    console.log('Detected GPL-2.0');
+                    //Detected GPL-2.0
                     return 'gpl-2.0';
                 }
                 else if (licenseContent.includes('Version 3')) {
-                    console.log('Detected GPL-3.0');
+                    //Detected GPL-3.0
                     return 'gpl-3.0';
                 }
             }
             if (licenseContent.includes('GNU LESSER GENERAL PUBLIC LICENSE')) {
                 if (licenseContent.includes('Version 2.1')) {
-                    console.log('Detected LGPL-2.0');
+                    //Detected LGPL-2.0
                     return 'lgpl-2.1';
                 }
                 else if (licenseContent.includes('Version 3')) {
-                    console.log('Detected LGPL-3.0');
+                    //Detected LGPL-3.0
                     return 'lgpl-3.0';
                 }
             }
@@ -105,13 +105,13 @@ function getLicenseFromReadme(owner, repo) {
                 return licenseSection[1].trim();
             }
             else {
-                console.log('No license section found in README.');
+                //No license section found in README.
                 return;
             }
         }
         catch (error) {
-            console.error(`Error fetching README file: ${error}`);
-            return;
+            //Run into an error then 
+            return 0;
         }
     });
 }
@@ -120,17 +120,19 @@ function checkLicenseCompatibility(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         const licenseContent = yield getRepoLicense(owner, repo);
         if (!licenseContent) {
-            console.log('License information could not be retrieved.');
+            //License information could not be retrieved
             return 0;
         }
         // Check if the license content contains any compatible license keywords
         const isCompatible = compatibleLicenses.some(license => licenseContent.toLowerCase().includes(license));
         if (isCompatible) {
-            console.log(`The license is compatible with LGPL-2.1.`);
+            //Debug Output
+            //The license is compatible with LGPL-2.1 so return 1
             return 1;
         }
         else {
-            console.log(`The license is NOT compatible with LGPL-2.1.`);
+            //Debug Output
+            //The license is NOT compatible with LGPL-2.1 so return 0
             return 0;
         }
     });
