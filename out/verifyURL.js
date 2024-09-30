@@ -5,7 +5,7 @@
  * Description:
  * This file will take a NPMJS link, and find a github repo link to return. If it does not find one, then it returns null
  *
- * Author: Jacob Esparza
+ * Author:
  * Date: 9-29-2024
  * Version: 1.0
  *

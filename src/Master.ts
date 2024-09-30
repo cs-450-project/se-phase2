@@ -3,6 +3,9 @@
  * 
  * Description:
  * This file compiles all the necessary files for scoring the URLs
+ * It will time each metric collected and collect the metric information.
+ * It will then send it to the output method using JSON
+ * It also does extra things to accomplish this, such as getting repo/owner names or testing if a link is from npmjs
  * 
  * Author: Jacob Esparza
  * Date: 9-29-2024
@@ -91,7 +94,7 @@ async function ProcessURL(url: string, urlNum: number){
             factorTime.Reset();
 
             factorTime.StartTime();
-            if(urlNum > 0){
+            if(urlNum > 1){
                 //Check Rampup
                 ranker.SetRampUp = await displayRampupScore(owner, repo);
             }

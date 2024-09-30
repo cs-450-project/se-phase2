@@ -34,9 +34,9 @@ export class Calculate {
     private licenseWeight: number = 0.3;
 
     private rampUpMax: number = 50;
-    private corrrectnessMax: number = 20;
-    private busFactorMax: number = 20;
-    private responsiveMaintainerMax: number = 10;
+    private corrrectnessMax: number = 100;
+    private busFactorMax: number = 16;
+    private responsiveMaintainerMax: number = 7;
     private licenseMax: number = 1;
 
 
@@ -75,9 +75,12 @@ export class Calculate {
     }
 
     get GetNetScore(): number {
-        this.netScore = (this.rampUp * this.rampUpWeight) + (this.correctness * this.corrrectnessWeight) 
-        + (this.busFactor * this.busFactorWeight) + (this.responsiveMaintainer * this.responsiveMaintainerWeight) 
-        + (this.license * this.licenseWeight)
+        this.netScore = (this.rampUp * this.rampUpWeight) + 
+                        (this.correctness * this.corrrectnessWeight) + 
+                        (this.busFactor * this.busFactorWeight) + 
+                        ((1 - this.responsiveMaintainer) * this.responsiveMaintainerWeight) + 
+                        (this.license * this.licenseWeight)
+                        
         if(this.netScore > 1){
             this.netScore = 1;
         }

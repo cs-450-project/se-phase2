@@ -20,9 +20,9 @@ class Calculate {
         this.responsiveMaintainerWeight = 0.3;
         this.licenseWeight = 0.3;
         this.rampUpMax = 50;
-        this.corrrectnessMax = 20;
-        this.busFactorMax = 20;
-        this.responsiveMaintainerMax = 10;
+        this.corrrectnessMax = 100;
+        this.busFactorMax = 16;
+        this.responsiveMaintainerMax = 7;
         this.licenseMax = 1;
         this.URL = "none";
         this.netScore = -1;
@@ -54,7 +54,7 @@ class Calculate {
     }
     get GetNetScore() {
         this.netScore = (this.rampUp * this.rampUpWeight) + (this.correctness * this.corrrectnessWeight)
-            + (this.busFactor * this.busFactorWeight) + (this.responsiveMaintainer * this.responsiveMaintainerWeight)
+            + (this.busFactor * this.busFactorWeight) + ((1 - this.responsiveMaintainer) * this.responsiveMaintainerWeight)
             + (this.license * this.licenseWeight);
         if (this.netScore > 1) {
             this.netScore = 1;
