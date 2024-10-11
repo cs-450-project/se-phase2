@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Run executable script
+
+# Install dependencies
+if [ "$1" = "install" ]; then
+    npm install
+    exit 0
+fi
+
+# Run tests
+if [ "$1" = "test" ]; then
+    npm run test
+    exit 0
+fi
+
+# Compile and run the code
+npm run build
+node out/Master.js $1
