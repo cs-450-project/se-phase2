@@ -9,7 +9,7 @@
     "outDir": "./out",
     "rootDir": "./src"
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "src/tests/**/*", "testingRepo/RampUpMetric.test.ts"],
   "exclude": ["node_modules", "out"]
 }
   

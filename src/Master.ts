@@ -12,18 +12,18 @@
  * Version: 1.0
  * 
  */
-import { UrlProcessor } from "./URLParser";
-import { SendToOutput } from "./Output";
-import { Calculate } from "./Ranker";
-import { Timer } from "./Timer";
-import {getBusFactor} from './BusFactor';
-import {calculateResponsiveMaintainer} from './ResponsiveMaintainer'
-import {calculateCorrectnessScore} from './CorrectnessMetric'
-import {checkLicenseCompatibility} from './LicenseMetric'
-import {displayRampupScore} from './RampUpMetric'
-import {isPackageOnGitHub} from './VerifyURL'
-import {cloneRepository} from './RepoClone'
-import logger from './Logger';
+import { UrlProcessor } from "./evaluators/URLParser";
+import { SendToOutput } from "./utils/Output";
+import { Calculate } from "./scores/Ranker";
+import { Timer } from "./utils/Timer";
+import {getBusFactor} from './metrics/BusFactor';
+import {calculateResponsiveMaintainer} from './metrics/ResponsiveMaintainer'
+import {calculateCorrectnessScore} from './metrics/CorrectnessMetric'
+import {checkLicenseCompatibility} from './metrics/LicenseMetric'
+import {displayRampupScore} from './metrics/RampUpMetric'
+import {isPackageOnGitHub} from './evaluators/VerifyURL'
+import {cloneRepository} from './evaluators/RepoClone'
+import logger from './utils/Logger';
 import * as fs from 'fs';
 
 function GetRepoInfo(url: string): {owner: string; repo: string} | null{
