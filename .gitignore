@@ -2,7 +2,7 @@
 node_modules/
 
 # Compiled JavaScript files
-dist/
+out/**/*.js
 build/
 coverage/
 
@@ -16,6 +16,8 @@ coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs
+*.log
 
 # IDE and Editor settings
 .vscode/
