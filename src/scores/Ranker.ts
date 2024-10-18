@@ -11,7 +11,7 @@
  */
 
 
-export class Calculate {
+export class Ranker {
 
     private URL: string;
     private netScore: number;
@@ -22,21 +22,21 @@ export class Calculate {
     private correctnessLatency: number;
     private busFactor: number;
     private busFactorLatency: number;
-    private responsiveMaintainer: number;
-    private responsiveMaintainerLatency: number;
+    private responsiveMaintainers: number;
+    private responsiveMaintainersLatency: number;
     private license: number;
     private licenseLatency: number;
 
     private rampUpWeight: number = 0.15;
     private corrrectnessWeight: number = 0.1;
     private busFactorWeight: number = 0.15;
-    private responsiveMaintainerWeight: number = 0.3;
+    private responsiveMaintainersWeight: number = 0.3;
     private licenseWeight: number = 0.3;
 
     private rampUpMax: number = 50;
     private corrrectnessMax: number = 100;
     private busFactorMax: number = 16;
-    private responsiveMaintainerMax: number = 7;
+    private responsiveMaintainersMax: number = 7;
     private licenseMax: number = 1;
 
 
@@ -51,8 +51,8 @@ export class Calculate {
         this.correctnessLatency = -1;
         this.busFactor = -1;
         this.busFactorLatency = -1;
-        this.responsiveMaintainer = -1;
-        this.responsiveMaintainerLatency = -1;
+        this.responsiveMaintainers = -1;
+        this.responsiveMaintainersLatency = -1;
         this.license = -1;
         this.licenseLatency = -1;
     }
@@ -78,7 +78,7 @@ export class Calculate {
         this.netScore = (this.rampUp * this.rampUpWeight) + 
                         (this.correctness * this.corrrectnessWeight) + 
                         (this.busFactor * this.busFactorWeight) + 
-                        ((1 - this.responsiveMaintainer) * this.responsiveMaintainerWeight) + 
+                        ((1 - this.responsiveMaintainers) * this.responsiveMaintainersWeight) + 
                         (this.license * this.licenseWeight)
                         
         if(this.netScore > 1){
@@ -143,20 +143,20 @@ export class Calculate {
         this.busFactorLatency = value;
     }
 
-    get GetResponsiveMaintainer(): number {
-        return  1 - this.responsiveMaintainer;
+    get GetResponsiveMaintainers(): number {
+        return  1 - this.responsiveMaintainers;
     }
 
-    set SetResponsiveMaintainer(value: number) {
-        this.responsiveMaintainer = this.Normalize(value, this.responsiveMaintainerMax);
+    set SetResponsiveMaintainers(value: number) {
+        this.responsiveMaintainers = this.Normalize(value, this.responsiveMaintainersMax);
     }
 
-    get GetResponsiveMaintainerLatency(): number {
-        return this.responsiveMaintainerLatency;
+    get GetResponsiveMaintainersLatency(): number {
+        return this.responsiveMaintainersLatency;
     }
 
-    set SetResponsiveMaintainerLatency(value: number) {
-        this.responsiveMaintainerLatency = value;
+    set SetResponsiveMaintainersLatency(value: number) {
+        this.responsiveMaintainersLatency = value;
     }
 
     get GetLicense(): number {
@@ -185,8 +185,8 @@ export class Calculate {
         this.correctnessLatency = -1;
         this.busFactor = -1;
         this.busFactorLatency = -1;
-        this.responsiveMaintainer = -1;
-        this.responsiveMaintainerLatency = -1;
+        this.responsiveMaintainers = -1;
+        this.responsiveMaintainersLatency = -1;
         this.license = -1;
         this.licenseLatency = -1;
     }

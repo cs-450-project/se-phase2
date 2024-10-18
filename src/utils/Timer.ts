@@ -12,26 +12,20 @@
 
 export class Timer {
 
-  private elapsedTime;
-  private startTime;
+  private initial;
 
   constructor(){
-    this.elapsedTime = 0;
-    this.startTime = 0;
+    this.initial = 0;
   }
 
-  public StartTime(){
-    this.startTime = Date.now();
+  public start(){
+    this.initial = Date.now();
   }
 
-  public GetTime(): number{
-    this.elapsedTime = Date.now() - this.startTime;
-    return Number((this.elapsedTime / 1000).toFixed(5));
-  }
-
-  public Reset(){
-    this.elapsedTime = 0;
-    this.startTime = 0;
+  public stop() {
+    let time = Number(((Date.now() - this.initial) / 1000).toFixed(5));
+    this.initial = 0;
+    return time;
   }
 
 } //End class Timer

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Correctness.ts
  * 
  * Description:
@@ -36,7 +36,7 @@ var readmeContent: string = "";
 
 
 
-export async function cloneRepository(repoUrl: string) {
+export async function cloneRepositoryAndEvaluateRampUp(repoUrl: string) {
     try {
 
         //Only clone if the directory does not exist

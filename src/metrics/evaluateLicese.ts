@@ -27,6 +27,23 @@ const GITHUB_API_BASE_URL = 'https://api.github.com';
 // Compatible licenses with LGPL-2.1
 const compatibleLicenses = ['lgpl-2.1', 'gpl-2.0', 'gpl-3.0', 'lgpl-3.0'];
 
+
+// Function to check if the repository license is compatible with LGPL-2.1
+export async function evaluateLicense(owner: string, repo: string) {
+  const licenseKey = await getRepoLicense(owner, repo);
+
+  if (!licenseKey) {
+    return 0;
+  }
+
+  if (compatibleLicenses.includes(licenseKey.toLowerCase())) {
+    return 1; // Output 1 for compatible license
+  } else {
+    return 0; // Output 0 for non-compatible license
+  }
+}
+
+
 // Function to fetch repository license information
 async function getRepoLicense(owner: string, repo: string) {
   try {
@@ -67,20 +84,7 @@ async function getRepoLicense(owner: string, repo: string) {
   }
 }
 
-// Function to check if the repository license is compatible with LGPL-2.1
-export async function checkLicenseCompatibility(owner: string, repo: string) {
-  const licenseKey = await getRepoLicense(owner, repo);
 
-  if (!licenseKey) {
-    return 0;
-  }
-
-  if (compatibleLicenses.includes(licenseKey.toLowerCase())) {
-    return 1; // Output 1 for compatible license
-  } else {
-    return 0; // Output 0 for non-compatible license
-  }
-}
 
 // Example usage: Check the license compatibility for a repository
 //checkLicenseCompatibility('nodists', 'nodist');

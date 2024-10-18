@@ -30,8 +30,27 @@ const ONE_YEAR_AGO = dayjs().subtract(1, 'year').toISOString();
 // Cap for maximum contributors
 const CONTRIBUTOR_CAP = 16; 
 
-// Fetches the list of commits from a GitHub repository in the last year
 
+// Main function to calculate the Bus Factor of a GitHub repository
+export async function evaluateBusFactor(owner: string, repo: string){
+  
+  const contributors = await getCommits(owner, repo);
+
+  if (!contributors) {
+    // Failed to retrieve contributors
+    return 0; 
+  }
+
+  // Calculate Bus Factor
+  const busFactor = calculateBusFactor(contributors);
+
+  // Output the result
+  return busFactor
+
+}
+
+
+// Fetches the list of commits from a GitHub repository in the last year
 async function getCommits(owner: string, repo: string): Promise<Set<string> | null> {
   try {
     const contributors = new Set<string>();
@@ -89,19 +108,4 @@ function calculateBusFactor(contributors: Set<string>): number {
 }
 
 
- // Main function to calculate the Bus Factor of a GitHub repository
 
-export async function getBusFactor(owner: string, repo: string){
-  const contributors = await getCommits(owner, repo);
-
-  if (!contributors) {
-    // Failed to retrieve contributors
-    return 0; 
-  }
-
-  // Calculate Bus Factor
-  const busFactor = calculateBusFactor(contributors);
-
-  // Output the result
-  return busFactor
-}

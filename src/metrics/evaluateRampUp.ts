@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Correctness.ts
  * 
  * Description:
@@ -34,6 +34,16 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
     process.exit(1);
 }//end if statement
+
+export async function evaluateRampUp(owner: string, repo: string) {
+
+    rampScore = 0;
+
+    await analyzeReadmeContent(owner, repo);
+
+    return rampScore;
+
+}//end displayRampupScore function
 
 //Function that will get the README file from the repository
 async function getReadme(owner: string, repo: string) {
@@ -123,15 +133,7 @@ async function analyzeReadmeContent(owner:string, repo:string) {
 
 }//end analyzeReadmeContent function
 
-export async function displayRampupScore(owner: string, repo: string) {
 
-    rampScore = 0;
-
-    await analyzeReadmeContent(owner, repo);
-
-    return rampScore;
-
-}//end displayRampupScore function
 
 
 

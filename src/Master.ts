@@ -12,21 +12,30 @@
  * Version: 1.0
  * 
  */
-import { UrlProcessor } from "./evaluators/URLParser";
-import { SendToOutput } from "./utils/Output";
-import { Calculate } from "./scores/Ranker";
-import { Timer } from "./utils/Timer";
-import {getBusFactor} from './metrics/BusFactor';
-import {calculateResponsiveMaintainer} from './metrics/ResponsiveMaintainer'
-import {calculateCorrectnessScore} from './metrics/CorrectnessMetric'
-import {checkLicenseCompatibility} from './metrics/LicenseMetric'
-import {displayRampupScore} from './metrics/RampUpMetric'
-import {isPackageOnGitHub} from './evaluators/VerifyURL'
-import {cloneRepository} from './evaluators/RepoClone'
-import logger from './utils/Logger';
-import * as fs from 'fs';
 
-function GetRepoInfo(url: string): {owner: string; repo: string} | null{
+
+import * as fs from 'fs';
+import logger from './utils/Logger';
+
+import { processURLsFromFile } from './evaluators/processURLsFromFile';
+import { SendToOutput } from "./utils/Output";
+import { Ranker } from "./scores/Ranker";
+import { Timer } from "./utils/Timer";
+
+// Importing the functions to calculate the metrics
+import { evaluateBusFactor } from "./metrics/evaluateBusFactor";
+import { evaluateCorrectness } from "./metrics/evaluateCorrectness";
+import { evaluateLicense } from "./metrics/evaluateLicese";
+import { evaluateRampUp } from "./metrics/evaluateRampUp";
+// Other version of evaluateRampUp that clones the repo (only used for the first URL/testingRepo directory doesn't exist)
+import { cloneRepositoryAndEvaluateRampUp } from "./metrics/cloneRepositoryAndEvaluateRampUp";
+import { evaluateResponsiveMaintainers } from "./metrics/evaluateResponsiveMaintainers";
+
+import { findGitHubRepoForNPMLink } from './evaluators/findGitHubRepoForNPMLink';
+
+
+
+function getRepoInfo(url: string): {owner: string; repo: string} | null{
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
     const match = url.match(regex);
 
@@ -38,23 +47,23 @@ function GetRepoInfo(url: string): {owner: string; repo: string} | null{
     return null; // Return null if the URL doesn't match
 }
 
-function isNpmLink(url: string): boolean {
+function isNPMLink(url: string): boolean {
     const npmRegex = /^(https?:\/\/(www\.)?npmjs\.com\/|npm:\/\/)/;
     return npmRegex.test(url);
 }
 
 
-async function ProcessURL(url: string, urlNum: number){
-    const ranker = new Calculate();
+async function evaluateMetrics(url: string, urlNum: number){
+    const ranker = new Ranker();
     const totalTime = new Timer();
     const factorTime = new Timer();
     let repoInfo;
     
-    if(isNpmLink(url)){
-        let newURL = await isPackageOnGitHub(url);
+    if(isNPMLink(url)){
+        let newURL = await findGitHubRepoForNPMLink(url);
         if(newURL){
             url = newURL;
-            repoInfo = GetRepoInfo(url);
+            repoInfo = getRepoInfo(url);
             
         }
         else{
@@ -63,7 +72,7 @@ async function ProcessURL(url: string, urlNum: number){
         }
     }
     else{
-        repoInfo = GetRepoInfo(url);
+        repoInfo = getRepoInfo(url);
         
     }
 
@@ -72,47 +81,42 @@ async function ProcessURL(url: string, urlNum: number){
         const { owner, repo } = repoInfo;
 
         if(owner && repo){
-            totalTime.StartTime();
+            totalTime.start();
             ranker.SetURL = url;
 
-            factorTime.StartTime();
+            factorTime.start();
             //Check Bus Factor
-            ranker.SetBusFactor = Number(await getBusFactor(owner, repo));
-            ranker.SetBusFactorLatency = factorTime.GetTime();
-            factorTime.Reset();
-
-            factorTime.StartTime();
+            ranker.SetBusFactor = Number(await evaluateBusFactor(owner, repo));
+            ranker.SetBusFactorLatency = factorTime.stop();
+        
+            factorTime.start();
             //Check Correctness
-            ranker.SetCorrectness = Number(await calculateCorrectnessScore(owner, repo));
-            ranker.SetCorrectnessLatency = factorTime.GetTime();
-            factorTime.Reset();
+            ranker.SetCorrectness = Number(await evaluateCorrectness(owner, repo));
+            ranker.SetCorrectnessLatency = factorTime.stop();
             
-            factorTime.StartTime();
+            factorTime.start();
             //Check License
-            ranker.SetLicense = Number(await checkLicenseCompatibility(owner, repo));
-            ranker.SetLicenseLatency = factorTime.GetTime();
-            factorTime.Reset();
-
-            factorTime.StartTime();
+            ranker.SetLicense = Number(await evaluateLicense(owner, repo));
+            ranker.SetLicenseLatency = factorTime.stop();
+            
+            factorTime.start();
             if(urlNum > 1){
                 //Check Rampup
-                ranker.SetRampUp = await displayRampupScore(owner, repo);
+                ranker.SetRampUp = await evaluateRampUp(owner, repo);
             }
             else{
-                ranker.SetRampUp = await cloneRepository(url);
+                ranker.SetRampUp = await cloneRepositoryAndEvaluateRampUp(url);
             }
-            ranker.SetRampUpLatency = factorTime.GetTime();
-            factorTime.Reset();
+            ranker.SetRampUpLatency = factorTime.stop();
 
-            factorTime.StartTime();
+            factorTime.start();
             //Check ResponsiveMaintainer
-            ranker.SetResponsiveMaintainer = Number(await calculateResponsiveMaintainer(owner, repo));
-            ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
-            factorTime.Reset();
-
+            ranker.SetResponsiveMaintainers = Number(await evaluateResponsiveMaintainers(owner, repo));
+            ranker.SetResponsiveMaintainersLatency = factorTime.stop();
+           
             //Ends the NetScore timer and sends the time to the ranker
-            ranker.SetNetScoreLatency = totalTime.GetTime();
-            totalTime.Reset();
+            ranker.SetNetScoreLatency = totalTime.stop();
+
         }
         else{
             logger.info("Could not get repo owner or name from URL" + url);
@@ -126,7 +130,7 @@ async function ProcessURL(url: string, urlNum: number){
 
     SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
         RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency, 
-        BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency, 
+        BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainers, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainersLatency, 
         License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency});
 
 
@@ -135,14 +139,15 @@ async function ProcessURL(url: string, urlNum: number){
 }
 
 logger.info('Program Started');
+
 //Read Input
 const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
+
 //Outputs file
 fs.stat(fileLocation, (err, stats) => {
     if (err==null){
         if(stats.isFile()){
-        const parser = new UrlProcessor();
-        parser.processUrlsFromFile(fileLocation, ProcessURL);
+            processURLsFromFile(fileLocation, evaluateMetrics);
         }
     }
     else{

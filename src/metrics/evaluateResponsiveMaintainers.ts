@@ -29,6 +29,52 @@ const GITHUB_API_BASE_URL = 'https://api.github.com';
 // GitHub allows a maximum of 100 items per page
 const ITEMS_PER_PAGE = 100; 
 
+// Main function to calculate the "Responsive Maintainer" metric
+export async function evaluateResponsiveMaintainers(owner: string, repo: string) {
+  
+  // Fetch pull requests and issues
+  const pullRequests = await getPullRequests(owner, repo);
+  const issues = await getIssues(owner, repo);
+
+  if (!pullRequests || !issues) {
+    return;
+  }
+
+  // 1. Check when the last update was made (Pull Requests)
+  const lastPR = pullRequests[0]; // The most recent pull request
+  const lastPRUpdateDate = lastPR ? lastPR.updated_at : null;
+  const lastPRClosedDate = lastPR ? lastPR.closed_at : null;
+  const daysSinceLastUpdate = lastPRUpdateDate
+    ? calculateDaysDifference(lastPRUpdateDate, new Date().toISOString())
+    : null;
+
+  // 2. Check if there are any issues still open and how long they've been open
+  const openIssuesCount = issues.length;
+  const issueDurations: number[] = issues.map((issue: { created_at: string; }) => {
+    return calculateDaysDifference(issue.created_at, new Date().toISOString());
+  });
+
+  const averageIssueDuration =
+    issueDurations.reduce((sum, duration) => sum + duration, 0) /
+    (issueDurations.length || 1);
+
+  // Output results
+  //console.log(`--- Responsive Maintainer Metrics for ${owner}/${repo} ---`);
+  //if (lastPRUpdateDate) {
+  //  console.log(`Last Pull Request Updated: ${lastPRUpdateDate}`);
+  //  console.log(
+  //    `Days Since Last Update: ${
+  //      daysSinceLastUpdate !== null ? daysSinceLastUpdate : 'N/A'
+  //    }`
+  //  );
+  //}
+  //console.log(`Open Issues: ${openIssuesCount}`);
+  //Only ouput we care about is the average issue open duration. 
+  return averageIssueDuration;
+  //console.log('--- End of Report ---');
+}
+
+
 // Helper function to get the "next" URL from the pagination link header
 function getNextPage(linkHeader: string | null): string | null {
     if (!linkHeader) return null;
@@ -86,50 +132,3 @@ async function getPullRequests(owner: string, repo: string) {
     return Math.floor(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
   }
   
-  // Main function to calculate the "Responsive Maintainer" metric
-  export async function calculateResponsiveMaintainer(owner: string, repo: string) {
-  
-    // Fetch pull requests and issues
-    const pullRequests = await getPullRequests(owner, repo);
-    const issues = await getIssues(owner, repo);
-  
-    if (!pullRequests || !issues) {
-      return;
-    }
-  
-    // 1. Check when the last update was made (Pull Requests)
-    const lastPR = pullRequests[0]; // The most recent pull request
-    const lastPRUpdateDate = lastPR ? lastPR.updated_at : null;
-    const lastPRClosedDate = lastPR ? lastPR.closed_at : null;
-    const daysSinceLastUpdate = lastPRUpdateDate
-      ? calculateDaysDifference(lastPRUpdateDate, new Date().toISOString())
-      : null;
-  
-    // 2. Check if there are any issues still open and how long they've been open
-    const openIssuesCount = issues.length;
-    const issueDurations: number[] = issues.map((issue: { created_at: string; }) => {
-      return calculateDaysDifference(issue.created_at, new Date().toISOString());
-    });
-  
-    const averageIssueDuration =
-      issueDurations.reduce((sum, duration) => sum + duration, 0) /
-      (issueDurations.length || 1);
-  
-    // Output results
-    //console.log(`--- Responsive Maintainer Metrics for ${owner}/${repo} ---`);
-    //if (lastPRUpdateDate) {
-    //  console.log(`Last Pull Request Updated: ${lastPRUpdateDate}`);
-    //  console.log(
-    //    `Days Since Last Update: ${
-    //      daysSinceLastUpdate !== null ? daysSinceLastUpdate : 'N/A'
-    //    }`
-    //  );
-    //}
-    //console.log(`Open Issues: ${openIssuesCount}`);
-    //Only ouput we care about is the average issue open duration. 
-    return averageIssueDuration;
-    //console.log('--- End of Report ---');
-  }
-  
-  // Example usage
- // calculateResponsiveMaintainer('facebook', 'react');

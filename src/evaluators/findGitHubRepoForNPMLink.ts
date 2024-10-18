@@ -1,4 +1,4 @@
-﻿/*
+/*
  * VerifyURL.ts
  * 
  * Description:
@@ -18,7 +18,7 @@
 import axios from 'axios';
 import logger from '../utils/Logger';
 
-export async function isPackageOnGitHub(packageName: string): Promise<string | null> {
+export async function findGitHubRepoForNPMLink(packageName: string): Promise<string | null> {
     try {
 
         //Extract package name from URL
