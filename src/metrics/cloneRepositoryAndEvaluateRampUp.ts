@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Correctness.ts
  * 
  * Description:
@@ -16,7 +16,7 @@
 import simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
-import logger from '../utils/Logger';
+import logger from '../utils/logger';
 
 // Initialize simple-git
 const git = simpleGit();
@@ -36,7 +36,7 @@ var readmeContent: string = "";
 
 
 
-export async function cloneRepository(repoUrl: string) {
+export async function cloneRepositoryAndEvaluateRampUp(repoUrl: string) {
     try {
 
         //Only clone if the directory does not exist
