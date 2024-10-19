@@ -16,7 +16,7 @@
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
-import logger from '../utils/logger';
+import logger from '../utils/logger.js';
 
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv.config();

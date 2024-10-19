@@ -13,21 +13,21 @@
  * 
  */
 
-import logger from '../utils/logger';
+import logger from '../utils/logger.js';
 
-import { sendToOutput } from "../utils/sendToOutput";
-import { Ranker } from "../scores/Ranker";
-import { Timer } from "../utils/Timer";
-import { findGitHubRepoForNPMLink } from './findGitHubRepoForNPMLink';
+import { sendToOutput } from "../utils/sendToOutput.js";
+import { Ranker } from "../scores/Ranker.js";
+import { Timer } from "../utils/Timer.js";
+import { findGitHubRepoForNPMLink } from './findGitHubRepoForNPMLink.js';
 
 // Importing the functions to calculate the metrics
-import { evaluateBusFactor } from "../metrics/evaluateBusFactor";
-import { evaluateCorrectness } from "../metrics/evaluateCorrectness";
-import { evaluateLicense } from "../metrics/evaluateLicese";
-import { evaluateRampUp } from "../metrics/evaluateRampUp";
+import { evaluateBusFactor } from "../metrics/evaluateBusFactor.js";
+import { evaluateCorrectness } from "../metrics/evaluateCorrectness.js";
+import { evaluateLicense } from "../metrics/evaluateLicese.js";
+import { evaluateRampUp } from "../metrics/evaluateRampUp.js";
 // Other version of evaluateRampUp that clones the repo (only used for the first URL/testingRepo directory doesn't exist)
-import { cloneRepositoryAndEvaluateRampUp } from "../metrics/cloneRepositoryAndEvaluateRampUp";
-import { evaluateResponsiveMaintainers } from "../metrics/evaluateResponsiveMaintainers";
+import { cloneRepositoryAndEvaluateRampUp } from "../metrics/cloneRepositoryAndEvaluateRampUp.js";
+import { evaluateResponsiveMaintainers } from "../metrics/evaluateResponsiveMaintainers.js";
 
 export async function evaluateMetrics(url: string, urlNum: number){
     const ranker = new Ranker();
@@ -76,6 +76,7 @@ export async function evaluateMetrics(url: string, urlNum: number){
             ranker.SetLicenseLatency = factorTime.stop();
             
             factorTime.start();
+
             if(urlNum > 1){
                 //Check Rampup
                 ranker.SetRampUp = await evaluateRampUp(owner, repo);

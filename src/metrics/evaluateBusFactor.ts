@@ -17,7 +17,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import dayjs from 'dayjs';
-import logger from '../utils/logger';
+import logger from '../utils/logger.js';
 
 // Loads environment variables (GITHUB_TOKEN) from .env file
 dotenv.config();

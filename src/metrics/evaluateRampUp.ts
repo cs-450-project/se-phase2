@@ -15,7 +15,9 @@
 //Ensure that we have the required libraries
 import axios from 'axios';
 import * as dotenv from 'dotenv';
-import logger from '../utils/logger';
+import logger from '../utils/logger.js';
+
+import octokit from '../utils/octokit.js';
 
 
 //Variable that will keep track of how good the ramp-up score is
@@ -36,6 +38,15 @@ if (!GITHUB_TOKEN) {
 }//end if statement
 
 export async function evaluateRampUp(owner: string, repo: string) {
+
+    const readmeData = await octokit.repos.getReadme({
+        owner: owner,
+        repo: repo,
+    });
+
+    const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
+
+    console.log(readmeContent);
 
     rampScore = 0;
 
