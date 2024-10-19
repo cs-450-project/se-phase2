@@ -12,11 +12,12 @@
  * 
  */
 
-//Ensure that we have the required libraries
+// Ensure that we have the required libraries
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 import logger from '../utils/logger.js';
 
+// Import octokit
 import octokit from '../utils/octokit.js';
 
 
@@ -39,14 +40,15 @@ if (!GITHUB_TOKEN) {
 
 export async function evaluateRampUp(owner: string, repo: string) {
 
-    const readmeData = await octokit.repos.getReadme({
-        owner: owner,
-        repo: repo,
-    });
+    // EXAMPLE: Using the octokit API to get the README file from the repository instead of axios
 
-    const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
+    // const readmeData = await octokit.repos.getReadme({
+    //     owner: owner,
+    //     repo: repo,
+    // });
 
-    console.log(readmeContent);
+    // const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
+    // console.log(readmeContent);
 
     rampScore = 0;
 

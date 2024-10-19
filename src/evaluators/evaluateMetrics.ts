@@ -25,8 +25,6 @@ import { evaluateBusFactor } from "../metrics/evaluateBusFactor.js";
 import { evaluateCorrectness } from "../metrics/evaluateCorrectness.js";
 import { evaluateLicense } from "../metrics/evaluateLicese.js";
 import { evaluateRampUp } from "../metrics/evaluateRampUp.js";
-// Other version of evaluateRampUp that clones the repo (only used for the first URL/testingRepo directory doesn't exist)
-import { cloneRepositoryAndEvaluateRampUp } from "../metrics/cloneRepositoryAndEvaluateRampUp.js";
 import { evaluateResponsiveMaintainers } from "../metrics/evaluateResponsiveMaintainers.js";
 
 export async function evaluateMetrics(url: string, urlNum: number){
@@ -76,14 +74,8 @@ export async function evaluateMetrics(url: string, urlNum: number){
             ranker.SetLicenseLatency = factorTime.stop();
             
             factorTime.start();
-
-            if(urlNum > 1){
-                //Check Rampup
-                ranker.SetRampUp = await evaluateRampUp(owner, repo);
-            }
-            else{
-                ranker.SetRampUp = await cloneRepositoryAndEvaluateRampUp(url);
-            }
+            //Check RampUp
+            ranker.SetRampUp = await evaluateRampUp(owner, repo);
             ranker.SetRampUpLatency = factorTime.stop();
 
             factorTime.start();
