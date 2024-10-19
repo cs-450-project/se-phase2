@@ -13,46 +13,23 @@
  * 
  */
 
+import logger from '../utils/logger';
 
-import * as fs from 'fs';
-
-import logger from './utils/logger';
-
-import { processURLsFromFile } from './evaluators/processURLsFromFile';
-import { SendToOutput } from "./utils/Output";
-import { Ranker } from "./scores/Ranker";
-import { Timer } from "./utils/Timer";
-import { findGitHubRepoForNPMLink } from './evaluators/findGitHubRepoForNPMLink';
+import { sendToOutput } from "../utils/sendToOutput";
+import { Ranker } from "../scores/Ranker";
+import { Timer } from "../utils/Timer";
+import { findGitHubRepoForNPMLink } from './findGitHubRepoForNPMLink';
 
 // Importing the functions to calculate the metrics
-import { evaluateBusFactor } from "./metrics/evaluateBusFactor";
-import { evaluateCorrectness } from "./metrics/evaluateCorrectness";
-import { evaluateLicense } from "./metrics/evaluateLicese";
-import { evaluateRampUp } from "./metrics/evaluateRampUp";
+import { evaluateBusFactor } from "../metrics/evaluateBusFactor";
+import { evaluateCorrectness } from "../metrics/evaluateCorrectness";
+import { evaluateLicense } from "../metrics/evaluateLicese";
+import { evaluateRampUp } from "../metrics/evaluateRampUp";
 // Other version of evaluateRampUp that clones the repo (only used for the first URL/testingRepo directory doesn't exist)
-import { cloneRepositoryAndEvaluateRampUp } from "./metrics/cloneRepositoryAndEvaluateRampUp";
-import { evaluateResponsiveMaintainers } from "./metrics/evaluateResponsiveMaintainers";
+import { cloneRepositoryAndEvaluateRampUp } from "../metrics/cloneRepositoryAndEvaluateRampUp";
+import { evaluateResponsiveMaintainers } from "../metrics/evaluateResponsiveMaintainers";
 
-
-function getRepoInfo(url: string): {owner: string; repo: string} | null{
-    const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
-    const match = url.match(regex);
-
-    if (match) {
-        const owner = match[1];
-        const repo = match[2];
-        return { owner, repo };
-    }
-    return null; // Return null if the URL doesn't match
-}
-
-function isNPMLink(url: string): boolean {
-    const npmRegex = /^(https?:\/\/(www\.)?npmjs\.com\/|npm:\/\/)/;
-    return npmRegex.test(url);
-}
-
-
-async function evaluateMetrics(url: string, urlNum: number){
+export async function evaluateMetrics(url: string, urlNum: number){
     const ranker = new Ranker();
     const totalTime = new Timer();
     const factorTime = new Timer();
@@ -127,7 +104,7 @@ async function evaluateMetrics(url: string, urlNum: number){
         ranker.SetURL = url;
     }
 
-    SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
+    sendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
         RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency, 
         BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainers, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainersLatency, 
         License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency});
@@ -137,21 +114,22 @@ async function evaluateMetrics(url: string, urlNum: number){
     
 }
 
-logger.info('Program Started');
+function getRepoInfo(url: string): {owner: string; repo: string} | null{
+    const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
+    const match = url.match(regex);
 
-//Read Input
-const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
+    if (match) {
+        const owner = match[1];
+        const repo = match[2];
+        return { owner, repo };
+    }
+    return null; // Return null if the URL doesn't match
+}
 
-//Outputs file
-fs.stat(fileLocation, (err, stats) => {
-    if (err==null){
-        if(stats.isFile()){
-            processURLsFromFile(fileLocation, evaluateMetrics);
-        }
-    }
-    else{
-        logger.info("File does not exist");
-        process.exit(1);
-    }
-    //close error things etc etc    
-});
+function isNPMLink(url: string): boolean {
+    const npmRegex = /^(https?:\/\/(www\.)?npmjs\.com\/|npm:\/\/)/;
+    return npmRegex.test(url);
+}
+
+
+
