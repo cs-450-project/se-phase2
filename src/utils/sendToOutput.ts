@@ -11,7 +11,7 @@
  */
 
 //Output can change easily in a line or two
-export const SendToOutput = {
+export const sendToOutput = {
     //This writes to the standard out
     writeToStdout: (data: object) => {
         //Convert the data object to a JSON string

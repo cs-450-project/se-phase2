@@ -11,13 +11,18 @@
  */
 
 import * as fs from 'fs';
+import * as path from 'path';
 import logger from '../utils/logger';
 
 // Function to read the file, parse URLs, and perform operations
 export async function processURLsFromFile(filePath: string, operation: (url: string, num: number) => void): Promise<void> {
     try {
+
+        // Resolve the file path to an absolute path
+        const absoluteFilePath = path.resolve(filePath);
+
         // Read the file content
-        const data = fs.readFileSync(filePath, 'utf-8');
+        const data = fs.readFileSync(absoluteFilePath, 'utf-8');
 
         // Split the file content into lines (each line is a URL)
         const urls = data.split('\n').map(line => line.trim()).filter(line => line.length > 0);
