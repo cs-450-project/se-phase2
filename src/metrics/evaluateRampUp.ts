@@ -15,7 +15,7 @@
 //Ensure that we have the required libraries
 import axios from 'axios';
 import * as dotenv from 'dotenv';
-import logger from '../utils/Logger';
+import logger from '../utils/logger';
 
 
 //Variable that will keep track of how good the ramp-up score is

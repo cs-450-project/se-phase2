@@ -16,7 +16,7 @@
 import simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
-import logger from '../utils/Logger';
+import logger from '../utils/logger';
 
 // Initialize simple-git
 const git = simpleGit();

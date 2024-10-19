@@ -11,7 +11,7 @@
  */
 
 import * as fs from 'fs';
-import logger from '../utils/Logger';
+import logger from '../utils/logger';
 
 // Function to read the file, parse URLs, and perform operations
 export async function processURLsFromFile(filePath: string, operation: (url: string, num: number) => void): Promise<void> {

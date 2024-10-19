@@ -16,7 +16,7 @@
 
 import axios from 'axios';
 import * as dotenv from 'dotenv';
-import logger from '../utils/Logger';
+import logger from '../utils/logger';
 
 // Load environment variables from .env
 dotenv.config();

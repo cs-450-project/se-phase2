@@ -15,12 +15,14 @@
 
 
 import * as fs from 'fs';
-import logger from './utils/Logger';
+
+import logger from './utils/logger';
 
 import { processURLsFromFile } from './evaluators/processURLsFromFile';
 import { SendToOutput } from "./utils/Output";
 import { Ranker } from "./scores/Ranker";
 import { Timer } from "./utils/Timer";
+import { findGitHubRepoForNPMLink } from './evaluators/findGitHubRepoForNPMLink';
 
 // Importing the functions to calculate the metrics
 import { evaluateBusFactor } from "./metrics/evaluateBusFactor";
@@ -30,9 +32,6 @@ import { evaluateRampUp } from "./metrics/evaluateRampUp";
 // Other version of evaluateRampUp that clones the repo (only used for the first URL/testingRepo directory doesn't exist)
 import { cloneRepositoryAndEvaluateRampUp } from "./metrics/cloneRepositoryAndEvaluateRampUp";
 import { evaluateResponsiveMaintainers } from "./metrics/evaluateResponsiveMaintainers";
-
-import { findGitHubRepoForNPMLink } from './evaluators/findGitHubRepoForNPMLink';
-
 
 
 function getRepoInfo(url: string): {owner: string; repo: string} | null{
