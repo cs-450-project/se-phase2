@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "ES2020",
     "sourceMap": true,
     "outDir": "./out",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*", "src/tests/**/*", "testingRepo/RampUpMetric.test.ts"],
-  "exclude": ["node_modules", "out"]
+  "include": ["src/**/*.ts", "src/metrics/cloneRepositoryAndEvaluateRampUp.ts", "src/utils/logger.ts"],
+  "exclude": ["node_modules"]
 }
-  

@@ -14,98 +14,44 @@
  * Version: 1.0
  * 
  */
-import axios from 'axios';
-import dotenv from 'dotenv';
-import dayjs from 'dayjs';
-import logger from '../utils/logger';
 
-// Loads environment variables (GITHUB_TOKEN) from .env file
-dotenv.config();
-
-// Retrieves GitHub Token from .env file
-const token = process.env.GITHUB_TOKEN;
-
-const GITHUB_API_BASE_URL = 'https://api.github.com';
-const ONE_YEAR_AGO = dayjs().subtract(1, 'year').toISOString();
-// Cap for maximum contributors
-const CONTRIBUTOR_CAP = 16; 
-
+import logger from '../utils/logger.js';
+import octokit from '../utils/octokit.js';
 
 // Main function to calculate the Bus Factor of a GitHub repository
 export async function evaluateBusFactor(owner: string, repo: string){
-  
-  const contributors = await getCommits(owner, repo);
-
-  if (!contributors) {
-    // Failed to retrieve contributors
-    return 0; 
-  }
-
-  // Calculate Bus Factor
-  const busFactor = calculateBusFactor(contributors);
-
-  // Output the result
-  return busFactor
-
-}
-
-
-// Fetches the list of commits from a GitHub repository in the last year
-async function getCommits(owner: string, repo: string): Promise<Set<string> | null> {
   try {
-    const contributors = new Set<string>();
-    let page = 1;
+    
+    // Fetch contributors data from GitHub API
+    const contributorsData = await octokit.repos.listContributors({
+        owner: owner,
+        repo: repo,
+        per_page: 100,
+    });
+    
+    const contributors = contributorsData.data;
 
-    // Fetch commits page by page (100 commits per page)
-    while (true) {
-      const response = await axios.get(
-        `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/commits`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            per_page: 100,
-            page: page,
-            since: ONE_YEAR_AGO,
-          },
-        }
-      );
-
-      const commits = response.data;
-
-      // If no more commits, break the loop
-      if (commits.length === 0) break;
-
-      // Collect contributors from each commit
-      commits.forEach((commit: any) => {
-        if (commit.author && commit.author.login) {
-          contributors.add(commit.author.login);
-        }
-      });
-
-      // Stop if we've reached the contributor cap
-      if (contributors.size >= CONTRIBUTOR_CAP) break;
-
-      page++; // Move to the next page
+    if (contributors.length === 0) {
+      return 0;
     }
 
-    return contributors;
+    const totalContributions = contributors.reduce((sum, contributor) => sum + contributor.contributions, 0);
+
+    const topContributions = contributors[0].contributions;
+    const topContributorPercentage = topContributions / totalContributions;
+
+    // Scoring logic based on top contributor's percentage
+    if (topContributorPercentage >= 0.8) {
+        return 0;
+    } else if (topContributorPercentage >= 0.6) {
+        return 0.2;
+    } else if (topContributorPercentage >= 0.4) {
+        return 0.5;
+    } else {
+        return 1;
+    }
 
   } catch (error) {
-    //Error fetching commits
-    logger.info('Unable to fetch commits for BusFactor');
-    logger.info(error);
-    return null;
+      return 0;
   }
 }
-
-
- // Calculates the Bus Factor based on the number of contributors
-
-function calculateBusFactor(contributors: Set<string>): number {
-  return Math.min(contributors.size, CONTRIBUTOR_CAP);
-}
-
-
-

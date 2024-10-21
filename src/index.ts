@@ -7,8 +7,8 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { processURLsFromFile } from './evaluators/processURLsFromFile';
-import { evaluateMetrics } from './evaluators/evaluateMetrics';
+import { processURLsFromFile } from './evaluators/processURLsFromFile.js';
+import { evaluateMetrics } from './evaluators/evaluateMetrics.js';
 
 // Command line arguments
 const argv = yargs(hideBin(process.argv))
