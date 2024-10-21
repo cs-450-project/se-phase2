@@ -13,42 +13,17 @@
  */
 
 // Ensure that we have the required libraries
-import axios from 'axios';
+
 import * as dotenv from 'dotenv';
 import logger from '../utils/logger.js';
 
 // Import octokit
 import octokit from '../utils/octokit.js';
 
-
 //Variable that will keep track of how good the ramp-up score is
 var rampScore: number = 0;
 
-//load the environment variables
-dotenv.config();
-
-// Base URL for GitHub API
-const GITHUB_API_BASE_URL = 'https://api.github.com';
-
-//Get the environment variables as a constant
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-
-//Throw an error if the token is not found
-if (!GITHUB_TOKEN) {
-    process.exit(1);
-}//end if statement
-
 export async function evaluateRampUp(owner: string, repo: string) {
-
-    // EXAMPLE: Using the octokit API to get the README file from the repository instead of axios
-
-    // const readmeData = await octokit.repos.getReadme({
-    //     owner: owner,
-    //     repo: repo,
-    // });
-
-    // const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
-    // console.log(readmeContent);
 
     rampScore = 0;
 
@@ -56,25 +31,24 @@ export async function evaluateRampUp(owner: string, repo: string) {
 
     return rampScore;
 
-}//end displayRampupScore function
+}// end displayRampupScore function
 
 //Function that will get the README file from the repository
 async function getReadme(owner: string, repo: string) {
     try {
-        //Get the README file from the repository
-        const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents/README.md`, {
+        
+            console.log(`Owner: ${owner} Repo: ${repo}\n`);
 
-            headers: {
+            const readmeData = await octokit.repos.getReadme({
+                owner: owner,
+                repo: repo,
+            });
 
-                Authorization: `Bearer ${GITHUB_TOKEN}`
+            const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
 
-            }//end headers
+            //Return the content of the README file
 
-        });//end axios.get
-
-        //Return the content of the README file
-
-        return response.data.content;
+            return readmeContent;
 
     }//end try statement
 
@@ -136,13 +110,8 @@ async function analyzeReadmeContent(owner:string, repo:string) {
         return; // Exit if there's no content
     }
 
-    //now we need to decode the content of the README file
-    const buff = Buffer.from(readmeContent, 'base64');
-    const decodedReadmeContent = buff.toString('utf-8');
-
-
     //Analyze the content of the README file
-    analyzeReadme(decodedReadmeContent);
+    analyzeReadme(readmeContent);
 
 }//end analyzeReadmeContent function
 
