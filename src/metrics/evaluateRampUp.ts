@@ -14,7 +14,6 @@
 
 // Ensure that we have the required libraries
 
-import * as dotenv from 'dotenv';
 import logger from '../utils/logger.js';
 
 // Import octokit

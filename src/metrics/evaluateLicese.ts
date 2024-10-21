@@ -14,19 +14,12 @@
  */
 
 
-import axios from 'axios';
-import * as dotenv from 'dotenv';
+
 import logger from '../utils/logger.js';
-
-// Load environment variables from .env
-dotenv.config();
-
-// Base URL for GitHub API
-const GITHUB_API_BASE_URL = 'https://api.github.com';
+import octokit from '../utils/octokit.js';
 
 // Compatible licenses with LGPL-2.1
 const compatibleLicenses = ['lgpl-2.1', 'gpl-2.0', 'gpl-3.0', 'lgpl-3.0'];
-
 
 // Function to check if the repository license is compatible with LGPL-2.1
 export async function evaluateLicense(owner: string, repo: string) {
@@ -47,35 +40,24 @@ export async function evaluateLicense(owner: string, repo: string) {
 // Function to fetch repository license information
 async function getRepoLicense(owner: string, repo: string) {
   try {
-    const response = await axios.get(
-      `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/license`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, // GitHub API token from .env file
-        },
-      }
-    );
     
-    if (response.data.license.spdx_id === 'NOASSERTION') {
-      // Try to fetch the LICENSE file manually
-      const licenseFileResponse = await axios.get(
-        `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents/COPYING`, // Adjust the path based on where the license is located
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          },
-        }
-      );
-      
-      const licenseContent = Buffer.from(licenseFileResponse.data.content, 'base64').toString('utf-8');
-      
-      // Check if the license file contains 'GPL-2.0' or other relevant license information
-      if (licenseContent.includes('GNU GENERAL PUBLIC LICENSE') && licenseContent.includes('Version 2')) {
-        return 'gpl-2.0';  // Return the GPL-2.0 identifier manually
-      }
-    }
+    // Fetch the repository information using octokit
+    const { data } = await octokit.repos.get({
+      owner: owner,
+      repo: repo,
+    });
 
-    return response.data.license.spdx_id;
+
+    if (data.license) {
+      
+      if (data.license.spdx_id === 'NOASSERTION') {
+        // Check README for license information
+        return null;
+      }
+
+      return data.license.spdx_id;
+
+    }
 
   } catch (error) {
     logger.info('Failed to access GitHub API from License');
@@ -85,6 +67,3 @@ async function getRepoLicense(owner: string, repo: string) {
 }
 
 
-
-// Example usage: Check the license compatibility for a repository
-//checkLicenseCompatibility('nodists', 'nodist');
