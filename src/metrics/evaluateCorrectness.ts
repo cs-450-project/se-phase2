@@ -16,6 +16,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import logger from '../utils/logger.js';
+import octokit from '../utils/octokit.js';
 
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv.config();
@@ -35,38 +36,36 @@ export async function evaluateCorrectness(owner: string, repo: string): Promise<
   score += contributorScore;
 
   // 2. Check if README file exists
-  const readmeExists = await fileExists(owner, repo, 'README.md');
-  if (readmeExists) {
+  const readme = await readmeExists(owner, repo);
+
+  if (readme) {
     score += 20;
   }
 
-  // 3. Check if test case files exist
-  const testFiles = ["test", "tests", "spec"]; // common test directories
-  for (const file of testFiles) {
-    const testFileExists = await fileExists(owner, repo, file);
-    if (testFileExists) {
-      score += 50;
-      break; // Stop once we find any test file
-    }
+  // 3. Check if test files exist
+  const testFileExists = await testsExists(owner, repo);
+
+  if (testFileExists) {
+    score += 50;
   }
 
   //Correctness Score
   return score;
+
 }
 
 
 // Helper function to check if a file exists in the repository
-async function fileExists(owner: string, repo: string, filePath: string): Promise<boolean> {
+async function readmeExists(owner: string, repo: string): Promise<boolean> {
   try {
-    const response = await axios.get(
-      `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contents/${filePath}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.status === 200;
+    
+    const readmeData = await octokit.repos.getReadme({
+      owner: owner,
+      repo: repo,
+    });
+
+    return readmeData.data && readmeData.data.content ? true : false;
+
   } catch (error) {
     logger.info('Something went wrong with connecting to the github api from Correctness');
     logger.info(error);
@@ -74,18 +73,41 @@ async function fileExists(owner: string, repo: string, filePath: string): Promis
   }
 }
 
+async function testsExists(owner: string, repo: string): Promise<boolean> {
+  try {
+    
+    // Fetch package.json content
+    const packageJsonData = await octokit.repos.getContent({
+        owner: owner,
+        repo: repo,
+        path: 'package.json',
+    });
+
+    const packageJsonContent = Buffer.from((packageJsonData.data as any).content, 'base64').toString('utf-8');
+    const packageJson = JSON.parse(packageJsonContent);
+
+    const hasTestScript = !!(packageJson.scripts && packageJson.scripts.test);
+    return hasTestScript;
+    
+  } catch (error: any) {
+      if (error.status === 404) {
+          return false; // Return false if package.json is not found
+      } else {
+          return false; // Return false for other errors as well
+      }
+   }
+}
 // Function to get the number of contributors in the repo
 async function getContributorsCount(owner: string, repo: string): Promise<number> {
   try {
-    const response = await axios.get(
-      `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/contributors`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data.length;
+    
+    const { data } = await octokit.repos.listContributors({
+      owner: owner,
+      repo: repo,
+    });
+
+    return data.length;
+
   } catch (error) {
     logger.info('Something went wrong with connecting to the github api from Correctness');
     logger.info(error);

@@ -35,19 +35,17 @@ export async function evaluateRampUp(owner: string, repo: string) {
 //Function that will get the README file from the repository
 async function getReadme(owner: string, repo: string) {
     try {
-        
-            console.log(`Owner: ${owner} Repo: ${repo}\n`);
 
-            const readmeData = await octokit.repos.getReadme({
-                owner: owner,
-                repo: repo,
-            });
+        const readmeData = await octokit.repos.getReadme({
+            owner: owner,
+            repo: repo,
+        });
 
-            const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
+        const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
 
-            //Return the content of the README file
+        //Return the content of the README file
 
-            return readmeContent;
+        return readmeContent;
 
     }//end try statement
 
