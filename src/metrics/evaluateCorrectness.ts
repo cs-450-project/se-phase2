@@ -12,19 +12,10 @@
  * Version: 1.0
  * 
  */
-//Promised-based HTTP client to make requests to the GitHub API
-import axios from 'axios';
-import dotenv from 'dotenv';
+
 import logger from '../utils/logger.js';
 import octokit from '../utils/octokit.js';
 
-//loads environment variables GITHUB_TOKEN from .env file
-dotenv.config();
-
-//Retrieves Github Token form .env (environment variable file)
-const token = process.env.GITHUB_TOKEN;
-
-const GITHUB_API_BASE_URL = 'https://api.github.com';
 
 // Function to calculate correctness score based on contributors, README, and test files
 export async function evaluateCorrectness(owner: string, repo: string): Promise<number> {
