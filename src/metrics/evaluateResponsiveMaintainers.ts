@@ -13,122 +13,111 @@
  */
 
 
-//Promised-based HTTP client to make requests to the GitHub API
-import axios from 'axios';
-import dotenv from 'dotenv';
 import logger from '../utils/logger.js';
-
-//loads environment variables GITHUB_TOKEN from .env file
-dotenv.config();
-
-//Retrieves Github Token form .env (environment variable file)
-const token = process.env.GITHUB_TOKEN;
-
-const GITHUB_API_BASE_URL = 'https://api.github.com';
-
-// GitHub allows a maximum of 100 items per page
-const ITEMS_PER_PAGE = 100; 
+import octokit from '../utils/octokit.js';
 
 // Main function to calculate the "Responsive Maintainer" metric
 export async function evaluateResponsiveMaintainers(owner: string, repo: string) {
-  
-  // Fetch pull requests and issues
-  const pullRequests = await getPullRequests(owner, repo);
-  const issues = await getIssues(owner, repo);
+  try {
+    
+    const sinceDate = new Date();
+    sinceDate.setMonth(sinceDate.getMonth() - 1);
 
-  if (!pullRequests || !issues) {
-    return;
-  }
+    // Fetch all issues from the repository
+    const issuesData = await octokit.issues.listForRepo({
+        owner: owner,
+        repo: repo,
+        since: sinceDate.toISOString(),
+        state: 'all',
+        per_page: 100,
+    });
 
-  // 1. Check when the last update was made (Pull Requests)
-  const lastPR = pullRequests[0]; // The most recent pull request
-  const lastPRUpdateDate = lastPR ? lastPR.updated_at : null;
-  const lastPRClosedDate = lastPR ? lastPR.closed_at : null;
-  const daysSinceLastUpdate = lastPRUpdateDate
-    ? calculateDaysDifference(lastPRUpdateDate, new Date().toISOString())
-    : null;
-
-  // 2. Check if there are any issues still open and how long they've been open
-  const openIssuesCount = issues.length;
-  const issueDurations: number[] = issues.map((issue: { created_at: string; }) => {
-    return calculateDaysDifference(issue.created_at, new Date().toISOString());
-  });
-
-  const averageIssueDuration =
-    issueDurations.reduce((sum, duration) => sum + duration, 0) /
-    (issueDurations.length || 1);
-
-  // Output results
-  //console.log(`--- Responsive Maintainer Metrics for ${owner}/${repo} ---`);
-  //if (lastPRUpdateDate) {
-  //  console.log(`Last Pull Request Updated: ${lastPRUpdateDate}`);
-  //  console.log(
-  //    `Days Since Last Update: ${
-  //      daysSinceLastUpdate !== null ? daysSinceLastUpdate : 'N/A'
-  //    }`
-  //  );
-  //}
-  //console.log(`Open Issues: ${openIssuesCount}`);
-  //Only ouput we care about is the average issue open duration. 
-  return averageIssueDuration;
-  //console.log('--- End of Report ---');
-}
-
-
-// Helper function to get the "next" URL from the pagination link header
-function getNextPage(linkHeader: string | null): string | null {
-    if (!linkHeader) return null;
-  
-    const links = linkHeader.split(',').map(part => part.trim());
-    const nextLink = links.find(link => link.includes('rel="next"'));
-  
-    if (!nextLink) return null;
-  
-    const nextUrlMatch = nextLink.match(/<([^>]+)>/);
-    return nextUrlMatch ? nextUrlMatch[1] : null;
-}
-// Function to fetch all paginated data from the GitHub API
-async function fetchPaginatedData(url: string): Promise<any[]> {
-    let results: any[] = [];
-    let nextPageUrl: string | null = `${url}&per_page=${ITEMS_PER_PAGE}`;
-  
-    while (nextPageUrl) {
-      try {
-        const response = await axios.get(nextPageUrl, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        results = results.concat(response.data);
-  
-        // Check for the "Link" header to see if there's a next page
-        nextPageUrl = getNextPage(response.headers.link || null);
-      } catch (error) {
-          logger.info('Unable to fetch data from ResponsiveMaintainer');
-          logger.info(error);
-        return results; // Return what we have in case of failure
-      }
+      
+    const issues = issuesData.data;
+    
+    if (issues.length === 0) {
+        return 1;
     }
-  
-    return results;
+
+    let totalResponseTime = 0;
+    let responseCount = 0;
+
+    for (const issue of issues) {
+        const responseTime = await getFirstResponseTime(owner, repo, issue);
+        if (responseTime !== null) {
+            totalResponseTime += responseTime;
+            responseCount++;
+            logger.debug(`Issue #${issue.number} - Response time: ${responseTime} hours`);
+        } else {
+            logger.debug(`Issue #${issue.number} - No valid maintainer response found`);
+        }
+    }
+
+    if (responseCount === 0) {
+        logger.info('No responses found from maintainers. Setting responsiveMaintainer score to 0.');
+        return 0;
+
+    }
+
+    const averageResponseTime = totalResponseTime / responseCount;
+    logger.debug(`Average response time: ${averageResponseTime} hours`);
+
+    // Scoring logic based on average response time
+    let responseScore = 1;
+    if (averageResponseTime <= 24) {  // Less than or equal to 1 day
+      responseScore = 1;
+      logger.info('Average response time is within 24 hours (1 day). Setting score to 1.');
+    } else if (averageResponseTime <= 72) { // Less than or equal to 3 days
+        responseScore = 0.8;
+        logger.info('Average response time is within 72 hours (3 days). Setting score to 0.8.');
+    } else if (averageResponseTime <= 168) { // Less than or equal to 7 days
+        responseScore = 0.6;
+        logger.info('Average response time is within 168 hours (7 days). Setting score to 0.6.');
+    } else if (averageResponseTime <= 336) { // Less than or equal to 14 days
+        responseScore = 0.4;
+        logger.info('Average response time is within 336 hours (14 days). Setting score to 0.4.');
+    } else if (averageResponseTime <= 720) { // Less than or equal to 30 days
+        responseScore = 0.2;
+        logger.info('Average response time is within 720 hours (30 days). Setting score to 0.2.');
+    } else {  // More than 30 days
+        responseScore = 0;
+        logger.info('Average response time exceeds 720 hours (30 days). Setting score to 0.');
+    }
+
+
+    return responseScore;
+
+  } catch (error) {
+    return 0;
+    
+  }
 }
 
+async function getFirstResponseTime(owner: string, repo: string, issue: any): Promise<number | null> {
+  try {
+      logger.debug(`Fetching comments for issue #${issue.number}`);
+      
+      const commentsData = await octokit.issues.listComments({
+          owner: owner,
+          repo: repo,
+          issue_number: issue.number,
+      });
 
-// Function to fetch all pull requests (PRs) with pagination
-async function getPullRequests(owner: string, repo: string) {
-    const url = `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/pulls?state=all`;
-    return await fetchPaginatedData(url);
-  }
-  
-  // Function to fetch all issues with pagination
-  async function getIssues(owner: string, repo: string) {
-    const url = `${GITHUB_API_BASE_URL}/repos/${owner}/${repo}/issues?state=open`;
-    return await fetchPaginatedData(url);
-  }
+      const comments = commentsData.data;
 
-  // Helper function to calculate the days difference between two dates
-  function calculateDaysDifference(date1: string, date2: string): number {
-    const d1 = new Date(date1);
-    const d2 = new Date(date2);
-    const differenceInTime = d2.getTime() - d1.getTime();
-    return Math.floor(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
+      for (const comment of comments) {
+          const validAssociations = ['COLLABORATOR', 'MEMBER', 'OWNER', 'CONTRIBUTOR'];
+          if (comment.user && validAssociations.includes(comment.author_association)) {
+              const issueCreatedAt = new Date(issue.created_at);
+              const commentCreatedAt = new Date(comment.created_at);
+              const responseTime = (commentCreatedAt.getTime() - issueCreatedAt.getTime()) / (1000 * 60 * 60);
+              return responseTime;
+          }
+      }
+
+      return null;
+  } catch (error) {
+      logger.info(`Error fetching comments or checking collaborator status for issue #${issue.number}:`, error);
+      return null;
   }
-  
+}

@@ -19,25 +19,26 @@ import octokit from '../utils/octokit.js';
 
 // Function to calculate correctness score based on contributors, README, and test files
 export async function evaluateCorrectness(owner: string, repo: string): Promise<number> {
+  
   let score = 0;
 
   // 1. Check number of contributors
   const contributorsCount = await getContributorsCount(owner, repo);
-  const contributorScore = Math.min(contributorsCount, 30); // Cap the score at 30
+  const contributorScore = Math.min(contributorsCount, 60) / 200; // Cap the score at 30
   score += contributorScore;
 
   // 2. Check if README file exists
   const readme = await readmeExists(owner, repo);
 
   if (readme) {
-    score += 20;
+    score += 0.2;
   }
 
   // 3. Check if test files exist
   const testFileExists = await testsExists(owner, repo);
 
   if (testFileExists) {
-    score += 50;
+    score += 0.5;
   }
 
   //Correctness Score

@@ -33,13 +33,6 @@ export class Ranker {
     private responsiveMaintainersWeight: number = 0.3;
     private licenseWeight: number = 0.3;
 
-    private rampUpMax: number = 50;
-    private corrrectnessMax: number = 100;
-    private busFactorMax: number = 16;
-    private responsiveMaintainersMax: number = 7;
-    private licenseMax: number = 1;
-
-
 
     constructor(){
         this.URL = "none";
@@ -57,14 +50,6 @@ export class Ranker {
         this.licenseLatency = -1;
     }
 
-    private Normalize(value: number, max: number): number {
-        let num: number = value/max;
-        if(num > 1){
-            num = 1;
-        }
-        return num;
-    }
-
     // Getters and Setters
     get GetURL(): string {
         return this.URL;
@@ -78,7 +63,7 @@ export class Ranker {
         this.netScore = (this.rampUp * this.rampUpWeight) + 
                         (this.correctness * this.corrrectnessWeight) + 
                         (this.busFactor * this.busFactorWeight) + 
-                        ((1 - this.responsiveMaintainers) * this.responsiveMaintainersWeight) + 
+                        ((this.responsiveMaintainers) * this.responsiveMaintainersWeight) + 
                         (this.license * this.licenseWeight)
                         
         if(this.netScore > 1){
@@ -100,7 +85,7 @@ export class Ranker {
     }
 
     set SetRampUp(value: number) {
-        this.rampUp = this.Normalize(value, this.rampUpMax);
+        this.rampUp = value;
     }
 
     get GetRampUpLatency(): number {
@@ -116,7 +101,7 @@ export class Ranker {
     }
 
     set SetCorrectness(value: number) {
-        this.correctness = this.Normalize(value, this.corrrectnessMax);
+        this.correctness = value;
     }
 
     get GetCorrectnessLatency(): number {
@@ -132,7 +117,7 @@ export class Ranker {
     }
 
     set SetBusFactor(value: number) {
-        this.busFactor = this.Normalize(value, this.busFactorMax);
+        this.busFactor = value;
     }
 
     get GetBusFactorLatency(): number {
@@ -144,11 +129,11 @@ export class Ranker {
     }
 
     get GetResponsiveMaintainers(): number {
-        return  1 - this.responsiveMaintainers;
+        return  this.responsiveMaintainers;
     }
 
     set SetResponsiveMaintainers(value: number) {
-        this.responsiveMaintainers = this.Normalize(value, this.responsiveMaintainersMax);
+        this.responsiveMaintainers = value;
     }
 
     get GetResponsiveMaintainersLatency(): number {
@@ -164,7 +149,7 @@ export class Ranker {
     }
 
     set SetLicense(value: number) {
-        this.license = this.Normalize(value, this.licenseMax);
+        this.license = value;
     }
 
     get GetLicenseLatency(): number {
