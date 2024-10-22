@@ -11,6 +11,6 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/metrics/cloneRepositoryAndEvaluateRampUp.ts", "src/utils/logger.ts"],
+  "include": ["./src/**/*.ts", "src/metrics/cloneRepositoryAndEvaluateRampUp.ts", "src/utils/logger.ts"],
   "exclude": ["node_modules"]
 }
