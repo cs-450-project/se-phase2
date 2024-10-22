@@ -23,7 +23,7 @@ import { findGitHubRepoForNPMLink } from './findGitHubRepoForNPMLink.js';
 // Importing the functions to calculate the metrics
 import { evaluateBusFactor } from "../metrics/evaluateBusFactor.js";
 import { evaluateCorrectness } from "../metrics/evaluateCorrectness.js";
-import { evaluateLicense } from "../metrics/evaluateLicese.js";
+import { evaluateLicense } from "../metrics/evaluateLicense.js";
 import { evaluateRampUp } from "../metrics/evaluateRampUp.js";
 import { evaluateResponsiveMaintainers } from "../metrics/evaluateResponsiveMaintainers.js";
 
