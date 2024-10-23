@@ -33,10 +33,8 @@ Group 4 has taken over Group 3's project from Handoff. Here you will find inform
 
 ## Getting Started
 
-The `.run` executable is in the `out` directory, but it doesn't work. 
-**At the moment, this program only runs in Command Prompt on Windows.**
-
-- `npm install` installs all the necessary packages and dependencies.
+- `npm install`  or `./run install` installs all the necessary packages and dependencies.
 - Create `.env` file in root project directory with `GITHUB_TOKEN`, `LOG_FILE`, and `LOG_LEVEL`
-- `npm run build` builds the program by compiling the TypeScript code to JavaScript using tsc.
-- `node out/Master.js <COMPLETE FILE PATH>` executes the program with a file containing URLs.
+- `npm run build` or `./run build` builds the program by compiling the TypeScript code to JavaScript using tsc.
+- `./run <"URL file name".txt>` executes the program with a file containing URLs.
+- `./run test` runs the tests and outputs the test coverage.
