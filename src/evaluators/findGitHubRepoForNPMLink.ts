@@ -16,26 +16,30 @@
  */
 
 import axios from 'axios';
-import logger from '../utils/logger.js';
+import logger from '../logger.js';
 
 export async function findGitHubRepoForNPMLink(packageName: string): Promise<string | null> {
     try {
+        logger.debug(`Received package URL: ${packageName}`);
 
         //Extract package name from URL
         const regex = /npmjs\.com\/package\/([^\/]+)/;
         const match = packageName.match(regex);
 
         if (match && match[1]) {
-            
             packageName = match[1];
-            
-        }//end if statement
+            logger.debug(`Extracted package name: ${packageName}`);
+        } else {
+            logger.info(`No package name found in URL: ${packageName}`);
+        }
 
         // Fetch package data from npm registry
+        logger.debug(`Fetching data from npm registry for package: ${packageName}`);
         const response = await axios.get(`https://registry.npmjs.org/${packageName}`);
 
         // Check if the repository field exists and points to GitHub
         const repository = response.data.repository;
+        logger.debug(`Repository field found: ${JSON.stringify(repository)}`);
 
         // If the repository is an object, use its URL
         if (repository) {
@@ -50,6 +54,8 @@ export async function findGitHubRepoForNPMLink(packageName: string): Promise<str
 
             // Ensure the URL is in HTTP format
             if (repoUrl && repoUrl.includes('github.com')) {
+                logger.debug(`Original repository URL: ${repoUrl}`);
+
                 // Convert SSH URL or other formats to HTTPS format
                 if (repoUrl.startsWith('git+ssh://')) {
                     repoUrl = repoUrl.replace('git+ssh://', 'https://').replace('git@', '').replace('.git', '');
@@ -70,17 +76,20 @@ export async function findGitHubRepoForNPMLink(packageName: string): Promise<str
                     repoUrl = repoUrl.replace(".git", "")
                 }
 
+                logger.info(`Formatted repository URL: ${repoUrl}`);
                 return repoUrl; // Return the formatted URL
+            } else {
+                logger.info(`No GitHub repository URL found for package: ${packageName}`);
             }
+        } else {
+            logger.info(`No repository field found for package: ${packageName}`);
         }
 
         return null; // Return null if no repository URL is found
 
     } catch (error) {
-        logger.info("Something went wrong connecting to the npmjs link " + packageName + " from VerifyURL");
-        logger.info(error);
+        logger.error(`Error connecting to the npmjs link ${packageName} from VerifyURL`);
+        logger.error(error);
         return null; // Return null in case of error
     }
 }
-
-

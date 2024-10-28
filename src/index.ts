@@ -6,7 +6,7 @@
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-
+import logger from './logger.js';
 import { processURLsFromFile } from './evaluators/processURLsFromFile.js';
 import { evaluateMetrics } from './evaluators/evaluateMetrics.js';
 
@@ -27,7 +27,14 @@ const argv = yargs(hideBin(process.argv))
 // Get file from the command line arguments, or use testing values
 const file = argv.file;
 
-
 if (file) {
+  logger.info(`Processing URLs from file: ${file}`);
+  try {
     processURLsFromFile(file, evaluateMetrics);
+    logger.debug('Processing completed successfully.');
+  } catch (error) {
+    logger.error(`Error processing URLs from file: ${(error as Error).message}`);
+  }
+} else {
+  logger.error('No file provided.');
 }

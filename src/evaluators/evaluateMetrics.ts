@@ -13,7 +13,7 @@
  * 
  */
 
-import logger from '../utils/logger.js';
+import logger from '../logger.js';
 
 import { sendToOutput } from "../utils/sendToOutput.js";
 import { Ranker } from "../scores/Ranker.js";
@@ -33,78 +33,95 @@ export async function evaluateMetrics(url: string, urlNum: number){
     const factorTime = new Timer();
     let repoInfo;
     
+    logger.debug(`Evaluating metrics for URL: ${url}`);
+
     if(isNPMLink(url)){
+        logger.debug(`URL is an NPM link: ${url}`);
         let newURL = await findGitHubRepoForNPMLink(url);
         if(newURL){
             url = newURL;
             repoInfo = getRepoInfo(url);
-            
+            logger.debug(`Converted NPM link to GitHub URL: ${url}`);
         }
         else{
-            logger.info('No github repo for URL ' + url);
+            logger.info('No GitHub repo for URL ' + url);
             repoInfo = null;
         }
     }
     else{
         repoInfo = getRepoInfo(url);
-        
     }
 
     if(repoInfo){
-
         const { owner, repo } = repoInfo;
+        logger.debug(`Extracted owner: ${owner}, repo: ${repo} from URL: ${url}`);
 
         if(owner && repo){
             totalTime.start();
             ranker.SetURL = url;
 
             factorTime.start();
-            //Check Bus Factor
+            // Check Bus Factor
             ranker.SetBusFactor = Number(await evaluateBusFactor(owner, repo));
             ranker.SetBusFactorLatency = factorTime.stop();
-        
+            logger.debug(`Bus Factor: ${ranker.GetBusFactor}, Latency: ${ranker.GetBusFactorLatency}`);
+
             factorTime.start();
-            //Check Correctness
+            // Check Correctness
             ranker.SetCorrectness = Number(await evaluateCorrectness(owner, repo));
             ranker.SetCorrectnessLatency = factorTime.stop();
+            logger.debug(`Correctness: ${ranker.GetCorrectness}, Latency: ${ranker.GetCorrectnessLatency}`);
             
             factorTime.start();
-            //Check License
+            // Check License
             ranker.SetLicense = Number(await evaluateLicense(owner, repo));
             ranker.SetLicenseLatency = factorTime.stop();
+            logger.debug(`License: ${ranker.GetLicense}, Latency: ${ranker.GetLicenseLatency}`);
             
             factorTime.start();
-            //Check RampUp
+            // Check RampUp
             ranker.SetRampUp = await evaluateRampUp(owner, repo);
             ranker.SetRampUpLatency = factorTime.stop();
+            logger.debug(`RampUp: ${ranker.GetRampUp}, Latency: ${ranker.GetRampUpLatency}`);
 
             factorTime.start();
-            //Check ResponsiveMaintainer
+            // Check ResponsiveMaintainer
             ranker.SetResponsiveMaintainers = Number(await evaluateResponsiveMaintainers(owner, repo));
             ranker.SetResponsiveMaintainersLatency = factorTime.stop();
+            logger.debug(`Responsive Maintainers: ${ranker.GetResponsiveMaintainers}, Latency: ${ranker.GetResponsiveMaintainersLatency}`);
            
-            //Ends the NetScore timer and sends the time to the ranker
+            // Ends the NetScore timer and sends the time to the ranker
             ranker.SetNetScoreLatency = totalTime.stop();
-
+            logger.debug(`NetScore Latency: ${ranker.GetNetScoreLatency}`);
         }
         else{
-            logger.info("Could not get repo owner or name from URL" + url);
+            logger.info("Could not get repo owner or name from URL " + url);
             ranker.SetURL = url;
         }
     }
     else{
-        logger.info("Could not get repo owner or name from URL" + url);
+        logger.info("Could not get repo owner or name from URL " + url);
         ranker.SetURL = url;
     }
 
-    sendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
-        RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency, 
-        BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainers, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainersLatency, 
-        License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency});
+    sendToOutput.writeToStdout({ 
+        URL: ranker.GetURL, 
+        NetScore: ranker.GetNetScore, 
+        NetScore_Latency: ranker.GetNetScoreLatency, 
+        RampUp: ranker.GetRampUp, 
+        RampUp_Latency: ranker.GetRampUpLatency, 
+        Correctness: ranker.GetCorrectness, 
+        Correctness_Latency: ranker.GetCorrectnessLatency, 
+        BusFactor: ranker.GetBusFactor, 
+        BusFactor_Latency: ranker.GetBusFactorLatency, 
+        ResponsiveMaintainer: ranker.GetResponsiveMaintainers, 
+        ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainersLatency, 
+        License: ranker.GetLicense, 
+        License_Latency: ranker.GetLicenseLatency
+    });
 
-
+    logger.debug(`Metrics evaluation completed for URL: ${url}`);
     ranker.Clear();
-    
 }
 
 function getRepoInfo(url: string): {owner: string; repo: string} | null{
@@ -123,6 +140,3 @@ function isNPMLink(url: string): boolean {
     const npmRegex = /^(https?:\/\/(www\.)?npmjs\.com\/|npm:\/\/)/;
     return npmRegex.test(url);
 }
-
-
-
