@@ -14,7 +14,7 @@
 
 // Ensure that we have the required libraries
 
-import logger from '../utils/logger.js';
+import logger from '../logger.js';
 
 // Import octokit
 import octokit from '../utils/octokit.js';
@@ -23,97 +23,81 @@ import octokit from '../utils/octokit.js';
 var rampScore: number = 0;
 
 export async function evaluateRampUp(owner: string, repo: string) {
-
+    logger.debug(`Evaluating ramp-up score for ${owner}/${repo}`);
     rampScore = 0;
 
     await analyzeReadmeContent(owner, repo);
 
+    logger.info(`Final ramp-up score for ${owner}/${repo}: ${rampScore}`);
     return rampScore;
-
 }// end displayRampupScore function
 
 //Function that will get the README file from the repository
 async function getReadme(owner: string, repo: string) {
     try {
-
+        logger.debug(`Fetching README for ${owner}/${repo}`);
         const readmeData = await octokit.repos.getReadme({
             owner: owner,
             repo: repo,
         });
 
         const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
+        logger.debug(`Fetched README content for ${owner}/${repo}`);
 
         //Return the content of the README file
-
         return readmeContent;
-
-    }//end try statement
-
-    catch (error) {
-
-        logger.info('Failed to access GitHub API from RampUp');
-        logger.info(error);
-
-    }//end catch statement
-
+    } catch (error) {
+        logger.error(`Failed to access GitHub API for ${owner}/${repo}`);
+        logger.error(error);
+    }
 }//end getReadme function
 
 async function analyzeReadme(readmeContent: string) {
+    logger.debug(`Analyzing README content`);
 
     //Checking to see which sections are contained in the README file
     if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
-
         rampScore += 0.2;
-
-    }//end if statement
+        logger.debug(`Found Introduction section, rampScore: ${rampScore}`);
+    }
 
     if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
-
         rampScore += 0.2;
-
-    }//end if statement
+        logger.debug(`Found Installation section, rampScore: ${rampScore}`);
+    }
 
     if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
-
         rampScore += 0.2;
-
-    }//end if statement
+        logger.debug(`Found Usage section, rampScore: ${rampScore}`);
+    }
 
     if (readmeContent.includes("## Contact Information")) {
-
         rampScore += 0.2;
-
-    }//end if statement
+        logger.debug(`Found Contact Information section, rampScore: ${rampScore}`);
+    }
 
     if (readmeContent.includes("## Configuration") || readmeContent.includes("## configuration")) {
-
         rampScore += 0.2;
-
-    }//end if statement"
-
-
-
+        logger.debug(`Found Configuration section, rampScore: ${rampScore}`);
+    }
 }//end analyzeReadme function
 
-
 //Analyze the content of the README file
-async function analyzeReadmeContent(owner:string, repo:string) {
+async function analyzeReadmeContent(owner: string, repo: string) {
+    logger.debug(`Starting analysis of README content for ${owner}/${repo}`);
 
     //Get the content of the README file
     const readmeContent = await getReadme(owner, repo);
 
-     // Check if the readmeContent is null before decoding
-     if (!readmeContent) {
+    // Check if the readmeContent is null before decoding
+    if (!readmeContent) {
+        logger.info(`No README content found for ${owner}/${repo}`);
         return; // Exit if there's no content
     }
 
     //Analyze the content of the README file
     analyzeReadme(readmeContent);
-
+    logger.debug(`Completed analysis of README content for ${owner}/${repo}`);
 }//end analyzeReadmeContent function
-
-
-
-
 
 
