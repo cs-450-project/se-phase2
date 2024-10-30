@@ -1,0 +1,12 @@
+{
+    "type": "postgres",
+    "host": "172.19.22.130",
+    "port": 5432,
+    "username": "postgres",
+    "password": "mypassword",
+    "database": "package-registry",
+    "entities": ["src/entities/**/*.ts"],
+    "synchronize": true,
+    "logging": false
+  }
+  

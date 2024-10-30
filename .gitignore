@@ -2,6 +2,7 @@
 node_modules/
 
 testingRepo
+ormconfig.json
 
 # Compiled JavaScript files
 out
