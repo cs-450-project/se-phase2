@@ -9,6 +9,8 @@
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/metrics/cloneRepositoryAndEvaluateRampUp.ts", "src/utils/logger.ts"],
