@@ -11,7 +11,7 @@ import 'reflect-metadata';
 // Initialize DataSource
 const AppDataSource = new DataSource({
   type: 'postgres',
-  url: 'postgres://user:password@localhost:5432/your_db',
+  url: 'postgres://postgres:mypassword@172.19.22.130:5432/package_registry',
   entities: [PackageMetadata, PackageData],
   synchronize: true,
   logging: false,

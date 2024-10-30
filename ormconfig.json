@@ -4,7 +4,7 @@
     "port": 5432,
     "username": "postgres",
     "password": "mypassword",
-    "database": "package-registry",
+    "database": "package_registry",
     "entities": ["src/entities/**/*.ts"],
     "synchronize": true,
     "logging": false
