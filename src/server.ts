@@ -8,10 +8,17 @@ import { PackageData } from './entities/PackageData.js';
 import AdmZip from 'adm-zip';
 import 'reflect-metadata';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 // Initialize DataSource
 const AppDataSource = new DataSource({
   type: 'postgres',
-  url: 'postgres://postgres:mypassword@172.19.22.130:5432/package_registry',
+  host: process.env.POSTGRES_HOST || 'localhost',
+  port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  username: process.env.POSTGRES_USER || 'posiitgres',
+  password: process.env.POSTGRES_PASSWORD || 'mypassword',
+  database: process.env.POSTGRES_NAME || 'package_registry',
   entities: [PackageMetadata, PackageData],
   synchronize: true,
   logging: false,

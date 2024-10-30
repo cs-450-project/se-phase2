@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { PackageMetadata } from './PackageMetadata.js';
-import { P } from 'pino';
+
 
 @Entity('package_data')
 
@@ -24,5 +24,5 @@ export class PackageData {
 
     @Column({ name: 'js_program', nullable: true })
     jsProgram?: string;
-    
+
 }
