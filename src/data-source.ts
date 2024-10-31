@@ -22,6 +22,6 @@ export const AppDataSource = new DataSource({
     // false: tells TypeORM to not synchronize the database schema with the entities
     // should be used in production
     synchronize: NODE_ENV === "dev" ? true : false,
-    logging: NODE_ENV === "dev" ? true : false,
+    logging: NODE_ENV === "dev" ? false : false,
     entities: ["dist/entities/*.js"],
 });

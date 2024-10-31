@@ -7,7 +7,7 @@ import { AppDataSource } from './data-source.js';
 import express from 'express';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
-import { packageRouter } from './routes/packageRoutes.js';
+import packageRouter from './routes/packageRoutes.js';
 import 'reflect-metadata';
 
 dotenv.config();
