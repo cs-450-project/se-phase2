@@ -2,27 +2,11 @@
 
 import express from 'express';
 import multer from 'multer';
-import { DataSource } from 'typeorm';
+import { AppDataSource } from './db.js';
 import { PackageMetadata } from './entities/PackageMetadata.js';
 import { PackageData } from './entities/PackageData.js';
 import AdmZip from 'adm-zip';
 import 'reflect-metadata';
-
-import dotenv from 'dotenv';
-dotenv.config();
-
-// Initialize DataSource
-const AppDataSource = new DataSource({
-  type: 'postgres',
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  username: process.env.POSTGRES_USER || 'posiitgres',
-  password: process.env.POSTGRES_PASSWORD || 'mypassword',
-  database: process.env.POSTGRES_NAME || 'package_registry',
-  entities: [PackageMetadata, PackageData],
-  synchronize: true,
-  logging: false,
-});
 
 const upload = multer();
 const app = express();
@@ -124,6 +108,7 @@ app.post('/api/packages', upload.single('Content'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
