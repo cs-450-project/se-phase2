@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "dev": "nodemon",
     "start": "npx tsc; node dist/server.js",
     "build": "npx tsc",
     "test": "jest"
@@ -42,6 +43,7 @@
     "express": "^4.21.1",
     "jest": "^29.7.0",
     "multer": "^1.4.5-lts.1",
+    "nodemon": "^3.1.7",
     "ts-jest": "^29.2.5",
     "typescript": "^5.6.3"
   },

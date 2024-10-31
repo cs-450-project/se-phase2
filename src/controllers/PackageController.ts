@@ -7,11 +7,10 @@ import { Request, Response } from 'express';
 
 class PackageController {
 
+    // POST /package handler
     static async uploadPackage(req: Request, res: Response) {
         try {
-        
-            console.log('[PackageController] Request received:', req.body);
-
+            // Pull the Content, URL, debloat, and JSProgram from the request body
             const { Content, URL, JSProgram, debloat } = req.body;
 
             if (Content && !URL) {
@@ -21,7 +20,7 @@ class PackageController {
                     message: 'Content package uploaded successfully.',
                     processedData: { Content, debloat, JSProgram },
                  });
-                
+                return;
 
             }
 
@@ -32,6 +31,7 @@ class PackageController {
                     message: 'URL package uploaded successfully.',
                     processedData: { URL, JSProgram },
                  });
+                return;
                 
             }
 
@@ -39,18 +39,16 @@ class PackageController {
 
                 console.log('[PackageController] Request does not contain Content or URL.');
                 res.status(400).json({ message: 'There is missing field(s) in the PackageData or it is formed improperly (e.g. Content and URL ar both set)' });
-                
+                return;
             }
         
 
         } catch (error) {
             console.error('[PackageController] An error occurred while processing the request:', error);
             res.status(400).json({ message: 'Bad Request' });
-            
-
+            return;
         }
     }
-
 }
 
 export default PackageController;
