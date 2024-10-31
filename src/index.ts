@@ -6,7 +6,7 @@
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import logger from './logger.js';
+import logger from './utils/logger.js';
 import { processURLsFromFile } from './evaluators/processURLsFromFile.js';
 import { evaluateMetrics } from './evaluators/evaluateMetrics.js';
 

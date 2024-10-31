@@ -2,7 +2,7 @@
 
 import express from 'express';
 import multer from 'multer';
-import { AppDataSource } from './db.js';
+import { AppDataSource } from './data-source.js';
 import { PackageMetadata } from './entities/PackageMetadata.js';
 import { PackageData } from './entities/PackageData.js';
 import AdmZip from 'adm-zip';

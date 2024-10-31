@@ -16,7 +16,7 @@
  */
 
 import axios from 'axios';
-import logger from '../logger.js';
+import logger from '../utils/logger.js';
 
 export async function findGitHubRepoForNPMLink(packageName: string): Promise<string | null> {
     try {

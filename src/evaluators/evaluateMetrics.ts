@@ -13,7 +13,7 @@
  * 
  */
 
-import logger from '../logger.js';
+import logger from '../utils/logger.js';
 
 import { sendToOutput } from "../utils/sendToOutput.js";
 import { Ranker } from "../scores/Ranker.js";

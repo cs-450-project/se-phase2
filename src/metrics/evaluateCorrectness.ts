@@ -13,7 +13,7 @@
  * 
  */
 
-import logger from '../logger.js';
+import logger from '../utils/logger.js';
 import octokit from '../utils/octokit.js';
 
 // Function to calculate correctness score based on contributors, README, and test files

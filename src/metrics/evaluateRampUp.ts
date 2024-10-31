@@ -14,7 +14,7 @@
 
 // Ensure that we have the required libraries
 
-import logger from '../logger.js';
+import logger from '../utils/logger.js';
 
 // Import octokit
 import octokit from '../utils/octokit.js';
