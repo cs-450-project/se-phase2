@@ -1,16 +1,21 @@
-import { DataSource } from 'typeorm';
 import 'reflect-metadata';
+import { DataSource } from 'typeorm';
 
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Initialize DataSource
+const { DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE, NODE_ENV } = process.env;
+
+// Initialize DataSource to connect to the database
 export const AppDataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.POSTGRES_HOST || 'localhost',
-    port: parseInt(process.env.POSTGRES_PORT || '5432'),
-    username: process.env.POSTGRES_USER || 'postgres',
-    password: process.env.POSTGRES_PASSWORD || 'mypassword',
-    database: process.env.POSTGRES_NAME || 'package_registry',
+    type: "postgres",
+    host: DB_HOST,
+    port: parseInt(DB_PORT || "5432"),
+    username: DB_USERNAME,
+    password: DB_PASSWORD,
+    database: DB_DATABASE,
+
+    synchronize: NODE_ENV === "dev" ? true : false,
+    logging: NODE_ENV === "dev" ? true : false,
     entities: ["dist/entities/*.js"],
-    synchronize: true,
-    logging: false,
-  });
+});
