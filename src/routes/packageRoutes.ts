@@ -1,15 +1,15 @@
+/**
+ * @file src/routes/packageRoutes.ts
+ * Defines the routes for /package and passes requests to the controller.
+ */
 import express from 'express';
-import multer from 'multer';
 import { PackageController } from '../controllers/PackageController.js';
 
-// multer serves as middleware for handling file uploads
-const upload = multer();
-// PackageRouter defines the routes for /package
 const packageRouter = express.Router();
 
+// POST /package
 packageRouter.post(
     "/",
-    upload.single("Content"),
     PackageController.uploadPackage
 );
 
