@@ -1,12 +1,12 @@
-import { Entity, PrimaryColumn, Column, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
 
 @Entity('package_metadata')
 @Unique(['name', 'version'])
 
 export class PackageMetadata {
   
-  @PrimaryColumn()
-  id!: string;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
   @Column()
   name!: string;

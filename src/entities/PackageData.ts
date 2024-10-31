@@ -5,16 +5,16 @@ import { PackageMetadata } from './PackageMetadata.js';
 @Entity('package_data')
 
 export class PackageData {
-
+    
     @PrimaryColumn()
-    package_id!: string;
+    package_id!: number;
 
     @OneToOne(() => PackageMetadata)
-    @JoinColumn({ name: 'package_id' })
+    @JoinColumn({ name: 'package_id', referencedColumnName: 'id' })
     packageMetadata!: PackageMetadata;
     
-    @Column({ type: 'bytea', nullable: true })
-    content?: Buffer;
+    @Column({ nullable: true })
+    content?: string;
 
     @Column({ nullable: true })
     url?: string;
@@ -24,5 +24,8 @@ export class PackageData {
 
     @Column({ name: 'js_program', nullable: true })
     jsProgram?: string;
+
+    
+    
 
 }

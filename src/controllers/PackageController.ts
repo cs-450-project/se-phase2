@@ -4,8 +4,9 @@
  */
 
 import { Request, Response } from 'express';
+import { PackageService } from '../services/PackageService.js';
 
-class PackageController {
+export class PackageController {
 
     // POST /package handler
     static async uploadPackage(req: Request, res: Response) {
@@ -16,10 +17,13 @@ class PackageController {
             if (Content && !URL) {
                 console.log('[PackageController] Request contains Content.');
 
+                // Call the service to process the Content package
+                const result = await PackageService.uploadContentType(Content, JSProgram, debloat);
+
                 res.status(200).json({ 
-                    message: 'Content package uploaded successfully.',
-                    processedData: { Content, debloat, JSProgram },
+                    ...(result ? { ...JSON.parse(JSON.stringify(result)) } : {})
                  });
+
                 return;
 
             }
@@ -50,5 +54,3 @@ class PackageController {
         }
     }
 }
-
-export default PackageController;

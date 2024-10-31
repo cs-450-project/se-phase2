@@ -4,7 +4,7 @@
  */
 import express from 'express';
 import { Request, Response } from 'express';
-import PackageController from '../controllers/PackageController.js';
+import { PackageController } from '../controllers/PackageController.js';
 
 const packageRouter = express.Router();
 
