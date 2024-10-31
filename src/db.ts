@@ -10,7 +10,7 @@ export const AppDataSource = new DataSource({
     username: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || 'mypassword',
     database: process.env.POSTGRES_NAME || 'package_registry',
-    entities: ["out/entities/*.js"],
+    entities: ["dist/entities/*.js"],
     synchronize: true,
     logging: false,
   });

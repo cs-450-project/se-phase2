@@ -29,7 +29,7 @@ if [ -f $arg ]; then
     # Compile TS files
     npm run build
     # Pass the file path index.js
-    node out/index.js --file "$arg"
+    node dist/index.js --file "$arg"
     exit 0
 fi
 

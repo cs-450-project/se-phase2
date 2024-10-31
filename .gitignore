@@ -5,6 +5,7 @@ testingRepo
 
 # Compiled JavaScript files
 out
+dist
 build/
 coverage/
 
