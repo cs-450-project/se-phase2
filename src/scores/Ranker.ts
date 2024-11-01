@@ -2,205 +2,267 @@
  * URLParser.ts
  * 
  * Description:
- * This file takes a text file and splits each line as it's own URL. Then it performs an operation on each one
+ * This file takes a text file and splits each line as its own URL, performing an operation on each.
  * 
  * Author: Jacob Esparza
  * Date: 9-29-2024
- * Version: 1.0
+ * Version: 1.1
  * 
  */
 
-import logger from '../logger.js';
+// Ranker.ts
+import logger from '../logger.js'; // Adjust the import path as necessary
 
 export class Ranker {
+    public URL: string = 'none';
 
-    private URL: string;
-    private netScore: number;
-    private netScoreLatency: number;
-    private rampUp: number;
-    private rampUpLatency: number;
-    private correctness: number;
-    private correctnessLatency: number;
-    private busFactor: number;
-    private busFactorLatency: number;
-    private responsiveMaintainers: number;
-    private responsiveMaintainersLatency: number;
-    private license: number;
-    private licenseLatency: number;
+    private _netScore: number = -1;
+    private _netScoreLatency: number = -1;
 
-    private rampUpWeight: number = 0.15;
-    private corrrectnessWeight: number = 0.1;
-    private busFactorWeight: number = 0.15;
-    private responsiveMaintainersWeight: number = 0.3;
-    private licenseWeight: number = 0.3;
+    private _rampUp: number = -1;
+    private _rampUpLatency: number = -1;
 
-    constructor(){
-        this.URL = "none";
-        this.netScore = -1;
-        this.netScoreLatency = -1;
-        this.rampUp = -1;
-        this.rampUpLatency = -1;
-        this.correctness = -1;
-        this.correctnessLatency = -1;
-        this.busFactor = -1;
-        this.busFactorLatency = -1;
-        this.responsiveMaintainers = -1;
-        this.responsiveMaintainersLatency = -1;
-        this.license = -1;
-        this.licenseLatency = -1;
-        logger.info('Ranker instance created with default values.');
+    private _correctness: number = -1;
+    private _correctnessLatency: number = -1;
+
+    private _busFactor: number = -1;
+    private _busFactorLatency: number = -1;
+
+    private _responsiveMaintainers: number = -1;
+    private _responsiveMaintainersLatency: number = -1;
+
+    private _license: number = -1;
+    private _licenseLatency: number = -1;
+
+    private _dependencyPinning: number = -1;
+    private _dependencyPinningLatency: number = -1;
+
+    private _codeReview: number = -1;
+    private _codeReviewLatency: number = -1;
+
+    constructor() {
+        this.resetValues();
     }
 
-    // Getters and Setters
-    get GetURL(): string {
-        logger.debug(`Getting URL: ${this.URL}`);
-        return this.URL;
+    get netScore(): number {
+        const weights = {
+            busFactor: 0.2,
+            correctness: 0.2,
+            rampUp: 0.2,
+            responsiveMaintainers: 0.2,
+            license: 0.1,
+            dependencyPinning: 0.05,
+            codeReview: 0.05
+        };
+
+        const score = (
+            this._busFactor * weights.busFactor +
+            this._correctness * weights.correctness +
+            this._rampUp * weights.rampUp +
+            this._responsiveMaintainers * weights.responsiveMaintainers +
+            this._license * weights.license +
+            this._dependencyPinning * weights.dependencyPinning +
+            this._codeReview * weights.codeReview
+        );
+
+        logger.debug(`Calculated netScore: ${score}`);
+        return score >= 0 ? score : -1;
     }
 
-    set SetURL(value: string) {
-        logger.debug(`Setting URL from ${this.URL} to ${value}`);
-        this.URL = value;
+
+    set netScore(value: number) {
+        logger.debug(`Setting netScore from ${this._netScore} to ${value}`);
+        this._netScore = value;
     }
 
-    get GetNetScore(): number {
-        this.netScore = (this.rampUp * this.rampUpWeight) + 
-                        (this.correctness * this.corrrectnessWeight) + 
-                        (this.busFactor * this.busFactorWeight) + 
-                        ((this.responsiveMaintainers) * this.responsiveMaintainersWeight) + 
-                        (this.license * this.licenseWeight);
-                        
-        if(this.netScore > 1){
-            this.netScore = 1;
-        }
-        logger.debug(`Calculated netScore: ${this.netScore}`);
-        return this.netScore;
+    get netScoreLatency(): number {
+        logger.debug(`Getting netScoreLatency: ${this._netScoreLatency}`);
+        return this._netScoreLatency;
     }
 
-    get GetNetScoreLatency(): number {
-        logger.debug(`Getting netScoreLatency: ${this.netScoreLatency}`);
-        return this.netScoreLatency;
+    set netScoreLatency(value: number) {
+        logger.debug(`Setting netScoreLatency from ${this._netScoreLatency} to ${value}`);
+        this._netScoreLatency = value;
     }
 
-    set SetNetScoreLatency(value: number) {
-        logger.debug(`Setting netScoreLatency from ${this.netScoreLatency} to ${value}`);
-        this.netScoreLatency = value;
+    // Ramp Up
+    get rampUp(): number {
+        logger.debug(`Getting rampUp: ${this._rampUp}`);
+        return this._rampUp;
     }
 
-    get GetRampUp(): number {
-        logger.debug(`Getting rampUp: ${this.rampUp}`);
-        return this.rampUp;
+    set rampUp(value: number) {
+        logger.debug(`Setting rampUp from ${this._rampUp} to ${value}`);
+        this._rampUp = value;
     }
 
-    set SetRampUp(value: number) {
-        logger.debug(`Setting rampUp from ${this.rampUp} to ${value}`);
-        this.rampUp = value;
+    get rampUpLatency(): number {
+        logger.debug(`Getting rampUpLatency: ${this._rampUpLatency}`);
+        return this._rampUpLatency;
     }
 
-    get GetRampUpLatency(): number {
-        logger.debug(`Getting rampUpLatency: ${this.rampUpLatency}`);
-        return this.rampUpLatency;
+    set rampUpLatency(value: number) {
+        logger.debug(`Setting rampUpLatency from ${this._rampUpLatency} to ${value}`);
+        this._rampUpLatency = value;
     }
 
-    set SetRampUpLatency(value: number) {
-        logger.debug(`Setting rampUpLatency from ${this.rampUpLatency} to ${value}`);
-        this.rampUpLatency = value;
+    // Correctness
+    get correctness(): number {
+        logger.debug(`Getting correctness: ${this._correctness}`);
+        return this._correctness;
     }
 
-    get GetCorrectness(): number {
-        logger.debug(`Getting correctness: ${this.correctness}`);
-        return this.correctness;
+    set correctness(value: number) {
+        logger.debug(`Setting correctness from ${this._correctness} to ${value}`);
+        this._correctness = value;
     }
 
-    set SetCorrectness(value: number) {
-        logger.debug(`Setting correctness from ${this.correctness} to ${value}`);
-        this.correctness = value;
+    get correctnessLatency(): number {
+        logger.debug(`Getting correctnessLatency: ${this._correctnessLatency}`);
+        return this._correctnessLatency;
     }
 
-    get GetCorrectnessLatency(): number {
-        logger.debug(`Getting correctnessLatency: ${this.correctnessLatency}`);
-        return this.correctnessLatency;
+    set correctnessLatency(value: number) {
+        logger.debug(`Setting correctnessLatency from ${this._correctnessLatency} to ${value}`);
+        this._correctnessLatency = value;
     }
 
-    set SetCorrectnessLatency(value: number) {
-        logger.debug(`Setting correctnessLatency from ${this.correctnessLatency} to ${value}`);
-        this.correctnessLatency = value;
+    // Bus Factor
+    get busFactor(): number {
+        logger.debug(`Getting busFactor: ${this._busFactor}`);
+        return this._busFactor;
     }
 
-    get GetBusFactor(): number {
-        logger.debug(`Getting busFactor: ${this.busFactor}`);
-        return this.busFactor;
+    set busFactor(value: number) {
+        logger.debug(`Setting busFactor from ${this._busFactor} to ${value}`);
+        this._busFactor = value;
     }
 
-    set SetBusFactor(value: number) {
-        logger.debug(`Setting busFactor from ${this.busFactor} to ${value}`);
-        this.busFactor = value;
+    get busFactorLatency(): number {
+        logger.debug(`Getting busFactorLatency: ${this._busFactorLatency}`);
+        return this._busFactorLatency;
     }
 
-    get GetBusFactorLatency(): number {
-        logger.debug(`Getting busFactorLatency: ${this.busFactorLatency}`);
-        return this.busFactorLatency;
+    set busFactorLatency(value: number) {
+        logger.debug(`Setting busFactorLatency from ${this._busFactorLatency} to ${value}`);
+        this._busFactorLatency = value;
     }
 
-    set SetBusFactorLatency(value: number) {
-        logger.debug(`Setting busFactorLatency from ${this.busFactorLatency} to ${value}`);
-        this.busFactorLatency = value;
+    // Responsive Maintainers
+    get responsiveMaintainers(): number {
+        logger.debug(`Getting responsiveMaintainers: ${this._responsiveMaintainers}`);
+        return this._responsiveMaintainers;
     }
 
-    get GetResponsiveMaintainers(): number {
-        logger.debug(`Getting responsiveMaintainers: ${this.responsiveMaintainers}`);
-        return  this.responsiveMaintainers;
+    set responsiveMaintainers(value: number) {
+        logger.debug(`Setting responsiveMaintainers from ${this._responsiveMaintainers} to ${value}`);
+        this._responsiveMaintainers = value;
     }
 
-    set SetResponsiveMaintainers(value: number) {
-        logger.debug(`Setting responsiveMaintainers from ${this.responsiveMaintainers} to ${value}`);
-        this.responsiveMaintainers = value;
+    get responsiveMaintainersLatency(): number {
+        logger.debug(`Getting responsiveMaintainersLatency: ${this._responsiveMaintainersLatency}`);
+        return this._responsiveMaintainersLatency;
     }
 
-    get GetResponsiveMaintainersLatency(): number {
-        logger.debug(`Getting responsiveMaintainersLatency: ${this.responsiveMaintainersLatency}`);
-        return this.responsiveMaintainersLatency;
+    set responsiveMaintainersLatency(value: number) {
+        logger.debug(`Setting responsiveMaintainersLatency from ${this._responsiveMaintainersLatency} to ${value}`);
+        this._responsiveMaintainersLatency = value;
     }
 
-    set SetResponsiveMaintainersLatency(value: number) {
-        logger.debug(`Setting responsiveMaintainersLatency from ${this.responsiveMaintainersLatency} to ${value}`);
-        this.responsiveMaintainersLatency = value;
+    // License
+    get license(): number {
+        logger.debug(`Getting license: ${this._license}`);
+        return this._license;
     }
 
-    get GetLicense(): number {
-        logger.debug(`Getting license: ${this.license}`);
-        return this.license;
+    set license(value: number) {
+        logger.debug(`Setting license from ${this._license} to ${value}`);
+        this._license = value;
     }
 
-    set SetLicense(value: number) {
-        logger.debug(`Setting license from ${this.license} to ${value}`);
-        this.license = value;
+    get licenseLatency(): number {
+        logger.debug(`Getting licenseLatency: ${this._licenseLatency}`);
+        return this._licenseLatency;
     }
 
-    get GetLicenseLatency(): number {
-        logger.debug(`Getting licenseLatency: ${this.licenseLatency}`);
-        return this.licenseLatency;
+    set licenseLatency(value: number) {
+        logger.debug(`Setting licenseLatency from ${this._licenseLatency} to ${value}`);
+        this._licenseLatency = value;
     }
 
-    set SetLicenseLatency(value: number) {
-        logger.debug(`Setting licenseLatency from ${this.licenseLatency} to ${value}`);
-        this.licenseLatency = value;
+    // Dependency Pinning
+    get dependencyPinning(): number {
+        logger.debug(`Getting dependencyPinning: ${this._dependencyPinning}`);
+        return this._dependencyPinning;
     }
 
-    public Clear(){
+    set dependencyPinning(value: number) {
+        logger.debug(`Setting dependencyPinning from ${this._dependencyPinning} to ${value}`);
+        this._dependencyPinning = value;
+    }
+
+    get dependencyPinningLatency(): number {
+        logger.debug(`Getting dependencyPinningLatency: ${this._dependencyPinningLatency}`);
+        return this._dependencyPinningLatency;
+    }
+
+    set dependencyPinningLatency(value: number) {
+        logger.debug(`Setting dependencyPinningLatency from ${this._dependencyPinningLatency} to ${value}`);
+        this._dependencyPinningLatency = value;
+    }
+
+    // Code Review
+    get codeReview(): number {
+        logger.debug(`Getting codeReview: ${this._codeReview}`);
+        return this._codeReview;
+    }
+
+    set codeReview(value: number) {
+        logger.debug(`Setting codeReview from ${this._codeReview} to ${value}`);
+        this._codeReview = value;
+    }
+
+    get codeReviewLatency(): number {
+        logger.debug(`Getting codeReviewLatency: ${this._codeReviewLatency}`);
+        return this._codeReviewLatency;
+    }
+
+    set codeReviewLatency(value: number) {
+        logger.debug(`Setting codeReviewLatency from ${this._codeReviewLatency} to ${value}`);
+        this._codeReviewLatency = value;
+    }
+
+    // Clear all values
+    public clear(): void {
         logger.info('Clearing all values to default.');
-        this.URL = "none";
-        this.netScore = -1;
-        this.netScoreLatency = -1;
-        this.rampUp = -1;
-        this.rampUpLatency = -1;
-        this.correctness = -1;
-        this.correctnessLatency = -1;
-        this.busFactor = -1;
-        this.busFactorLatency = -1;
-        this.responsiveMaintainers = -1;
-        this.responsiveMaintainersLatency = -1;
-        this.license = -1;
-        this.licenseLatency = -1;
+        this.resetValues();
     }
 
+    private resetValues(): void {
+        this.URL = 'none';
+
+        this._netScore = -1;
+        this._netScoreLatency = -1;
+
+        this._rampUp = -1;
+        this._rampUpLatency = -1;
+
+        this._correctness = -1;
+        this._correctnessLatency = -1;
+
+        this._busFactor = -1;
+        this._busFactorLatency = -1;
+
+        this._responsiveMaintainers = -1;
+        this._responsiveMaintainersLatency = -1;
+
+        this._license = -1;
+        this._licenseLatency = -1;
+
+        this._dependencyPinning = -1;
+        this._dependencyPinningLatency = -1;
+
+        this._codeReview = -1;
+        this._codeReviewLatency = -1;
+    }
 }
