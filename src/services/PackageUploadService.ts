@@ -1,6 +1,6 @@
 /** 
- * @file src/services/PackageService.ts
- * Service contains the business logic for the API.
+ * @file src/services/PackageUploadService.ts
+ * Service contains the business logic for uploading a package to the database.
  */
 
 
@@ -10,8 +10,22 @@ import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
 
-export class PackageService {
+/**
+ * @class PackageUploadService
+ * Service class that contains the business logic for uploading a package to the database.
+ * 
+ */
+export class PackageUploadService {
 
+    /**
+     * @function uploadContentType
+     * Uploads a package that contains Base64 encoded zip file to the database.
+     * 
+     * @param Content Base64 encoded zip file
+     * @param JSProgram Base64 encoded JavaScript program
+     * @param debloat Boolean indicating whether to debloat the package
+     * @returns Object containing Json data of the uploaded package
+     */
     static async uploadContentType(Content: string, JSProgram: string, debloat: boolean) {
         try {
             console.log('[PackageService] Uploading Content type package to the database...');
@@ -61,7 +75,6 @@ export class PackageService {
         }
     }
 };
-
 
 /**
  * @function extractNameAndVersionFromZip

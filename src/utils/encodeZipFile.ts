@@ -1,3 +1,7 @@
+/**
+ * This function reads a zip file and encodes it to base64.
+ * Use to generate a base64 string from a zip file for testing.
+ */
 import { readFileSync } from 'fs';
 
 const encodeZipFileToBase64 = (filePath: string): string => {
