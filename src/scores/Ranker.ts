@@ -44,6 +44,10 @@ export class Ranker {
         this.resetValues();
     }
 
+    private roundValue(value: number): number {
+        return Number(value.toFixed(3));
+    }
+
     get netScore(): number {
         const weights = {
             busFactor: 0.2,
@@ -55,7 +59,7 @@ export class Ranker {
             codeReview: 0.05
         };
 
-        const score = (
+        const score = this.roundValue(
             this._busFactor * weights.busFactor +
             this._correctness * weights.correctness +
             this._rampUp * weights.rampUp +
@@ -72,7 +76,7 @@ export class Ranker {
 
     set netScore(value: number) {
         logger.debug(`Setting netScore from ${this._netScore} to ${value}`);
-        this._netScore = value;
+        this._netScore = this.roundValue(value);
     }
 
     get netScoreLatency(): number {
@@ -82,7 +86,7 @@ export class Ranker {
 
     set netScoreLatency(value: number) {
         logger.debug(`Setting netScoreLatency from ${this._netScoreLatency} to ${value}`);
-        this._netScoreLatency = value;
+        this._netScoreLatency = this.roundValue(value);
     }
 
     // Ramp Up
@@ -93,7 +97,7 @@ export class Ranker {
 
     set rampUp(value: number) {
         logger.debug(`Setting rampUp from ${this._rampUp} to ${value}`);
-        this._rampUp = value;
+        this._rampUp = this.roundValue(value);
     }
 
     get rampUpLatency(): number {
@@ -103,7 +107,7 @@ export class Ranker {
 
     set rampUpLatency(value: number) {
         logger.debug(`Setting rampUpLatency from ${this._rampUpLatency} to ${value}`);
-        this._rampUpLatency = value;
+        this._rampUpLatency = this.roundValue(value);
     }
 
     // Correctness
@@ -114,7 +118,7 @@ export class Ranker {
 
     set correctness(value: number) {
         logger.debug(`Setting correctness from ${this._correctness} to ${value}`);
-        this._correctness = value;
+        this._correctness = this.roundValue(value);
     }
 
     get correctnessLatency(): number {
@@ -124,7 +128,7 @@ export class Ranker {
 
     set correctnessLatency(value: number) {
         logger.debug(`Setting correctnessLatency from ${this._correctnessLatency} to ${value}`);
-        this._correctnessLatency = value;
+        this._correctnessLatency = this.roundValue(value);
     }
 
     // Bus Factor
@@ -135,7 +139,7 @@ export class Ranker {
 
     set busFactor(value: number) {
         logger.debug(`Setting busFactor from ${this._busFactor} to ${value}`);
-        this._busFactor = value;
+        this._busFactor = this.roundValue(value);
     }
 
     get busFactorLatency(): number {
@@ -145,7 +149,7 @@ export class Ranker {
 
     set busFactorLatency(value: number) {
         logger.debug(`Setting busFactorLatency from ${this._busFactorLatency} to ${value}`);
-        this._busFactorLatency = value;
+        this._busFactorLatency = this.roundValue(value);
     }
 
     // Responsive Maintainers
@@ -156,7 +160,7 @@ export class Ranker {
 
     set responsiveMaintainers(value: number) {
         logger.debug(`Setting responsiveMaintainers from ${this._responsiveMaintainers} to ${value}`);
-        this._responsiveMaintainers = value;
+        this._responsiveMaintainers = this.roundValue(value);
     }
 
     get responsiveMaintainersLatency(): number {
@@ -166,7 +170,7 @@ export class Ranker {
 
     set responsiveMaintainersLatency(value: number) {
         logger.debug(`Setting responsiveMaintainersLatency from ${this._responsiveMaintainersLatency} to ${value}`);
-        this._responsiveMaintainersLatency = value;
+        this._responsiveMaintainersLatency = this.roundValue(value);
     }
 
     // License
@@ -177,7 +181,7 @@ export class Ranker {
 
     set license(value: number) {
         logger.debug(`Setting license from ${this._license} to ${value}`);
-        this._license = value;
+        this._license = this.roundValue(value);
     }
 
     get licenseLatency(): number {
@@ -187,7 +191,7 @@ export class Ranker {
 
     set licenseLatency(value: number) {
         logger.debug(`Setting licenseLatency from ${this._licenseLatency} to ${value}`);
-        this._licenseLatency = value;
+        this._licenseLatency = this.roundValue(value);
     }
 
     // Dependency Pinning
@@ -198,7 +202,7 @@ export class Ranker {
 
     set dependencyPinning(value: number) {
         logger.debug(`Setting dependencyPinning from ${this._dependencyPinning} to ${value}`);
-        this._dependencyPinning = value;
+        this._dependencyPinning = this.roundValue(value);
     }
 
     get dependencyPinningLatency(): number {
@@ -208,7 +212,7 @@ export class Ranker {
 
     set dependencyPinningLatency(value: number) {
         logger.debug(`Setting dependencyPinningLatency from ${this._dependencyPinningLatency} to ${value}`);
-        this._dependencyPinningLatency = value;
+        this._dependencyPinningLatency = this.roundValue(value);
     }
 
     // Code Review
@@ -219,7 +223,7 @@ export class Ranker {
 
     set codeReview(value: number) {
         logger.debug(`Setting codeReview from ${this._codeReview} to ${value}`);
-        this._codeReview = value;
+        this._codeReview = this.roundValue(value);
     }
 
     get codeReviewLatency(): number {
@@ -229,7 +233,7 @@ export class Ranker {
 
     set codeReviewLatency(value: number) {
         logger.debug(`Setting codeReviewLatency from ${this._codeReviewLatency} to ${value}`);
-        this._codeReviewLatency = value;
+        this._codeReviewLatency = this.roundValue(value);
     }
 
     // Clear all values
