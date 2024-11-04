@@ -1,0 +1,22 @@
+{
+  "name": "test-zip-file",
+  "version": "6.9.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "npx tsc; node dist/server.js",
+    "build": "npx tsc",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@octokit/rest": "^21.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
+  },
+  "keywords": []
+}
+
