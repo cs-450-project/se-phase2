@@ -12,8 +12,8 @@
  * 
  */
 
-import logger from '../utils/logger.js';
-import octokit from '../utils/octokit.js';
+import logger from '../../utils/logger.js';
+import octokit from '../../utils/octokit.js';
 
 // Main function to calculate the "Responsive Maintainer" metric
 export async function evaluateResponsiveMaintainers(owner: string, repo: string) {

@@ -12,8 +12,47 @@ import { PackageUploadService } from '../services/PackageUploadService.js';
  */
 export class PackageController {
 
+    // POST /packages handler
+    static async getPackages(req: Request, res: Response) {
+        console.log('POST /packages');
+        res.status(200).json({ message: 'POST /packages' });
+    }
+    
+    // DELETE /reset handler
+    static async resetRegistry(req: Request, res: Response) {
+        console.log('DELETE /reset');
+        res.status(200).json({ message: 'DELETE /reset' });
+    }
+
+    // GET /:id handler
+    static async getPackage(req: Request, res: Response) {
+        try {
+            console.log('GET /:id');
+            const id = req.params.id;
+            console.log('[PackageController] Requested package ID:', id);
+            if (!id) {
+                res.status(400).json({ message: 'Bad Request' });
+                return;
+            }
+            res.status(200).json({ message: 'GET /:id' });
+        } catch (error) {
+            console.error('[PackageController] An error occurred with the GET package/:id request:', error);
+            res.status(400).json({ message: 'Bad Request' });
+            return;
+        }
+
+        
+    }
+
+    // PUT /:id handler
+    static async updatePackage(req: Request, res: Response) {
+        console.log('PUT /:id');
+        res.status(200).json({ message: 'PUT /:id' });
+    }
+
     // POST /package handler
     static async uploadPackage(req: Request, res: Response) {
+        console.log('POST /package');
         try {
             // Pull the Content, URL, debloat, and JSProgram from the request body
             const { Content, URL, JSProgram, debloat } = req.body;
@@ -56,4 +95,23 @@ export class PackageController {
             return;
         }
     }
+
+    // GET /:id/rate handler
+    static async getPackageRating(req: Request, res: Response) {
+        console.log('GET /:id/rate');
+        res.status(200).json({ message: 'GET /:id/rate' });
+    }
+
+    // GET /:id/cost handler
+    static async getPackageCost(req: Request, res: Response) {
+        console.log('GET /:id/cost');
+        res.status(200).json({ message: 'GET /:id/cost' });
+    }
+
+    // GET /byRegEx handler
+    static async getPackagesByRegEx(req: Request, res: Response) {
+        console.log('GET /byRegEx');
+        res.status(200).json({ message: 'GET /byRegEx' });
+    }
+
 }

@@ -14,8 +14,8 @@
  * 
  */
 
-import logger from '../utils/logger.js';
-import octokit from '../utils/octokit.js';
+import logger from '../../utils/logger.js';
+import octokit from '../../utils/octokit.js';
 
 // Main function to calculate the Bus Factor of a GitHub repository
 export async function evaluateBusFactor(owner: string, repo: string): Promise<number> {

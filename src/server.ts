@@ -3,12 +3,14 @@
  * Entry point for the API.
  */
 
-import { AppDataSource } from './data-source.js';
-import express from 'express';
 import dotenv from 'dotenv';
-import { Request, Response } from 'express';
-import packageRouter from './routes/packageRoutes.js';
 import 'reflect-metadata';
+import express from 'express';
+import { Request, Response } from 'express';
+
+import { AppDataSource } from './data-source.js';
+import packageRouter from './routes/packageRoutes.js';
+import { PackageController } from './controllers/PackageController.js';
 
 dotenv.config();
 
@@ -22,6 +24,12 @@ const PORT = process.env.PORT || 3000;
 
 // Loads the package router indicating that all routes defined in the packageRouter will be prefixed with /package
 app.use('/package', packageRouter);
+
+// Routes that do not start with /package
+
+app.post('/packages', PackageController.getPackages);
+
+app.delete('/reset', PackageController.resetRegistry);
 
 // Sends a 505 status code for all other routes
 app.get('*', (req: Request, res: Response) => {

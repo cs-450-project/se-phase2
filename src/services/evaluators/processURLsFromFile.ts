@@ -12,7 +12,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import logger from '../utils/logger.js';
+import logger from '../../utils/logger.js';
 
 // Function to read the file, parse URLs, and perform operations
 export async function processURLsFromFile(filePath: string, operation: (url: string, num: number) => void): Promise<void> {

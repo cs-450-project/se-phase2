@@ -19,7 +19,7 @@ export class PackageUploadService {
 
     /**
      * @function uploadContentType
-     * Uploads a package that contains Base64 encoded zip file to the database.
+     * Uploads a package that contains Base64 encoded zip file to the database. 
      * 
      * @param Content Base64 encoded zip file
      * @param JSProgram Base64 encoded JavaScript program
@@ -28,7 +28,7 @@ export class PackageUploadService {
      */
     static async uploadContentType(Content: string, JSProgram: string, debloat: boolean) {
         try {
-            console.log('[PackageService] Uploading Content type package to the database...');
+            console.log('[PackageService] Uploading Content type package to the database.');
 
             // Extract the package name and version from the zip file
             const extracted = await extractNameAndVersionFromZip(Content);
@@ -71,6 +71,23 @@ export class PackageUploadService {
 
         } catch (error) {
             console.error('[PackageService] An error occurred while adding the Content package to the database.', error);
+            throw error;
+        }
+    }
+
+    /**
+     * @function uploadURLType
+     * Uploads a package that contains a URL to the database.
+     * 
+     * @param URL URL of the package
+     * @param JSProgram Base64 encoded JavaScript program
+     */
+    static async uploadURLType(URL: string, JSProgram: string) {
+        try {
+            console.log('[PackageUploadService] Uploading URL type package to the database.');
+
+        } catch (error) {
+            console.error('[PackageUploadService] An error occurred while adding the URL package to the database.', error);
             throw error;
         }
     }

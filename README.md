@@ -1,40 +1,109 @@
-# A CLI for Trustworthy Module Re-use
 
-## Description
-The purpose of this project is to allow the ACME Company to rank and score different packages to see if they are viable for their company to use.
+# ACME Corporation: A Trustworthy Module Registry
 
-## Running/Installation
-To run this program, you must first install the necessary packages. Using a linux system, you can enter the following command:
-./run install
-This will run a program to install necessary packages
+Group 4 has taken over Group 3's project from Handoff. Here you will find information necessary for interacting with the system. 
 
-To run the program, you can enter the command:
-./run FILE_PATH
-Where FILE_PATH is the entire file path to the text file.
+## Getting Started - Phase 1
 
-The text file should be a list of repos to check. They should be seperated by a new line.
+Metric scores can be calculated from a file containing repository URLs, satisfying the Phase 1 requirements for the project. To get started with this portion of the project, follow the steps below.
 
-## Features
-This program runs through a text file of npmjs or github links and ranks them based on several metrics
+### Prerequisites
+* Node.js (preferably LTS version 20.17.0)
+* npm (Node Package Manager)
+* GitHub Token (for accessing the GitHub API)
 
-This following is a list of links you could test to get metrics. Simply copy and past them into a text file. Then, run the program as described above to score these packages
+### Installation
+1. Clone the repository to your local machine.
+```
+git clone https://github.com/cs-450-project/se-phase2.git
+```
+2. Install the required dependencies using npm or the run bash file:
+```
+npm install OR ./run install
+```
+3. Add 📁`logs` folder in the root directory.
+4. Add ⚙️`.env` file in the root directory:
+```
+// Example .env file
+GITHUB_TOKEN = '<your GitHub personal access token>'
+LOG_LEVEL = 1
+LOG_FILE = ./logs/app.log
+```
 
-https://github.com/cloudinary/cloudinary_npm  
-https://www.npmjs.com/package/express  
-https://github.com/nullivex/nodist  
-https://github.com/lodash/lodash  
-https://www.npmjs.com/package/browserify  
+### Running the Program
+To evaluate a list of open-source modules:
+1. Prepare a file (e.g., `sample-file.txt` already in the project) containing the URLs of the repositories to be evaluated.
+2. Execute the program with the following command:
+``` 
+./run <URL_FILE>
+```
+Example:
+```
+./run sample-file.txt
+```
+This will produce the output with the module scores in NDJSON format.
 
-The program will send the output to the standard out in JSON format
+### Logging
+The program supports logging, which can be configured through environment variables:
+- LOG_FILE: Specifies the location of the log file.
+- LOG_LEVEL: Controls the verbosity of logs (0 = silent, 1 = informational, 2 = debug). By default, the log level is set to 0 (silent).
 
-# Group 4 Additions
+See example `.env` file above for possible configuration.
 
-Group 4 has taken over Group 3's project from Handoff. Here you will find information on running the system.
+## Getting Started - Phase 2
 
-## Getting Started
+Phase 2 has brought about far more functionality to ACME's package registry system. The API can be started locally with the following steps and set up.
 
-- `npm install`  or `./run install` installs all the necessary packages and dependencies.
-- Create `.env` file in root project directory with `GITHUB_TOKEN`, `LOG_FILE`, and `LOG_LEVEL`
-- `npm run build` or `./run build` builds the program by compiling the TypeScript code to JavaScript using tsc.
-- `./run <"URL file name".txt>` executes the program with a file containing URLs.
-- `./run test` runs the tests and outputs the test coverage.
+### Prerequisites
+* Node.js (preferably LTS version 20.17.0)
+* npm (Node Package Manager)
+* GitHub Token (for accessing the GitHub API)
+* Docker/Docker Desktop
+
+### Installation
+1. Clone the repository to your local machine.
+```
+git clone https://github.com/cs-450-project/se-phase2.git
+```
+2. Install the required dependencies using npm:
+```
+npm install
+```
+3. Add 📁`logs` folder in the root directory.
+4. Add ⚙️`.env` file in the root directory:
+```
+// Example .env file
+GITHUB_TOKEN = '<your GitHub personal access token>'
+LOG_LEVEL = 1
+LOG_FILE = ./logs/app.log
+
+NODE_ENV=dev
+PORT=3000
+
+DB_HOST=172.19.22.130
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=mypassword
+DB_DATABASE=package_registry
+```
+
+### Setting Up the Database
+1. Open a terminal and fetch the latest image of PostgreSQL:
+```
+docker pull postgres
+```
+2. Start a PostgreSQL contiainer using Docker:
+```
+sudo docker run --name se-phase2-db -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=package-registry -p 5432:5432 -d postgres
+```
+3. (if using WSL) Open PowerShell to get the host name for the instance:
+```
+wsl hostname -I
+```
+
+### Serving the API
+* Ensure that the Postgres database is live, all dependencies are installed.
+* Run in development mode (live reload):
+```
+npm run dev
+```

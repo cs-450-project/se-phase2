@@ -1,3 +1,8 @@
+/**
+ * @file data-source.ts
+ * Configurations for the database connection.
+ * 
+ */
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 

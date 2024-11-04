@@ -3,14 +3,27 @@
  * Defines the routes for /package and passes requests to the controller.
  */
 import express from 'express';
-import { Request, Response } from 'express';
 import { PackageController } from '../controllers/PackageController.js';
 
 const packageRouter = express.Router();
 
-console.log('[packageRoutes] packageRouter loaded.');
+// GET /:id
+packageRouter.get('/:id', PackageController.getPackage);
+
+// PUT /:id
+packageRouter.put('/:id', PackageController.updatePackage);
 
 // POST /package
-packageRouter.post("/", PackageController.uploadPackage);
+packageRouter.post('/', PackageController.uploadPackage);
+
+// GET /:id/rate
+packageRouter.get('/:id/rate', PackageController.getPackageRating);
+
+// GET /:id/cost
+packageRouter.get('/:id/cost', PackageController.getPackageCost);
+
+// GET /byRegEx handler
+packageRouter.get('/byRegEx', PackageController.getPackagesByRegEx);
+
 
 export default packageRouter;
