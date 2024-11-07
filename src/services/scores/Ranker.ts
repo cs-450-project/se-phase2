@@ -11,7 +11,7 @@
  */
 
 // Ranker.ts
-import logger from '../logger.js'; // Adjust the import path as necessary
+import logger from '../../utils/logger.js'; // Adjust the import path as necessary
 
 export class Ranker {
     public URL: string = 'none';

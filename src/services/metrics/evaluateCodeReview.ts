@@ -1,5 +1,5 @@
-import logger from '../logger.js';
-import octokit from '../utils/octokit.js';
+import logger from '../../utils/logger.js';
+import octokit from '../../utils/octokit.js';
 
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 2000;
