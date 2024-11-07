@@ -14,10 +14,10 @@
 
 // Ensure that we have the required libraries
 
-import logger from '../logger.js';
+import logger from '../../utils/logger.js';
 
 // Import octokit
-import octokit from '../utils/octokit.js';
+import octokit from '../../utils/octokit.js';
 
 //Variable that will keep track of how good the ramp-up score is
 var rampScore: number = 0;

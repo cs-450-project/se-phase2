@@ -13,8 +13,8 @@
  * 
  */
 
-import logger from '../logger.js';
-import octokit from '../utils/octokit.js';
+import logger from '../../utils/logger.js';
+import octokit from '../../utils/octokit.js';
 
 // Function to calculate correctness score based on contributors, README, and test files
 export async function evaluateCorrectness(owner: string, repo: string): Promise<number> {

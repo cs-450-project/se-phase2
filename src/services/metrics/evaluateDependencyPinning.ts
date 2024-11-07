@@ -1,5 +1,5 @@
-import logger from '../logger.js';
-import octokit from '../utils/octokit.js';
+import logger from '../../utils/logger.js';
+import octokit from '../../utils/octokit.js';
 import semver from 'semver';
 
 const MAX_RETRIES = 5;

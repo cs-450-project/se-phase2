@@ -13,10 +13,10 @@
  * 
  */
 
-import logger from '../logger.js';
-import { sendToOutput } from "../utils/sendToOutput.js";
+import logger from '../../utils/logger.js';
+import { sendToOutput } from "../../utils/sendToOutput.js";
 import { Ranker } from "../scores/Ranker.js";
-import { Timer } from "../utils/Timer.js";
+import { Timer } from "../../utils/Timer.js";
 import { findGitHubRepoForNPMLink } from './findGitHubRepoForNPMLink.js';
 
 // Importing the functions to calculate the metrics
