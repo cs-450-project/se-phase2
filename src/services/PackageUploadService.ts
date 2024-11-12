@@ -125,6 +125,6 @@ async function extractNameAndVersionFromZip(Content: string) {
 
     } else {
         console.log('package.json not found in zip file.');
-        return { Name: 'Unknown', Version: '0.0.0' };
+        throw new Error('Failed to extract name and version from zip content');
     }
 }
