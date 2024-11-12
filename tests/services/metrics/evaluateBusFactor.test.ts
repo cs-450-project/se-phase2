@@ -103,5 +103,5 @@ describe('evaluateBusFactor', () => {
         const result = await evaluateBusFactor('owner', 'repo');
         expect(result).toBe(0);
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error evaluating Bus Factor for repository owner/repo: API error'));
-    });
+    }); 
 });
