@@ -15,20 +15,16 @@
 // Ensure that we have the required libraries
 
 import logger from '../../utils/logger.js';
-
 // Import octokit
 import octokit from '../../utils/octokit.js';
 
-//Variable that will keep track of how good the ramp-up score is
-var rampScore: number = 0;
-
 export async function evaluateRampUp(owner: string, repo: string) {
     logger.debug(`Evaluating ramp-up score for ${owner}/${repo}`);
-    rampScore = 0;
 
-    await analyzeReadmeContent(owner, repo);
+    const rampScore = await getReadme(owner, repo);
 
     logger.info(`Final ramp-up score for ${owner}/${repo}: ${rampScore}`);
+    
     return rampScore;
 }// end displayRampupScore function
 
@@ -45,59 +41,45 @@ async function getReadme(owner: string, repo: string) {
         logger.debug(`Fetched README content for ${owner}/${repo}`);
 
         //Return the content of the README file
-        return readmeContent;
+        return analyzeReadme(readmeContent);
+
     } catch (error) {
         logger.error(`Failed to access GitHub API for ${owner}/${repo}`);
         logger.error(error);
+        return 0;
     }
 }//end getReadme function
 
 async function analyzeReadme(readmeContent: string) {
+    let rampScore = 0;
+
     logger.debug(`Analyzing README content`);
+    const sections = [
+        { name: 'Installation', weight: 0.2 },
+        { name: 'Introduction', weight: 0.2},
+        { name: 'Usage', weight: 0.2 },
+        { name: 'Contributing', weight: 0.1 },
+        { name: 'Contributions', weight: 0.1 },
+        { name: 'Getting Started', weight: 0.2 },
+        { name: 'Documentation', weight: 0.1 },
+        { name: 'License', weight: 0.1 },
+        { name: 'Support', weight: 0.1 }
+    ];
 
-    //Checking to see which sections are contained in the README file
-    if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
-        rampScore += 0.2;
-        logger.debug(`Found Introduction section, rampScore: ${rampScore}`);
-    }
+    // Analyze presence and quality of sections
+    sections.forEach(section => {
+        const regex = new RegExp(`#\\s*${section.name}`, 'i');
+        if (regex.test(readmeContent)) {
+            rampScore += section.weight;
+            logger.debug(`Section "${section.name}" found and scored.`);
+        } else {
+            logger.debug(`Section "${section.name}" not found.`);
+        }
+    });
+  // Cap the rampScore at 1
+  rampScore = parseFloat((Math.min(rampScore, 1)).toFixed(2));
 
-    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
-        rampScore += 0.2;
-        logger.debug(`Found Installation section, rampScore: ${rampScore}`);
-    }
+  logger.debug(`Final rampScore: ${rampScore}`);
 
-    if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
-        rampScore += 0.2;
-        logger.debug(`Found Usage section, rampScore: ${rampScore}`);
-    }
-
-    if (readmeContent.includes("## Contact Information")) {
-        rampScore += 0.2;
-        logger.debug(`Found Contact Information section, rampScore: ${rampScore}`);
-    }
-
-    if (readmeContent.includes("## Configuration") || readmeContent.includes("## configuration")) {
-        rampScore += 0.2;
-        logger.debug(`Found Configuration section, rampScore: ${rampScore}`);
-    }
+  return rampScore;
 }//end analyzeReadme function
-
-//Analyze the content of the README file
-async function analyzeReadmeContent(owner: string, repo: string) {
-    logger.debug(`Starting analysis of README content for ${owner}/${repo}`);
-
-    //Get the content of the README file
-    const readmeContent = await getReadme(owner, repo);
-
-    // Check if the readmeContent is null before decoding
-    if (!readmeContent) {
-        logger.info(`No README content found for ${owner}/${repo}`);
-        return; // Exit if there's no content
-    }
-
-    //Analyze the content of the README file
-    analyzeReadme(readmeContent);
-    logger.debug(`Completed analysis of README content for ${owner}/${repo}`);
-}//end analyzeReadmeContent function
-
-
