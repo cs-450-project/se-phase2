@@ -31,7 +31,7 @@ export class PackageUploadService {
         console.log('[PackageService] Uploading Content type package to the database.');
 
         // Extract the package name and version from the zip file
-        const extracted = await extractNameAndVersionFromZip(Content);
+        const extracted = await this.extractNameAndVersionFromZip(Content);
         if (!extracted) {
             throw new ApiError('Failed to extract name and version from zip content', 400);
         }
@@ -97,43 +97,46 @@ export class PackageUploadService {
             throw error;
         }
     }
-};
 
-/**
+    /**
  * @function extractNameAndVersionFromZip
  * Extracts the name and version of the package from the package.json file in the zip content.
  * 
  * @param Content Base64 encoded zip file
  * @returns Object containing the name and version of the package
  */
-async function extractNameAndVersionFromZip(Content: string) {
+    static async extractNameAndVersionFromZip(Content: string) {
 
-    try {
+        try {
 
-        // Decode the base64 encoded zip file to binary buffer
-        const zipBuffer = Buffer.from(Content, 'base64');
+            // Decode the base64 encoded zip file to binary buffer
+            const zipBuffer = Buffer.from(Content, 'base64');
 
-        // Load buffer as zip file and extract package.json
-        const zip = new AdmZip(zipBuffer);
-        const zipEntries = zip.getEntries();
-        const targetEntry = zipEntries.find(entry => entry.entryName.endsWith('package.json'));
-        
-        if (!targetEntry) {
-            throw new ApiError('Package.json not found.', 400);
+            // Load buffer as zip file and extract package.json
+            const zip = new AdmZip(zipBuffer);
+            const zipEntries = zip.getEntries();
+            const targetEntry = zipEntries.find(entry => entry.entryName.endsWith('package.json'));
+            
+            if (!targetEntry) {
+                throw new ApiError('Package.json not found.', 400);
+            }
+
+            // Parse package.json file
+            const fileData = targetEntry.getData();
+            const packageJson = JSON.parse(fileData.toString('utf8'));
+            
+            // Extract name and version if available
+            const Name = packageJson.name || 'Unknown';
+            const Version = packageJson.version || '0.0.0';
+
+            return { Name, Version };
+
+        } catch (error) {
+            console.error('[PackageUploadService] An error occurred while extracting the name and version from the zip content.', error);
+            throw new ApiError("Failed to extract name and version from zip content.", 400);
         }
+    };
 
-        // Parse package.json file
-        const fileData = targetEntry.getData();
-        const packageJson = JSON.parse(fileData.toString('utf8'));
-        
-        // Extract name and version if available
-        const Name = packageJson.name || 'Unknown';
-        const Version = packageJson.version || '0.0.0';
 
-        return { Name, Version };
-
-    } catch (error) {
-        console.error('[PackageUploadService] An error occurred while extracting the name and version from the zip content.', error);
-        throw new ApiError("Failed to extract name and version from zip content.", 400);
-    }
 };
+

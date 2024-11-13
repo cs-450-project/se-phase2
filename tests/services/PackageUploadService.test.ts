@@ -1,28 +1,12 @@
-import 'reflect-metadata';
-
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { PackageUploadService } from '../../src/services/PackageUploadService';
 import { AppDataSource } from '../../src/data-source';
 import { PackageMetadata } from '../../src/entities/PackageMetadata';
 import { PackageData } from '../../src/entities/PackageData';
+import { ApiError } from '../../src/utils/errors/ApiError';
 import AdmZip from 'adm-zip';
 
-
-// Mock dependencies
-vi.mock('../../src/data-source', () => ({
-  AppDataSource: {
-    getRepository: vi.fn(),
-  },
-}));
-
-vi.mock('../../src/entities/PackageMetadata', () => ({
-  PackageMetadata: vi.fn(),
-}));
-
-vi.mock('../../src/entities/PackageData', () => ({
-  PackageData: vi.fn(),
-}));
-
+vi.mock('../../src/data-source');
 vi.mock('adm-zip');
 
 describe('PackageUploadService', () => {
@@ -31,68 +15,108 @@ describe('PackageUploadService', () => {
   });
 
   describe('uploadContentType', () => {
-    it('should upload content successfully', async () => {
-      // Mock AdmZip and its methods
-      const getEntriesMock = vi.fn(() => [
-        {
-          entryName: 'package.json',
-          getData: () =>
-            Buffer.from(JSON.stringify({ name: 'test-package', version: '1.0.0' }), 'utf-8'),
-        },
-      ]);
-      (AdmZip as unknown as Mock).mockImplementation(() => ({
-        getEntries: getEntriesMock,
-      }));
+    it('should upload a package successfully', async () => {
+      const mockContent = 'mockBase64Content';
+      const mockJSProgram = 'mockBase64JSProgram';
+      const mockDebloat = true;
 
-      // Mock repositories
-      const saveMock = vi.fn();
-      const createMock = vi.fn().mockImplementation(data => data);
-      const metadataRepositoryMock = { create: createMock, save: saveMock };
-      const dataRepositoryMock = { create: createMock, save: saveMock };
+      const mockExtracted = { Name: 'mockName', Version: '1.0.0' };
+      const mockMetadata = { id: 1, name: 'mockName', version: '1.0.0' };
+      const mockData = { content: mockContent, jsProgram: mockJSProgram };
 
-      (AppDataSource.getRepository as Mock).mockImplementation(entity => {
-        if (entity === PackageMetadata) {
-          return metadataRepositoryMock;
-        }
-        if (entity === PackageData) {
-          return dataRepositoryMock;
-        }
+      vi.spyOn(PackageUploadService, 'extractNameAndVersionFromZip').mockResolvedValue(mockExtracted);
+
+      const packageMetadataRepository = {
+        findOne: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockReturnValue(mockMetadata),
+        save: vi.fn().mockResolvedValue(mockMetadata),
+      };
+      const packageDataRepository = {
+        create: vi.fn().mockReturnValue(mockData),
+        save: vi.fn().mockResolvedValue(mockData),
+      };
+
+      (AppDataSource.getRepository as Mock).mockImplementation((entity) => {
+        if (entity === PackageMetadata) return packageMetadataRepository;
+        if (entity === PackageData) return packageDataRepository;
       });
 
-      // Input data
-      const content = 'base64-zip-content';
-      const jsProgram = 'base64-js-program';
-      const debloat = false;
+      const result = await PackageUploadService.uploadContentType(mockContent, mockJSProgram, mockDebloat);
 
-      // Call the method
-      const result = await PackageUploadService.uploadContentType(content, jsProgram, debloat);
-
-      // Assertions
-      expect(AdmZip).toHaveBeenCalledWith(Buffer.from(content, 'base64'));
-      expect(getEntriesMock).toHaveBeenCalled();
-      expect(saveMock).toHaveBeenCalledTimes(2);
       expect(result).toEqual({
-        metadata: { Name: 'test-package', Version: '1.0.0', ID: undefined },
-        data: { Content: content, JSProgram: jsProgram },
+        metadata: {
+          Name: mockMetadata.name,
+          Version: mockMetadata.version,
+          ID: mockMetadata.id,
+        },
+        data: {
+          Content: mockData.content,
+          JSProgram: mockData.jsProgram,
+        },
       });
     });
 
-    it('should throw an error if package.json is not found', async () => {
-      // Mock AdmZip with no package.json
-      const getEntriesMock = vi.fn(() => []);
-      (AdmZip as unknown as Mock).mockImplementation(() => ({
-        getEntries: getEntriesMock,
-      }));
+    it('should throw an error if package already exists', async () => {
+      const mockContent = 'mockBase64Content';
+      const mockJSProgram = 'mockBase64JSProgram';
+      const mockDebloat = true;
 
-      // Input data
-      const content = 'base64-zip-content';
-      const jsProgram = 'base64-js-program';
-      const debloat = false;
+      const mockExtracted = { Name: 'mockName', Version: '1.0.0' };
+      const mockMetadata = { id: 1, name: 'mockName', version: '1.0.0' };
 
-      // Call the method and expect an error
-      await expect(
-        PackageUploadService.uploadContentType(content, jsProgram, debloat)
-      ).rejects.toThrow('Failed to extract name and version from zip content');
+      vi.spyOn(PackageUploadService, 'extractNameAndVersionFromZip').mockResolvedValue(mockExtracted);
+
+      const packageMetadataRepository = {
+        findOne: vi.fn().mockResolvedValue(mockMetadata),
+      };
+
+      (AppDataSource.getRepository as Mock).mockImplementation((entity) => {
+        if (entity === PackageMetadata) return packageMetadataRepository;
+      });
+
+      await expect(PackageUploadService.uploadContentType(mockContent, mockJSProgram, mockDebloat))
+        .rejects
+        .toThrow(new ApiError('Package exists already.', 409));
+    });
+
+    it('should throw an error if extraction fails', async () => {
+      const mockContent = 'mockBase64Content';
+      const mockJSProgram = 'mockBase64JSProgram';
+      const mockDebloat = true;
+
+      vi.spyOn(PackageUploadService, 'extractNameAndVersionFromZip').mockResolvedValue({ Name: null, Version: null });
+
+      await expect(PackageUploadService.uploadContentType(mockContent, mockJSProgram, mockDebloat))
+        .rejects
+        .toThrow(new ApiError('Failed to extract name and version from zip content', 400));
+    });
+  });
+
+  describe('uploadURLType', () => {
+    it('should log the upload process', async () => {
+      const consoleSpy = vi.spyOn(console, 'log');
+      const mockURL = 'http://example.com/package.zip';
+      const mockJSProgram = 'mockBase64JSProgram';
+
+      await PackageUploadService.uploadURLType(mockURL, mockJSProgram);
+
+      expect(consoleSpy).toHaveBeenCalledWith('[PackageUploadService] Uploading URL type package to the database.');
+    });
+
+    it('should handle errors during upload', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error');
+      const mockURL = 'http://example.com/package.zip';
+      const mockJSProgram = 'mockBase64JSProgram';
+
+      vi.spyOn(PackageUploadService, 'uploadURLType').mockImplementation(() => {
+        throw new Error('Test error');
+      });
+
+      await expect(PackageUploadService.uploadURLType(mockURL, mockJSProgram))
+        .rejects
+        .toThrow('Test error');
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[PackageUploadService] An error occurred while adding the URL package to the database.', expect.any(Error));
     });
   });
 });
