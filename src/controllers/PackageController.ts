@@ -87,7 +87,7 @@ export class PackageController {
             // Request contains both Content and URL, or neither
             else {
                 console.log('[PackageController] Request does not contain Content or URL.');
-                throw new ApiError('PackageData is formatted improperly.', 400);
+                throw new ApiError('Package data is formatted improperly.', 400);
             }
         } catch (error) {
             next(error);

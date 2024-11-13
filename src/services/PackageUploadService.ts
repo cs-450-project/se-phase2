@@ -126,12 +126,19 @@ export class PackageUploadService {
             const packageJson = JSON.parse(fileData.toString('utf8'));
             
             // Extract name and version if available
-            const Name = packageJson.name || 'Unknown';
-            const Version = packageJson.version || '0.0.0';
+            const Name = packageJson.name;
+            const Version = packageJson.version;
+
+            if (!Name || !Version) {
+                throw new ApiError('Name or version not found in package.json.', 400);
+            }
 
             return { Name, Version };
 
         } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            } 
             console.error('[PackageUploadService] An error occurred while extracting the name and version from the zip content.', error);
             throw new ApiError("Failed to extract name and version from zip content.", 400);
         }
