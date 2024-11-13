@@ -5,7 +5,7 @@
 
 
 import AdmZip from 'adm-zip';
-
+import axios from 'axios';
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
@@ -85,7 +85,46 @@ export class PackageUploadService {
     static async uploadURLType(URL: string, JSProgram: string) {
         try {
             console.log('[PackageUploadService] Uploading URL type package to the database.');
-
+            const normalizedURL = await normalizePackageURL(URL);
+            if (!normalizedURL) {
+                throw new Error('Invalid or unsupported URL');
+            }
+            const response = await axios.get(normalizedURL, { responseType: 'arraybuffer' });
+            const zipBuffer = Buffer.from(response.data, 'binary');
+            const base64Zip = zipBuffer.toString('base64');
+            const extracted = await extractNameAndVersionFromZip(base64Zip);
+            if (!extracted) {
+                throw new Error('Failed to extract name and version from zip content');
+            }
+            const { Name, Version } = extracted;
+            const packageMetadataRepository = await AppDataSource.getRepository(PackageMetadata);
+            const metadata = packageMetadataRepository.create({
+                name: Name,
+                version: Version,
+            });
+            await packageMetadataRepository.save(metadata);
+    
+            const packageDataRepository = await AppDataSource.getRepository(PackageData);
+            const data = packageDataRepository.create({
+                packageMetadata: metadata,
+                content: base64Zip,
+                debloat: false,
+                jsProgram: JSProgram,
+            });
+            await packageDataRepository.save(data);
+    
+            return {
+                metadata: {
+                    Name: metadata.name,
+                    Version: metadata.version,
+                    ID: metadata.id,
+                },
+                data: {
+                    Content: data.content,
+                    JSProgram: data.jsProgram,
+                },
+            };
+    
         } catch (error) {
             console.error('[PackageUploadService] An error occurred while adding the URL package to the database.', error);
             throw error;
@@ -128,3 +167,31 @@ async function extractNameAndVersionFromZip(Content: string) {
         return { Name: 'Unknown', Version: '0.0.0' };
     }
 }
+
+ /**
+ * @function normalizePackageURL
+ * Converts npm link to GitHub link if applicable.
+ * Supports URLs like npm and GitHub URLs.
+ * 
+ * @param URL string - The input URL to normalize
+ * @returns Normalized GitHub URL or the original URL if no conversion is needed.
+ */
+async function normalizePackageURL(URL: string): Promise<string | null> {
+    try {
+        if (URL.includes('npmjs.com/package/')) {
+            const packageName = URL.split('/').pop();
+            return `https://github.com/${packageName}/${packageName}.git`; 
+        }
+        if (URL.includes('github.com')) {
+            return URL;
+        }
+        console.error('Unsupported URL format:', URL);
+        return null;
+
+    } catch (error) {
+        console.error('Error normalizing URL:', error);
+        return null;
+    }
+}
+
+
