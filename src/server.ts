@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import 'reflect-metadata';
 import express from 'express';
 import { Request, Response } from 'express';
+import { errorHandler } from './utils/middleware/errorHandler.js';
 
 import { AppDataSource } from './data-source.js';
 import packageRouter from './routes/packageRoutes.js';
@@ -36,6 +37,8 @@ app.get('*', (req: Request, res: Response) => {
   res.status(505).json({ message: 'Bad Request' });
 });
 
+app.use(errorHandler);
+
 // Initializes the database and starts the server
 AppDataSource.initialize()
   .then(async () => {
@@ -45,3 +48,5 @@ AppDataSource.initialize()
     console.log('Database has been initialized!');
   })
   .catch((error) => console.error('Database initialization error:', error));
+
+export default app;
