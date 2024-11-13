@@ -89,6 +89,9 @@ export class PackageUploadService {
             if (!normalizedURL) {
                 throw new Error('Invalid or unsupported URL');
             }
+
+            console.log('Normalized URL:', normalizedURL);
+
             const response = await axios.get(normalizedURL, { responseType: 'arraybuffer' });
             const zipBuffer = Buffer.from(response.data, 'binary');
             const base64Zip = zipBuffer.toString('base64');
@@ -126,7 +129,7 @@ export class PackageUploadService {
             };
     
         } catch (error) {
-            console.error('[PackageUploadService] An error occurred while adding the URL package to the database.', error);
+            //console.error('[PackageUploadService] An error occurred while adding the URL package to the database.', error);
             throw error;
         }
     }
@@ -176,22 +179,34 @@ async function extractNameAndVersionFromZip(Content: string) {
  * @param URL string - The input URL to normalize
  * @returns Normalized GitHub URL or the original URL if no conversion is needed.
  */
+
+/*
+    We unfortunately don't know whether the default branch is master or main, so we can't just append /archive/master.zip
+    in the long term. We could use the GitHub API or octokit (see metric implementations) to get the default branch which 
+    can then be used to construct the URL. 
+*/
+
 async function normalizePackageURL(URL: string): Promise<string | null> {
     try {
         if (URL.includes('npmjs.com/package/')) {
-            const packageName = URL.split('/').pop();
-            return `https://github.com/${packageName}/${packageName}.git`; 
+          const packageName = URL.split('/').pop();
+          /*
+          // The repo path goes 'owner'/'repo' so we can't just use the package name twice
+          // I updated the last portion of the URLs to correctly point to the zip file
+          // Look at Will's code from phase 1 to convert npm link to GitHub link, then add the extension
+          */
+          return `https://github.com/${packageName}/${packageName}/archive/master.zip`; 
         }
         if (URL.includes('github.com')) {
-            return URL;
+          const repoPath = URL.split('github.com/')[1];
+          return `https://github.com/${repoPath}/archive/master.zip`;
         }
         console.error('Unsupported URL format:', URL);
         return null;
-
-    } catch (error) {
+      } catch (error) {
         console.error('Error normalizing URL:', error);
         return null;
-    }
+      }
 }
 
 
