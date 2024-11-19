@@ -4,8 +4,10 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { PackageUploadService } from '../services/PackageUploadService.js';
-
+import { PackageGetterService } from '../services/PackageGetterService.js';
+import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { ApiError } from '../utils/errors/ApiError.js';
+import { PackageMetadata } from '../entities/PackageMetadata.js';
 
 /**
  * @class PackageController
@@ -15,9 +17,26 @@ import { ApiError } from '../utils/errors/ApiError.js';
 export class PackageController {
 
     // POST /packages handler
-    static async getPackages(req: Request, res: Response) {
-        console.log('POST /packages');
-        res.status(200).json({ message: 'POST /packages' });
+    static async getPackages(req: Request, res: Response, next: NextFunction) {
+        try {
+            console.log('POST /packages');
+            // Pull the array of package queries from the request body
+            const queries: PackageQuery[] = req.body;
+            
+            if (!queries) {
+                throw new ApiError('No queries provided.', 400);
+            }
+
+            // Call the service to query the packages
+            const results = await PackageGetterService.queryPackages(queries);
+
+            // Send the response back to the client
+            res.json(results);
+            return;
+
+        } catch (error) {
+            next(error);
+        }
     }
     
     // DELETE /reset handler
