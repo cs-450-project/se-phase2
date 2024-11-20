@@ -58,7 +58,7 @@ export function extractGitHubAttributesFromGitHubURL(urlRepo: string): { owner: 
 }
 
 
-    // Fetch GitHub repository URL from npm API
+// Fetch GitHub repository URL from npm API
 export async function getNpmRepoURLFromGitHubURL(url: string): Promise<string> {
     const npmApiUrl = url.replace(/(?<=\/)www(?=\.)/, 'replicate').replace('/package', '');
     console.log(`Fetching repository URL from npm API: ${npmApiUrl}`);

@@ -22,7 +22,6 @@ import octokit from '../utils/octokit.js';
  * 
  */
 export class PackageUploadService {
-
     
     /**
      * @function uploadContentType
