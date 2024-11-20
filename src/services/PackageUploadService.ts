@@ -6,6 +6,8 @@
 
 import AdmZip from 'adm-zip';
 import axios from 'axios';
+
+import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
@@ -27,53 +29,58 @@ export class PackageUploadService {
      * @returns Object containing Json data of the uploaded package
      */
     static async uploadContentType(Content: string, JSProgram: string, debloat: boolean) {
-        try {
-            console.log('[PackageService] Uploading Content type package to the database.');
+        console.log('[PackageService] Uploading Content type package to the database.');
 
-            // Extract the package name and version from the zip file
-            const extracted = await extractNameAndVersionFromZip(Content);
-            if (!extracted) {
-                throw new Error('Failed to extract name and version from zip content');
-            }
-            const { Name, Version } = extracted;
-
-            // Get PackageMetadata repository, create metadata and save
-            const packageMetadataRepository = await AppDataSource.getRepository(PackageMetadata);
-            const metadata = packageMetadataRepository.create({
-                name: Name,
-                version: Version,
-            });
-            await packageMetadataRepository.save(metadata);
-
-            // Get PackageData repository, create data and save
-            const packageDataRepository = await AppDataSource.getRepository(PackageData);
-            const data = packageDataRepository.create({
-                // 1:1 relationship between metadata and data
-                packageMetadata: metadata,
-                content: Content,
-                debloat: debloat,
-                jsProgram: JSProgram,
-            });
-            await packageDataRepository.save(data);
-
-            // Return the contents of the uploaded package
-            return {
-                metadata: {
-                    Name: metadata.name,
-                    Version: metadata.version,
-                    ID: metadata.id,
-                },
-                data: {
-                    Content: data.content,
-                    JSProgram: data.jsProgram,
-                }
-            };
-
-        } catch (error) {
-            console.error('[PackageService] An error occurred while adding the Content package to the database.', error);
-            throw error;
+        // Extract the package name and version from the zip file
+        const extracted = await this.extractNameAndVersionFromZip(Content);
+        if (!extracted) {
+            throw new ApiError('Failed to extract name and version from zip content', 400);
         }
-    }
+        const { Name, Version } = extracted;
+
+        // Get PackageMetadata repository, create metadata and save
+        const packageMetadataRepository = await AppDataSource.getRepository(PackageMetadata);
+
+        // Check if the package already exists
+        const existingMetadata = await packageMetadataRepository.findOne({ 
+            where: { name: Name, version: Version },
+        });
+
+        if (existingMetadata) {
+            throw new ApiError('Package exists already.', 409);
+        }
+
+        const metadata = packageMetadataRepository.create({
+            name: Name,
+            version: Version,
+        });
+        await packageMetadataRepository.save(metadata);
+
+        // Get PackageData repository, create data and save
+        const packageDataRepository = await AppDataSource.getRepository(PackageData);
+        const data = packageDataRepository.create({
+            // 1:1 relationship between metadata and data
+            packageMetadata: metadata,
+            content: Content,
+            debloat: debloat,
+            jsProgram: JSProgram,
+        });
+        await packageDataRepository.save(data);
+
+        // Return the contents of the uploaded package
+        return {
+            metadata: {
+                Name: metadata.name,
+                Version: metadata.version,
+                ID: metadata.id,
+            },
+            data: {
+                Content: data.content,
+                JSProgram: data.jsProgram,
+            }
+        };
+
+    };
 
     /**
      * @function uploadURLType
@@ -95,7 +102,7 @@ export class PackageUploadService {
             const response = await axios.get(normalizedURL, { responseType: 'arraybuffer' });
             const zipBuffer = Buffer.from(response.data, 'binary');
             const base64Zip = zipBuffer.toString('base64');
-            const extracted = await extractNameAndVersionFromZip(base64Zip);
+            const extracted = await this.extractNameAndVersionFromZip(base64Zip);
             if (!extracted) {
                 throw new Error('Failed to extract name and version from zip content');
             }
@@ -133,43 +140,55 @@ export class PackageUploadService {
             throw error;
         }
     }
-};
 
-/**
+    /**
  * @function extractNameAndVersionFromZip
  * Extracts the name and version of the package from the package.json file in the zip content.
  * 
  * @param Content Base64 encoded zip file
  * @returns Object containing the name and version of the package
  */
-async function extractNameAndVersionFromZip(Content: string) {
-    // Decode the base64 encoded zip file to binary buffer
-    const zipBuffer = Buffer.from(Content, 'base64');
+    static async extractNameAndVersionFromZip(Content: string) {
 
-    // Load buffer as zip file and extract package.json
-    const zip = new AdmZip(zipBuffer);
-    const zipEntries = zip.getEntries();
-    const targetEntry = zipEntries.find(entry => entry.entryName.endsWith('package.json'));
-    
-    // Process package.json file
-    if (targetEntry){
-        console.log('Found file: ', targetEntry.entryName);
-        
-        // Parse package.json file
-        const fileData = targetEntry.getData();
-        const packageJson = JSON.parse(fileData.toString('utf8'));
-        
-        // Extract name and version if available
-        const Name = packageJson.name || 'Unknown';
-        const Version = packageJson.version || '0.0.0';
+        try {
 
-        return { Name, Version };
+            // Decode the base64 encoded zip file to binary buffer
+            const zipBuffer = Buffer.from(Content, 'base64');
 
-    } else {
-        console.log('package.json not found in zip file.');
-        return { Name: 'Unknown', Version: '0.0.0' };
-    }
-}
+            // Load buffer as zip file and extract package.json
+            const zip = new AdmZip(zipBuffer);
+            const zipEntries = zip.getEntries();
+            const targetEntry = zipEntries.find(entry => entry.entryName.endsWith('package.json'));
+            
+            if (!targetEntry) {
+                throw new ApiError('Package.json not found.', 400);
+            }
+
+            // Parse package.json file
+            const fileData = targetEntry.getData();
+            const packageJson = JSON.parse(fileData.toString('utf8'));
+            
+            // Extract name and version if available
+            const Name = packageJson.name;
+            const Version = packageJson.version;
+
+            if (!Name || !Version) {
+                throw new ApiError('Name or version not found in package.json.', 400);
+            }
+
+            return { Name, Version };
+
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            } 
+            console.error('[PackageUploadService] An error occurred while extracting the name and version from the zip content.', error);
+            throw new ApiError("Failed to extract name and version from zip content.", 400);
+        }
+    };
+
+
+};
 
  /**
  * @function normalizePackageURL
