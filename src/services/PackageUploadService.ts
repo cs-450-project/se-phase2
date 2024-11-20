@@ -11,6 +11,7 @@ import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
+import octokit from '../utils/octokit.js';
 
 /**
  * @class PackageUploadService
@@ -92,7 +93,7 @@ export class PackageUploadService {
     static async uploadURLType(URL: string, JSProgram: string) {
         try {
             console.log('[PackageUploadService] Uploading URL type package to the database.');
-            const normalizedURL = await normalizePackageURL(URL);
+            const normalizedURL = await this.normalizePackageURL(URL);
             if (!normalizedURL) {
                 throw new Error('Invalid or unsupported URL');
             }
@@ -187,45 +188,92 @@ export class PackageUploadService {
         }
     };
 
+    /**
+     * @function normalizePackageURL
+     * Converts npm link to GitHub link if applicable.
+     * Supports URLs like npm and GitHub URLs.
+     * 
+     * @param URL string - The input URL to normalize
+     * @returns Normalized GitHub URL or the original URL if no conversion is needed.
+     */
+    private static async normalizePackageURL(URL: string): Promise<string | null> {
+
+        // Check if the URL is an npm package URL
+        if (URL.includes('npmjs.com/package/')) {
+            // Convert npm URL to GitHub URL
+            const npmGithubURL = await this.getNpmRepoURL(URL);
+            // Extract owner and repo from GitHub URL
+            const { owner, repo } = this.getGitHubAttributes(npmGithubURL);
+            // Get default branch
+            const defaultBranch = await this.getDefaultBranch(owner, repo);
+            // Construct GitHub zip URL
+            return `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`; 
+        }
+
+        // Check if the URL is a GitHub URL
+        else if (URL.includes('github.com')) {
+            // Extract owner and repo from GitHub URL
+            const { owner, repo } = this.getGitHubAttributes(URL);
+            // Get default branch
+            const defaultBranch = await this.getDefaultBranch(owner, repo);
+            // Construct GitHub zip URL
+            return `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`; 
+        }
+
+        // Unsupported URL format
+        else {
+            throw new ApiError('Unsupported URL format.', 400);
+        }
+    }
+
+    private static async getNpmRepoURL(url: string): Promise<string> {
+        const npmApiUrl = url.replace(/(?<=\/)www(?=\.)/, 'replicate').replace('/package', '');
+        console.log(`Fetching repository URL from npm API: ${npmApiUrl}`);
+        const npmApiResponse = await fetch(npmApiUrl);
+        const npmApiData = await npmApiResponse.json();
+
+        if (!npmApiData.repository || !npmApiData.repository.url) {
+            console.log(`Repository URL not found in npm package data for URL: ${url}`);
+            throw new ApiError('Repository URL not found in npm package data', 400);
+        }
+
+        const npmRepoUrl = npmApiData.repository.url;
+        console.log(`NPM Repository URL: ${npmRepoUrl}`);
+        return npmRepoUrl;
+    }
+
+    private static getGitHubAttributes(urlRepo: string): { owner: string, repo: string } {
+        
+        var owner = urlRepo.split('/')[3].trim();
+        var repo = urlRepo.split('/')[4].trim();
+
+        if (repo.includes('.git')) {
+            repo = repo.replace('.git', '');
+        }
+
+        console.log(`Owner: ${owner}`);
+        console.log(`Repo: ${repo}`);
+
+        return { owner, repo };
+    }
+
+    private static async getDefaultBranch(owner: string, repo: string): Promise<string> {
+        try {
+
+            const response = await octokit.repos.get({
+                owner,
+                repo
+            });
+
+            return response.data.default_branch;
+
+        } catch (error) {
+            console.error('Failed to get default branch:', error);
+            throw new ApiError('Failed to get default branch.', 400);
+        }
+    }
+
+     
 
 };
-
- /**
- * @function normalizePackageURL
- * Converts npm link to GitHub link if applicable.
- * Supports URLs like npm and GitHub URLs.
- * 
- * @param URL string - The input URL to normalize
- * @returns Normalized GitHub URL or the original URL if no conversion is needed.
- */
-
-/*
-    We unfortunately don't know whether the default branch is master or main, so we can't just append /archive/master.zip
-    in the long term. We could use the GitHub API or octokit (see metric implementations) to get the default branch which 
-    can then be used to construct the URL. 
-*/
-
-async function normalizePackageURL(URL: string): Promise<string | null> {
-    try {
-        if (URL.includes('npmjs.com/package/')) {
-          const packageName = URL.split('/').pop();
-          /*
-          // The repo path goes 'owner'/'repo' so we can't just use the package name twice
-          // I updated the last portion of the URLs to correctly point to the zip file
-          // Look at Will's code from phase 1 to convert npm link to GitHub link, then add the extension
-          */
-          return `https://github.com/${packageName}/${packageName}/archive/master.zip`; 
-        }
-        if (URL.includes('github.com')) {
-          const repoPath = URL.split('github.com/')[1];
-          return `https://github.com/${repoPath}/archive/master.zip`;
-        }
-        console.error('Unsupported URL format:', URL);
-        return null;
-      } catch (error) {
-        console.error('Error normalizing URL:', error);
-        return null;
-      }
-}
-
 
