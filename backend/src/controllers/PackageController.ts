@@ -95,11 +95,11 @@ export class PackageController {
                 console.log('[PackageController] Request contains URL.');
                 
                 // Call the service to process the URL package
+                const result = await PackageUploadService.uploadURLType(URL, JSProgram);
 
                 // Send the response back to the client
                 res.status(200).json({ 
-                    message: 'URL package uploaded successfully.',
-                    processedData: { URL, JSProgram },
+                    ...(result ? { ...JSON.parse(JSON.stringify(result)) } : {})
                  });
                 return;
             }
