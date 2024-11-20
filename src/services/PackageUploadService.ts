@@ -143,12 +143,12 @@ export class PackageUploadService {
     }
 
     /**
- * @function extractNameAndVersionFromZip
- * Extracts the name and version of the package from the package.json file in the zip content.
- * 
- * @param Content Base64 encoded zip file
- * @returns Object containing the name and version of the package
- */
+     * @function extractNameAndVersionFromZip
+     * Extracts the name and version of the package from the package.json file in the zip content.
+     * 
+     * @param Content Base64 encoded zip file
+     * @returns Object containing the name and version of the package
+     */
     static async extractNameAndVersionFromZip(Content: string) {
 
         try {
@@ -224,8 +224,9 @@ export class PackageUploadService {
         else {
             throw new ApiError('Unsupported URL format.', 400);
         }
-    }
+    } // end normalizePackageURL
 
+    // Fetch GitHub repository URL from npm API
     private static async getNpmRepoURL(url: string): Promise<string> {
         const npmApiUrl = url.replace(/(?<=\/)www(?=\.)/, 'replicate').replace('/package', '');
         console.log(`Fetching repository URL from npm API: ${npmApiUrl}`);
@@ -240,8 +241,9 @@ export class PackageUploadService {
         const npmRepoUrl = npmApiData.repository.url;
         console.log(`NPM Repository URL: ${npmRepoUrl}`);
         return npmRepoUrl;
-    }
+    } // end getNpmRepoURL
 
+    // Extract owner and repo from a GitHub URL
     private static getGitHubAttributes(urlRepo: string): { owner: string, repo: string } {
         
         var owner = urlRepo.split('/')[3].trim();
@@ -255,23 +257,21 @@ export class PackageUploadService {
         console.log(`Repo: ${repo}`);
 
         return { owner, repo };
-    }
+    } // end getGitHubAttributes
 
+    // Get the default branch of a GitHub repository (e.g. main, master)
     private static async getDefaultBranch(owner: string, repo: string): Promise<string> {
         try {
-
             const response = await octokit.repos.get({
                 owner,
                 repo
             });
-
             return response.data.default_branch;
-
         } catch (error) {
             console.error('Failed to get default branch:', error);
             throw new ApiError('Failed to get default branch.', 400);
         }
-    }
+    } // end getDefaultBranch
 
      
 
