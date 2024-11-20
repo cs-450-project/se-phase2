@@ -12,8 +12,7 @@ import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
 
-import { getPackageJsonFromContentBuffer } from '../utils/packageDataHelpers.js';
-import { extractNameAndVersionFromPackageJson } from '../utils/packageDataHelpers.js';
+import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL, getNpmRepoURLFromGitHubURL } from '../utils/packageDataHelpers.js';
 
 import octokit from '../utils/octokit.js';
 
@@ -160,9 +159,9 @@ export class PackageUploadService {
         // Check if the URL is an npm package URL
         if (URL.includes('npmjs.com/package/')) {
             // Convert npm URL to GitHub URL
-            const npmGithubURL = await this.getNpmRepoURL(URL);
+            const npmGithubURL = await getNpmRepoURLFromGitHubURL(URL);
             // Extract owner and repo from GitHub URL
-            const { owner, repo } = this.getGitHubAttributes(npmGithubURL);
+            const { owner, repo } = extractGitHubAttributesFromGitHubURL(npmGithubURL);
             // Get default branch
             const defaultBranch = await this.getDefaultBranch(owner, repo);
             // Construct GitHub zip URL
@@ -172,7 +171,7 @@ export class PackageUploadService {
         // Check if the URL is a GitHub URL
         else if (URL.includes('github.com')) {
             // Extract owner and repo from GitHub URL
-            const { owner, repo } = this.getGitHubAttributes(URL);
+            const { owner, repo } = extractGitHubAttributesFromGitHubURL(URL);
             // Get default branch
             const defaultBranch = await this.getDefaultBranch(owner, repo);
             // Construct GitHub zip URL
@@ -185,38 +184,6 @@ export class PackageUploadService {
         }
     } // end normalizePackageURL
 
-    // Fetch GitHub repository URL from npm API
-    private static async getNpmRepoURL(url: string): Promise<string> {
-        const npmApiUrl = url.replace(/(?<=\/)www(?=\.)/, 'replicate').replace('/package', '');
-        console.log(`Fetching repository URL from npm API: ${npmApiUrl}`);
-        const npmApiResponse = await fetch(npmApiUrl);
-        const npmApiData = await npmApiResponse.json();
-
-        if (!npmApiData.repository || !npmApiData.repository.url) {
-            console.log(`Repository URL not found in npm package data for URL: ${url}`);
-            throw new ApiError('Repository URL not found in npm package data', 400);
-        }
-
-        const npmRepoUrl = npmApiData.repository.url;
-        console.log(`NPM Repository URL: ${npmRepoUrl}`);
-        return npmRepoUrl;
-    } // end getNpmRepoURL
-
-    // Extract owner and repo from a GitHub URL
-    private static getGitHubAttributes(urlRepo: string): { owner: string, repo: string } {
-        
-        var owner = urlRepo.split('/')[3].trim();
-        var repo = urlRepo.split('/')[4].trim();
-
-        if (repo.includes('.git')) {
-            repo = repo.replace('.git', '');
-        }
-
-        console.log(`Owner: ${owner}`);
-        console.log(`Repo: ${repo}`);
-
-        return { owner, repo };
-    } // end getGitHubAttributes
 
     // Get the default branch of a GitHub repository (e.g. main, master)
     private static async getDefaultBranch(owner: string, repo: string): Promise<string> {
