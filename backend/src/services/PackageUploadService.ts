@@ -11,8 +11,9 @@ import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
-
-import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL, getNpmRepoURLFromGitHubURL } from '../utils/packageDataHelpers.js';
+import { evaluateMetrics } from './evaluators/evaluateMetrics.js';
+import { Ranker } from './scores/Ranker.js';
+import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL, getNpmRepoURLFromGitHubURL, normalizeToGithubUrl, extractGitHubLinkFromPackageJson } from '../utils/packageDataHelpers.js';
 
 import octokit from '../utils/octokit.js';
 
@@ -36,10 +37,18 @@ export class PackageUploadService {
         console.log('[PackageService] Uploading Content type package to the database.');
 
         // Extract the package.json from the zip file
-        const packageJson = await getPackageJsonFromContentBuffer(Content);
+        const packageJson = getPackageJsonFromContentBuffer(Content);
 
         // Extract the package name and version from the zip file
         const { Name, Version } = extractNameAndVersionFromPackageJson(packageJson);
+
+        const link = await extractGitHubLinkFromPackageJson(packageJson);
+
+        const { owner, repo } = extractGitHubAttributesFromGitHubURL(await extractGitHubLinkFromPackageJson(packageJson));
+
+        const scorecard = await evaluateMetrics(owner, repo);
+
+        console.log(`Ranker: ${JSON.stringify(scorecard)}`);
 
         // Get PackageMetadata repository, create metadata and save
         const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
@@ -50,6 +59,7 @@ export class PackageUploadService {
         });
 
         if (existingMetadata) {
+            console.log(`[PackageUploadService] Package with name ${Name} and version ${Version} already exists.`);
             throw new ApiError('Package exists already.', 409);
         }
 
@@ -58,6 +68,8 @@ export class PackageUploadService {
             version: Version,
         });
         await packageMetadataRepository.save(metadata);
+
+        console.log(`[PackageUploadService] Package with name ${Name} and version ${Version} saved to the database.`);
 
         // Get PackageData repository, create data and save
         const packageDataRepository = AppDataSource.getRepository(PackageData);
@@ -94,22 +106,21 @@ export class PackageUploadService {
      */
     static async uploadURLType(URL: string, JSProgram: string) {
         try {
+
             console.log('[PackageUploadService] Uploading URL type package to the database.');
-            const normalizedURL = await this.normalizePackageURL(URL);
-            if (!normalizedURL) {
-                throw new Error('Invalid or unsupported URL');
-            }
+            
+            const Content = await this.getContentBufferFromGithubUrl(URL);
 
-            console.log('Normalized URL:', normalizedURL);
-
-            const response = await axios.get(normalizedURL, { responseType: 'arraybuffer' });
-            const zipBuffer = Buffer.from(response.data, 'binary');
-            const base64Zip = zipBuffer.toString('base64');
-
-            const packageJson = await getPackageJsonFromContentBuffer(base64Zip);
+            const packageJson = getPackageJsonFromContentBuffer(Content);
 
             const { Name, Version } = extractNameAndVersionFromPackageJson(packageJson);
         
+            const { owner, repo } = extractGitHubAttributesFromGitHubURL(await normalizeToGithubUrl(URL));
+
+            const scorecard = await evaluateMetrics(owner, repo);
+
+            console.log(`Ranker: ${JSON.stringify(scorecard)}`);
+
             const packageMetadataRepository = await AppDataSource.getRepository(PackageMetadata);
             const metadata = packageMetadataRepository.create({
                 name: Name,
@@ -120,7 +131,7 @@ export class PackageUploadService {
             const packageDataRepository = await AppDataSource.getRepository(PackageData);
             const data = packageDataRepository.create({
                 packageMetadata: metadata,
-                content: base64Zip,
+                content: Content,
                 debloat: false,
                 jsProgram: JSProgram,
             });
@@ -146,41 +157,29 @@ export class PackageUploadService {
 
     
     /**
-     * @function normalizePackageURL
+     * @function getContentBufferFromGithubUrl
      * Converts npm link to GitHub link if applicable.
      * Supports URLs like npm and GitHub URLs.
      * 
      * @param URL string - The input URL to normalize
      * @returns Normalized GitHub URL or the original URL if no conversion is needed.
      */
-    private static async normalizePackageURL(URL: string): Promise<string | null> {
+    private static async getContentBufferFromGithubUrl(URL: string): Promise<string> {
 
-        // Check if the URL is an npm package URL
-        if (URL.includes('npmjs.com/package/')) {
-            // Convert npm URL to GitHub URL
-            const npmGithubURL = await getNpmRepoURLFromGitHubURL(URL);
-            // Extract owner and repo from GitHub URL
-            const { owner, repo } = extractGitHubAttributesFromGitHubURL(npmGithubURL);
-            // Get default branch
-            const defaultBranch = await this.getDefaultBranch(owner, repo);
-            // Construct GitHub zip URL
-            return `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`; 
-        }
+        const githubUrl = await normalizeToGithubUrl(URL);
+        
+        const { owner, repo } = extractGitHubAttributesFromGitHubURL(githubUrl);
 
-        // Check if the URL is a GitHub URL
-        else if (URL.includes('github.com')) {
-            // Extract owner and repo from GitHub URL
-            const { owner, repo } = extractGitHubAttributesFromGitHubURL(URL);
-            // Get default branch
-            const defaultBranch = await this.getDefaultBranch(owner, repo);
-            // Construct GitHub zip URL
-            return `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`; 
-        }
+        const defaultBranch = await this.getDefaultBranch(owner, repo);
 
-        // Unsupported URL format
-        else {
-            throw new ApiError('Unsupported URL format.', 400);
-        }
+        const normalizedURL = `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`;
+
+        const response = await axios.get(normalizedURL, { responseType: 'arraybuffer' });
+        const zipBuffer = Buffer.from(response.data, 'binary');
+        const base64Zip = zipBuffer.toString('base64');
+
+        return base64Zip;
+
     } // end normalizePackageURL
 
 

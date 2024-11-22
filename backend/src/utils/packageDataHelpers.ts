@@ -29,6 +29,7 @@ export function getPackageJsonFromContentBuffer(contentBuffer: string): string {
     }
 }
 
+// Extract Name and Version from package.json
 export function extractNameAndVersionFromPackageJson(packageJson: string) {
 
     const packageData = JSON.parse(packageJson);
@@ -43,6 +44,82 @@ export function extractNameAndVersionFromPackageJson(packageJson: string) {
     return { Name, Version };
 }
 
+// Extract GitHub owner and repository name from package.json
+export async function extractGitHubLinkFromPackageJson(packageJson: string): Promise<string> {
+    
+    try {
+        const packageData = JSON.parse(packageJson);
+        
+        // Check repository field
+        if (packageData.repository) {
+          if (typeof packageData.repository === 'string') {
+            if (packageData.repository.includes('github.com')) {
+              return await normalizeToGithubUrl(packageData.repository);
+            }
+          } else if (packageData.repository.url && packageData.repository.url.includes('github.com')) {
+            return await normalizeToGithubUrl(packageData.repository.url);
+          }
+        }
+        
+        // Check homepage field
+        if (packageData.homepage && packageData.homepage.includes('github.com')) {
+          return await normalizeToGithubUrl(packageData.homepage);
+        }
+        
+        // Check bugs field
+        if (packageData.bugs) {
+          const bugsUrl = typeof packageData.bugs === 'string' 
+            ? packageData.bugs 
+            : packageData.bugs.url;
+            
+          if (bugsUrl && bugsUrl.includes('github.com')) {
+            return await normalizeToGithubUrl(bugsUrl);
+          }
+        }
+
+        throw new ApiError('GitHub repository URL not found in package.json.', 400);
+
+      } catch (error) {
+        throw new ApiError('Failed to extract GitHub attributes from package.json.', 400);
+      }
+}
+
+export async function normalizeToGithubUrl(url: string): Promise<string> {
+    
+    console.log('Original URL:', url);
+
+    // Handle npm URLs first
+    if (url.includes('npmjs.com/package/')) {
+        url = await getNpmRepoURLFromGitHubURL(url);
+        console.log('Converted NPM URL:', url);
+    }
+
+    // Validate GitHub URL
+    if (!url.includes('github.com')) {
+        throw new ApiError('Unable to process URL: Not a GitHub URL', 400);
+    }
+
+    // Step 1: Strip all protocols and prefixes
+    let normalized = url
+        .replace(/^(git\+https?:\/\/|git:|https?:\/\/)/, '')  // Remove all protocol variants
+        .replace(/^github.com:/, '');  // Remove SSH format
+
+    // Step 2: Remove .git suffix
+    normalized = normalized.replace(/\.git$/, '');
+
+    // Step 3: Ensure URL starts with github.com/
+    if (!normalized.startsWith('github.com/')) {
+        normalized = `github.com/${normalized.replace(/^github.com/, '')}`;
+    }
+
+    // Step 4: Add https protocol
+    normalized = `https://${normalized}`;
+
+    console.log('Normalized URL:', normalized);
+    return normalized;
+  }
+
+// Extract owner and repository name from GitHub URL
 export function extractGitHubAttributesFromGitHubURL(urlRepo: string): { owner: string, repo: string } {
     var owner = urlRepo.split('/')[3].trim();
     var repo = urlRepo.split('/')[4].trim();

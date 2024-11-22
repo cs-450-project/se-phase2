@@ -14,7 +14,6 @@
 import logger from '../../utils/logger.js'; // Adjust the import path as necessary
 
 export class Ranker {
-    public URL: string = 'none';
 
     private _netScore: number = -1;
     private _netScoreLatency: number = -1;
@@ -39,10 +38,6 @@ export class Ranker {
 
     private _codeReview: number = -1;
     private _codeReviewLatency: number = -1;
-
-    constructor() {
-        this.resetValues();
-    }
 
     private roundValue(value: number): number {
         return Number(value.toFixed(3));
@@ -236,37 +231,5 @@ export class Ranker {
         this._codeReviewLatency = this.roundValue(value);
     }
 
-    // Clear all values
-    public clear(): void {
-        logger.info('Clearing all values to default.');
-        this.resetValues();
-    }
-
-    private resetValues(): void {
-        this.URL = 'none';
-
-        this._netScore = -1;
-        this._netScoreLatency = -1;
-
-        this._rampUp = -1;
-        this._rampUpLatency = -1;
-
-        this._correctness = -1;
-        this._correctnessLatency = -1;
-
-        this._busFactor = -1;
-        this._busFactorLatency = -1;
-
-        this._responsiveMaintainers = -1;
-        this._responsiveMaintainersLatency = -1;
-
-        this._license = -1;
-        this._licenseLatency = -1;
-
-        this._dependencyPinning = -1;
-        this._dependencyPinningLatency = -1;
-
-        this._codeReview = -1;
-        this._codeReviewLatency = -1;
-    }
+    
 }

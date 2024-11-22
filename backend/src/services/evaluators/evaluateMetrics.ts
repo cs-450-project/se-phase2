@@ -79,12 +79,14 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<Rank
         ranker.codeReviewLatency = factorTime.stop();
         logger.debug(`Code Review Fraction: ${ranker.codeReview}, Latency: ${ranker.codeReviewLatency}`);
 
+        ranker.netScore = ranker.netScore;
+
         // Ends the NetScore timer and sends the time to the ranker
         ranker.netScoreLatency = totalTime.stop();
         logger.debug(`NetScore Latency: ${ranker.netScoreLatency}`);
     }
 
-    logger.debug(`Ranker: ${JSON.stringify(ranker)}`);
+    
 
     return ranker;
 
