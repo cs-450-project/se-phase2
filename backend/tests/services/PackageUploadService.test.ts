@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL } from '../../src/utils/packageDataHelpers';
+import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL } from '../../../../src/utils/packageDataHelpers';
 import { PackageUploadService } from '../../src/services/PackageUploadService';
 import { AppDataSource } from '../../src/data-source';
 import { ApiError } from '../../src/utils/errors/ApiError';

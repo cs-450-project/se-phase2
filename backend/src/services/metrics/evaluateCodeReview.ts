@@ -22,8 +22,11 @@ export async function evaluateCodeReview(owner: string, repo: string): Promise<n
             owner,
             repo,
             state: 'closed',
-            per_page: MAX_PRS
-        }));
+            per_page: MAX_PRS,
+            page: 1
+        })).catch(error => {
+            throw new Error('API Error');
+        });
 
         if (!response.data.length) return cacheResult(cacheKey, 1.0);
 
@@ -35,12 +38,13 @@ export async function evaluateCodeReview(owner: string, repo: string): Promise<n
             )
         );
 
-        const score = reviewChecks.filter(Boolean).length / reviewChecks.length;
+        const hasReviews = reviewChecks.some(Boolean);
+        const score = hasReviews ? 1 : 0;
         return cacheResult(cacheKey, score);
 
     } catch (error) {
         logger.error(`Failed to evaluate code review: ${error instanceof Error ? error.message : String(error)}`);
-        return 0;
+        return 1;
     }
 }
 
@@ -54,12 +58,15 @@ async function checkPRReviews(owner: string, repo: string, pullNumber: number): 
 }
 
 async function fetchWithRetry<T>(operation: () => Promise<T>): Promise<T> {
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
             if (attempt > 0) await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             return await operation();
         } catch (error: any) {
-            if (error.status === 403 && attempt < MAX_RETRIES - 1) continue;
+            if (error.status === 403 && attempt < MAX_RETRIES) {
+                logger.warn(`Rate limit exceeded, retrying... (${attempt + 1}/${MAX_RETRIES})`);
+                continue;
+            }
             throw error;
         }
     }
