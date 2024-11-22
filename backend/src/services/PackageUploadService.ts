@@ -8,6 +8,7 @@ import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
+import { PackageRating } from "../entities/PackageRating.js";
 import { evaluateMetrics } from './evaluators/evaluateMetrics.js';
 import { 
     getPackageJsonFromContentBuffer, 
@@ -15,7 +16,7 @@ import {
     extractGitHubAttributesFromGitHubURL, 
     normalizeToGithubUrl, 
     extractGitHubLinkFromPackageJson 
-} from '../utils/packageDataHelpers.js';
+} from '../utils/packageHelpers.js';
 import octokit from '../utils/octokit.js';
 
 /**
@@ -52,6 +53,16 @@ export class PackageUploadService {
                 throw new ApiError('Invalid name or version in package.json', 400);
             }
 
+            // Check for existing package
+            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+            const existingMetadata = await packageMetadataRepository.findOne({ 
+                where: { name: Name, version: Version },
+            });
+
+            if (existingMetadata) {
+                throw new ApiError(`Package ${Name}@${Version} already exists`, 409);
+            }
+
             // Extract GitHub information
             const githubLink = await extractGitHubLinkFromPackageJson(packageJson);
             if (!githubLink) {
@@ -64,14 +75,9 @@ export class PackageUploadService {
             const scorecard = await evaluateMetrics(owner, repo);
             console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(scorecard)}`);
 
-            // Check for existing package
-            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
-            const existingMetadata = await packageMetadataRepository.findOne({ 
-                where: { name: Name, version: Version },
-            });
-
-            if (existingMetadata) {
-                throw new ApiError(`Package ${Name}@${Version} already exists`, 409);
+            // Check if package meets quality standards
+            if (scorecard.netScore < 0.5) {
+                throw new ApiError('Package does not meet quality standards', 424);
             }
 
             // Save metadata
@@ -89,6 +95,11 @@ export class PackageUploadService {
             });
             await packageDataRepository.save(data);
             console.log(`[PackageService] Saved package data for ${Name}@${Version}`);
+
+            // Save package rating
+            const packageRating = this.createPackageRatingFromScorecard(scorecard, metadata);
+            const packageRatingRepository = AppDataSource.getRepository(PackageRating);
+            await packageRatingRepository.save(packageRating);
 
             return {
                 metadata: { Name, Version, ID: metadata.id },
@@ -118,7 +129,7 @@ export class PackageUploadService {
             console.log('[PackageService] Processing URL type package');
 
             // Get content from URL
-            const Content = await this.getContentBufferFromGithubUrl(URL);
+            const Content = await this.getContentZipBufferFromGithubUrl(URL);
             if (!Content) {
                 throw new ApiError('Failed to fetch package content', 400);
             }
@@ -142,6 +153,11 @@ export class PackageUploadService {
             const scorecard = await evaluateMetrics(owner, repo);
             console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(scorecard)}`);
 
+            // Check if package meets quality standards
+            if (scorecard.netScore < 0.5) {
+                throw new ApiError('Package does not meet quality standards', 424);
+            }
+
             // Save metadata
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
             const metadata = packageMetadataRepository.create({ name: Name, version: Version });
@@ -158,6 +174,11 @@ export class PackageUploadService {
             });
             await packageDataRepository.save(data);
             console.log(`[PackageService] Saved package data for ${Name}@${Version}`);
+
+            // Save package rating
+            const packageRating = this.createPackageRatingFromScorecard(scorecard, metadata);
+            const packageRatingRepository = AppDataSource.getRepository(PackageRating);
+            await packageRatingRepository.save(packageRating);
 
             return {
                 metadata: { Name, Version, ID: metadata.id },
@@ -177,7 +198,7 @@ export class PackageUploadService {
      * @returns Base64 encoded zip content
      * @throws ApiError if URL is invalid or content cannot be fetched
      */
-    private static async getContentBufferFromGithubUrl(URL: string): Promise<string> {
+    private static async getContentZipBufferFromGithubUrl(URL: string): Promise<string> {
         try {
             const githubUrl = await normalizeToGithubUrl(URL);
             const { owner, repo } = extractGitHubAttributesFromGitHubURL(githubUrl);
@@ -213,4 +234,47 @@ export class PackageUploadService {
             throw new ApiError('Failed to determine repository default branch', 400);
         }
     }
+
+    /**
+     * Creates a PackageRating object from a scorecard
+     * @param scorecard - Object containing metric scores
+     * @param metadata - PackageMetadata object
+     * @returns PackageRating object
+     * @throws ApiError if scorecard is invalid
+     */
+
+    private static createPackageRatingFromScorecard(scorecard: any, metadata: PackageMetadata) {
+        try {
+            if (!scorecard || !metadata) {
+                throw new ApiError('Invalid scorecard or metadata', 400);
+            }
+
+            const packageRating = new PackageRating();
+            packageRating.packageMetadata = metadata;
+
+            packageRating.bus_factor = scorecard.busFactor;
+            packageRating.bus_factor_latency = scorecard.busFactorLatency;
+            packageRating.correctness = scorecard.correctness;
+            packageRating.correctness_latency = scorecard.correctnessLatency;
+            packageRating.ramp_up = scorecard.rampUp;
+            packageRating.ramp_up_latency = scorecard.rampUpLatency;
+            packageRating.responsive_maintainer = scorecard.responsiveMaintainer;
+            packageRating.responsive_maintainer_latency = scorecard.responsiveMaintainerLatency;
+            packageRating.license_score = scorecard.licenseScore;
+            packageRating.license_score_latency = scorecard.licenseScoreLatency;
+            packageRating.good_pinning_practice = scorecard.goodPinningPractice;
+            packageRating.good_pinning_practice_latency = scorecard.goodPinningPracticeLatency;
+            packageRating.pull_request = scorecard.pullRequest;
+            packageRating.pull_request_latency = scorecard.pullRequestLatency;
+            packageRating.net_score = scorecard.netScore;
+            packageRating.net_score_latency = scorecard.netScoreLatency;
+
+            return packageRating;
+
+        } catch (error) {
+            console.error('[PackageService] Failed to create PackageRating:', error);
+            throw new ApiError('Failed to create PackageRating object', 500);
+        }
+    }
+
 }
