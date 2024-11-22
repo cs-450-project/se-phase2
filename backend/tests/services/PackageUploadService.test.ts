@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL } from '../../../../src/utils/packageDataHelpers';
+import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL } from '../../src/utils/packageHelpers.js';
 import { PackageUploadService } from '../../src/services/PackageUploadService';
 import { AppDataSource } from '../../src/data-source';
 import { ApiError } from '../../src/utils/errors/ApiError';
@@ -53,7 +53,7 @@ vi.mock('../../src/entities/PackageData', () => ({
   }))
 }));
 
-describe('PackageUploadService', () => {
+// Mock the octokit module
   const mockRepositoryMethods = {
     create: vi.fn(),
     save: vi.fn(),
@@ -267,8 +267,7 @@ describe('PackageUploadService', () => {
         githubURL
       );
 
-      expect(result).toContain('github.com');
-      expect(result).toContain('.zip');
-    });
+    expect(result).toContain('github.com');
+    expect(result).toContain('.zip');
   });
 });

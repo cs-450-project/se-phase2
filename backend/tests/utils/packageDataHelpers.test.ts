@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL, getNpmRepoURLFromGitHubURL } from '../../src/utils/packageDataHelpers';
+import { getPackageJsonFromContentBuffer, extractNameAndVersionFromPackageJson, extractGitHubAttributesFromGitHubURL, getNpmRepoURLFromGitHubURL } from '../../src/utils/packageHelpers';
 import { ApiError } from '../../src/utils/errors/ApiError';
 import AdmZip from 'adm-zip';
 
