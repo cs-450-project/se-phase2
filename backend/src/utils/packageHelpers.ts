@@ -141,20 +141,35 @@ export async function normalizeToGithubUrl(url: string): Promise<string> {
             console.log('[PackageHelper] Converted NPM URL:', url);
         }
 
-        // Remove git+ prefix and .git suffix
+        // Step 1: Clean the URL
         let normalized = url
-            .replace(/^git\+/, '')
-            .replace(/\.git$/, '');
+            .replace(/^(git:\/\/|git\+https:\/\/|https:\/\/|http:\/\/)/, '') // Remove all protocols
+            .replace(/\.git$/, '')  // Remove .git suffix
+            .replace(/\/\/+/g, '/') // Remove duplicate slashes
+            .replace(/^github.com:/, '') // Remove SSH format
+            .replace(/\/+$/, '');   // Remove trailing slashes
 
-        // Remove authentication part (user@)
-        normalized = normalized.replace(/\/\/[^@]+@/, '//');
+        // Step 2: Remove authentication
+        normalized = normalized.replace(/([^@]+@)/, '');
 
-        // Ensure proper https://github.com format
-        normalized = normalized
-            .replace(/^(https?:\/\/)?(github\.com)?/, 'https://github.com')
-            .replace(/([^:])\/\/+/g, '$1/');  // Remove any duplicate slashes
+        // Step 3: Ensure github.com is at the start
+        if (!normalized.startsWith('github.com')) {
+            normalized = `github.com/${normalized}`;
+        }
+
+        // Step 4: Clean up any residual github.com duplicates
+        normalized = normalized.replace(/github\.com\/github\.com/, 'github.com');
+
+        // Step 5: Add https protocol
+        normalized = `https://${normalized}`;
 
         console.log('[PackageHelper] Normalized URL:', normalized);
+        
+        // Validate final URL format
+        if (!normalized.match(/^https:\/\/github\.com\/[\w-]+\/[\w-]+$/)) {
+            throw new ApiError('Invalid GitHub URL format after normalization', 400);
+        }
+
         return normalized;
 
     } catch (error) {
