@@ -4,6 +4,9 @@
  */
 
 import axios from 'axios';
+import AdmZip from 'adm-zip';
+import fs from 'fs';
+import path from 'path';
 import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
@@ -18,6 +21,22 @@ import {
     extractGitHubLinkFromPackageJson 
 } from '../utils/packageHelpers.js';
 import octokit from '../utils/octokit.js';
+
+/**
+ * Debloat rules for removing unnecessary files
+ * Each rule is a regex pattern matching files to remove
+ */
+const DEBLOAT_RULES: Array<{
+    pattern: RegExp;
+    description: string;
+}> = [
+    { pattern: /\.test\.(js|ts|jsx|tsx)$/, description: 'Test files' },
+    { pattern: /\.(md|markdown)$/, description: 'Documentation files' },
+    { pattern: /__(tests|mocks|fixtures)__/, description: 'Test directories' },
+    { pattern: /\.(log|lock)$/, description: 'Log and lock files' },
+    { pattern: /^(tests?|spec|docs|examples?|samples?)\//, description: 'Common test/doc directories' }
+];
+
 
 /**
  * @class PackageUploadService
@@ -61,6 +80,11 @@ export class PackageUploadService {
 
             if (existingMetadata) {
                 throw new ApiError(`Package ${Name}@${Version} already exists`, 409);
+            }
+
+            // Check for debloat flag
+            if (debloat) {
+                Content = await this.getDebloatedZipBuffer(Content);
             }
 
             // Extract GitHub information
@@ -286,4 +310,119 @@ export class PackageUploadService {
         }
     }
 
-}
+    
+
+        /**
+     * Removes unnecessary files from a package based on debloat rules
+     * @param Content - Base64 encoded zip content
+     * @throws ApiError if debloat process fails
+     */
+    private static async debloatPackage(Content: string, tempDir: string): Promise<void> {
+        try {
+            if (!Content) {
+                throw new ApiError('Content cannot be empty', 400);
+            }
+
+            console.log('[PackageService] Starting package debloat process');
+
+            // Create zip from content
+            const zipBuffer = Buffer.from(Content, 'base64');
+            const zip = new AdmZip(zipBuffer);
+
+            // Extract to temp directory
+            try {
+                zip.extractAllTo(tempDir, true);
+                console.log(`[PackageService] Extracted package to ${tempDir}`);
+            } catch (error) {
+                throw new ApiError('Failed to extract package content', 500);
+            }
+
+            // Process files recursively
+            await this.removeUnnecessaryFiles(tempDir);
+            console.log('[PackageService] Completed package debloat process');
+
+        } catch (error) {
+            console.error('[PackageService] Debloat process failed:', error);
+            throw new ApiError('Failed to debloat package', 500);
+        }
+    }
+
+    /**
+     * Recursively removes files matching debloat rules
+     * @param dir - Directory to process
+     * @throws ApiError if file operations fail
+     */
+    private static async removeUnnecessaryFiles(dir: string): Promise<void> {
+        try {
+            const entries = await fs.promises.readdir(dir);
+
+            for (const entry of entries) {
+                const fullPath = path.join(dir, entry);
+                const stats = await fs.promises.stat(fullPath);
+
+                if (stats.isDirectory()) {
+                    // Process subdirectory
+                    await this.removeUnnecessaryFiles(fullPath);
+
+                    // Remove if empty
+                    const remaining = await fs.promises.readdir(fullPath);
+                    if (remaining.length === 0) {
+                        await fs.promises.rmdir(fullPath);
+                        console.log(`[PackageService] Removed empty directory: ${fullPath}`);
+                    }
+                } else {
+                    // Check file against debloat rules
+                    const matchedRule = DEBLOAT_RULES.find(rule => rule.pattern.test(entry));
+                    if (matchedRule) {
+                        await fs.promises.unlink(fullPath);
+                        console.log(`[PackageService] Removed ${matchedRule.description}: ${fullPath}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`[PackageService] Error processing directory ${dir}:`, error);
+            throw new ApiError('Failed to process directory during debloat', 500);
+        }
+    }
+
+    /**
+     * Creates a debloated zip buffer from the processed content
+     * @param Content - Original base64 encoded zip content
+     * @returns Debloated base64 encoded zip content
+     * @throws ApiError if zip operations fail
+     */
+    private static async getDebloatedZipBuffer(Content: string): Promise<string> {
+        const tempDir = path.join(process.cwd(), 'temp', Date.now().toString());
+
+        try {
+            // Create temp directory
+            await fs.promises.mkdir(tempDir, { recursive: true });
+            console.log(`[PackageService] Created temporary directory: ${tempDir}`);
+
+            // Process package
+            await this.debloatPackage(Content, tempDir);
+
+            // Create new zip
+            const zip = new AdmZip();
+            zip.addLocalFolder(tempDir);
+            const zipBuffer = zip.toBuffer();
+
+            console.log('[PackageService] Created debloated zip package');
+            return zipBuffer.toString('base64');
+
+        } catch (error) {
+            console.error('[PackageService] Failed to create debloated package:', error);
+            throw new ApiError('Failed to create debloated package', 500);
+
+        } finally {
+            // Cleanup temp directory
+            try {
+                await fs.promises.rm(tempDir, { recursive: true, force: true });
+                console.log(`[PackageService] Cleaned up temporary directory: ${tempDir}`);
+            } catch (error) {
+                console.error(`[PackageService] Failed to cleanup temporary directory ${tempDir}:`, error);
+            }
+        }
+    }
+
+};
