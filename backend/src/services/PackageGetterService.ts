@@ -70,7 +70,7 @@ export class PackageGetterService {
       // Fetch the package data from the database using the package metadata
       const packageDataRepository = AppDataSource.getRepository(PackageData);
       const data = await packageDataRepository.findOne({
-        where: { package_id: metadata.id },
+        where: { packageId: metadata.id },
       });
 
       if (!data) {
@@ -99,7 +99,7 @@ export class PackageGetterService {
       // Fetch the package metadata from the database using the provided ID
       const packageRatingRepository = AppDataSource.getRepository(PackageRating);
       const rating = await packageRatingRepository.findOne({
-        where: { package_id: id },
+        where: { packageId: id },
       });
 
       if (!rating) {
@@ -109,7 +109,24 @@ export class PackageGetterService {
       console.log(`[PackageGetterService] Found package with ID: ${id}`);
 
       // Return the package rating
-      return rating;
+      return {
+        BusFactor: rating.busFactor,
+        BusFactorLatency: rating.busFactorLatency,
+        Correctness: rating.correctness,
+        CorrectnessLatency: rating.correctnessLatency,
+        RampUp: rating.rampUp,
+        RampUpLatency: rating.rampUpLatency,
+        ResponsiveMaintainer: rating.responsiveMaintainer,
+        ResponsiveMaintainerLatency: rating.responsiveMaintainerLatency,
+        LicenseScore: rating.licenseScore,
+        LicenseScoreLatency: rating.licenseScoreLatency,
+        GoodPinningPractice: rating.goodPinningPractice,
+        GoodPinningPracticeLatency: rating.goodPinningPracticeLatency,
+        PullRequest: rating.pullRequest,
+        PullRequestLatency: rating.pullRequestLatency,
+        NetScore: rating.netScore,
+        NetScoreLatency: rating.netScoreLatency
+      }
 
     } catch (error) {
       console.error(`[PackageGetterService] Failed to find package by ID '${id}':`, error);

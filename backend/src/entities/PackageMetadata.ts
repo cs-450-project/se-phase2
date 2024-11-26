@@ -5,13 +5,13 @@ import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
 
 export class PackageMetadata {
   
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;
 
-  @Column()
+  @Column({ name: 'name', nullable: false })
   name!: string;
 
-  @Column()
+  @Column({ name: 'version', nullable: false })
   version!: string;
   
 }
