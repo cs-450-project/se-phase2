@@ -1,65 +1,60 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { PackageMetadata } from './PackageMetadata.js';
 
-
 @Entity('package_rating')
-
 export class PackageRating {
-    
-    @PrimaryColumn()
-    package_id!: number;
+    @PrimaryColumn({ name: 'package_id' })
+    packageId!: number;
 
     @OneToOne(() => PackageMetadata)
     @JoinColumn({ name: 'package_id', referencedColumnName: 'id' })
     packageMetadata!: PackageMetadata;
-    
-    // Metric Scores
-    @Column({ type: 'float', default: -1 })
-    bus_factor!: number;
 
-    @Column({ type: 'float', default: -1 })
-    bus_factor_latency!: number;
+    @Column({ name: 'bus_factor', type: 'float', default: -1 })
+    busFactor!: number;
 
-    @Column({ type: 'float', default: -1 })
+    @Column({ name: 'bus_factor_latency', type: 'float', default: -1 })
+    busFactorLatency!: number;
+
+    @Column({ name: 'correctness', type: 'float', default: -1 })
     correctness!: number;
 
-    @Column({ type: 'float', default: -1 })
-    correctness_latency!: number;
+    @Column({ name: 'correctness_latency', type: 'float', default: -1 })
+    correctnessLatency!: number;
 
-    @Column({ type: 'float', default: -1 })
-    ramp_up!: number;
+    @Column({ name: 'ramp_up', type: 'float', default: -1 })
+    rampUp!: number;
 
-    @Column({ type: 'float', default: -1 })
-    ramp_up_latency!: number;
+    @Column({ name: 'ramp_up_latency', type: 'float', default: -1 })
+    rampUpLatency!: number;
 
-    @Column({ type: 'float', default: -1 })
-    responsive_maintainer!: number;
+    @Column({ name: 'responsive_maintainer', type: 'float', default: -1 })
+    responsiveMaintainer!: number;
 
-    @Column({ type: 'float', default: -1 })
-    responsive_maintainer_latency!: number;
+    @Column({ name: 'responsive_maintainer_latency', type: 'float', default: -1 })
+    responsiveMaintainerLatency!: number;
 
-    @Column({ type: 'float', default: -1 })
-    license_score!: number;
+    @Column({ name: 'license_score', type: 'float', default: -1 })
+    licenseScore!: number;
 
-    @Column({ type: 'float', default: -1 })
-    license_score_latency!: number;
+    @Column({ name: 'license_score_latency', type: 'float', default: -1 })
+    licenseScoreLatency!: number;
 
-    @Column({ type: 'float', default: -1 })
-    good_pinning_practice!: number;
+    @Column({ name: 'good_pinning_practice', type: 'float', default: -1 })
+    goodPinningPractice!: number;
 
-    @Column({ type: 'float', default: -1 })
-    good_pinning_practice_latency!: number;
+    @Column({ name: 'good_pinning_practice_latency', type: 'float', default: -1 })
+    goodPinningPracticeLatency!: number;
 
-    @Column({ type: 'float', default: -1 })
-    pull_request!: number;
+    @Column({ name: 'pull_request', type: 'float', default: -1 })
+    pullRequest!: number;
 
-    @Column({ type: 'float', default: -1 })
-    pull_request_latency!: number;
+    @Column({ name: 'pull_request_latency', type: 'float', default: -1 })
+    pullRequestLatency!: number;
 
-    @Column({ type: 'float', default: -1 })
-    net_score!: number;
+    @Column({ name: 'net_score', type: 'float', default: -1 })
+    netScore!: number;
 
-    @Column({ type: 'float', default: -1 })
-    net_score_latency!: number;
-
+    @Column({ name: 'net_score_latency', type: 'float', default: -1 })
+    netScoreLatency!: number;
 }

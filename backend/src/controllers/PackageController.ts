@@ -129,7 +129,7 @@ export class PackageController {
             
             if (URL && !Content) {
                 console.log('[PackageController] Processing URL upload');
-                const result = await PackageUploadService.uploadURLType(URL, JSProgram);
+                const result = await PackageUploadService.uploadUrlType(URL, JSProgram);
                 res.status(200).json(result);
                 return;
             }

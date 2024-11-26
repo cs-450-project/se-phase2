@@ -52,22 +52,26 @@ export function getPackageJsonFromContentBuffer(contentBuffer: string): string {
  * @returns Object containing Name and Version
  * @throws ApiError if name or version is missing
  */
-export function extractNameAndVersionFromPackageJson(packageJson: string): { Name: string, Version: string } {
+export function extractNameAndVersionFromPackageJson(packageJson: string): { name: string, version: string } {
     try {
         if (!packageJson) {
             throw new ApiError('Package.json content cannot be empty', 400);
         }
 
         const packageData = JSON.parse(packageJson);
-        const Name = packageData.name;
-        const Version = packageData.version;
+        const name = packageData.name;
+        var version = packageData.version;
 
-        if (!Name || !Version) {
-            throw new ApiError('Name or version not found in package.json', 400);
+        if (!name || name === '*') {
+            throw new ApiError('Package name not found in package.json', 400);
         }
 
-        console.log(`[PackageHelper] Extracted name: ${Name}, version: ${Version}`);
-        return { Name, Version };
+        if (!version) {
+            version = '1.0.0';
+        }
+
+        console.log(`[PackageHelper] Extracted name: ${name}, version: ${version}`);
+        return { name, version };
     } catch (error) {
         console.error('[PackageHelper] Failed to extract name and version:', error);
         if (error instanceof ApiError) throw error;
@@ -81,7 +85,7 @@ export function extractNameAndVersionFromPackageJson(packageJson: string): { Nam
  * @returns Normalized GitHub URL
  * @throws ApiError if GitHub URL cannot be found
  */
-export async function extractGitHubLinkFromPackageJson(packageJson: string): Promise<string> {
+export async function extractGithubUrlFromPackageJson(packageJson: string): Promise<string> {
     try {
         if (!packageJson) {
             throw new ApiError('Package.json content cannot be empty', 400);
@@ -137,11 +141,11 @@ export async function normalizeToGithubUrl(url: string): Promise<string> {
 
         // Handle npm URLs first
         if (url.includes('npmjs.com/package/')) {
-            url = await getNpmRepoURLFromGitHubURL(url);
+            url = await getNpmRepoUrlFromGithubUrl(url);
             console.log('[PackageHelper] Converted NPM URL:', url);
         }
 
-        // Step 1: Clean the URL
+        // Clean the URL
         let normalized = url
             .replace(/^(git:\/\/|git\+https:\/\/|https:\/\/|http:\/\/)/, '') // Remove all protocols
             .replace(/\.git$/, '')  // Remove .git suffix
@@ -149,18 +153,18 @@ export async function normalizeToGithubUrl(url: string): Promise<string> {
             .replace(/^github.com:/, '') // Remove SSH format
             .replace(/\/+$/, '');   // Remove trailing slashes
 
-        // Step 2: Remove authentication
+        // Remove authentication
         normalized = normalized.replace(/([^@]+@)/, '');
 
-        // Step 3: Ensure github.com is at the start
+        // Ensure github.com is at the start
         if (!normalized.startsWith('github.com')) {
             normalized = `github.com/${normalized}`;
         }
 
-        // Step 4: Clean up any residual github.com duplicates
+        // Clean up any residual github.com duplicates
         normalized = normalized.replace(/github\.com\/github\.com/, 'github.com');
 
-        // Step 5: Add https protocol
+        // Add https protocol
         normalized = `https://${normalized}`;
 
         console.log('[PackageHelper] Normalized URL:', normalized);
@@ -181,17 +185,17 @@ export async function normalizeToGithubUrl(url: string): Promise<string> {
 
 /**
  * Extracts owner and repository name from GitHub URL
- * @param urlRepo - GitHub repository URL
+ * @param repoUrl - GitHub repository URL
  * @returns Object containing owner and repo names
  * @throws ApiError if URL format is invalid
  */
-export function extractGitHubAttributesFromGitHubURL(urlRepo: string): { owner: string, repo: string } {
+export function extractGithubAttributesFromGithubUrl(repoUrl: string): { owner: string, repo: string } {
     try {
-        if (!urlRepo || !urlRepo.includes('github.com')) {
+        if (!repoUrl || !repoUrl.includes('github.com')) {
             throw new ApiError('Invalid GitHub URL format', 400);
         }
 
-        const parts = urlRepo.split('/');
+        const parts = repoUrl.split('/');
         if (parts.length < 5) {
             throw new ApiError('Invalid GitHub URL format', 400);
         }
@@ -215,7 +219,7 @@ export function extractGitHubAttributesFromGitHubURL(urlRepo: string): { owner: 
  * @returns GitHub repository URL
  * @throws ApiError if repository URL cannot be found
  */
-export async function getNpmRepoURLFromGitHubURL(url: string): Promise<string> {
+export async function getNpmRepoUrlFromGithubUrl(url: string): Promise<string> {
     try {
         if (!url || !url.includes('npmjs.com')) {
             throw new ApiError('Invalid npm package URL', 400);
