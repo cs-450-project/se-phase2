@@ -13,13 +13,13 @@ import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
 
 export class PackageMetadata {
   
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;
 
-  @Column('varchar')
+  @Column({ name: 'name', nullable: false })
   name!: string;
 
-  @Column('varchar')
+  @Column({ name: 'version', nullable: false })
   version!: string;
   
 }

@@ -1,5 +1,7 @@
 /**
  * @file PackageController.ts
+ * Controller handles HTTP requests for package management endpoints.
+ * Processes requests, delegates to services, and returns responses.
  */
 import 'reflect-metadata';
 import { Request, Response, NextFunction } from 'express';
@@ -7,128 +9,209 @@ import { PackageUploadService } from '../services/PackageUploadService.js';
 import { PackageGetterService } from '../services/PackageGetterService.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { ApiError } from '../utils/errors/ApiError.js';
-import { PackageMetadata } from '../entities/PackageMetadata.js';
 
 /**
  * @class PackageController
- * Controller class that processes /package requests, invokes the appropriate service, and returns the response.
- * 
+ * Processes package-related HTTP requests and returns appropriate responses.
+ * Handles package uploads, queries, updates, and deletions.
  */
 export class PackageController {
-
-    // POST /packages handler
-    static async getPackages(req: Request, res: Response, next: NextFunction) {
+    /**
+     * Processes POST /packages request to query multiple packages
+     * @param req Express request containing array of package queries
+     * @param res Express response
+     * @param next Next middleware function
+     * @throws ApiError if query format is invalid
+     */
+    static async getPackagesFromQueries(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            console.log('POST /packages');
-            // Pull the array of package queries from the request body
+            console.log('[PackageController] Processing POST /packages request');
             const queries: PackageQuery[] = req.body;
             
-            if (!queries) {
-                throw new ApiError('No queries provided.', 400);
+            if (!queries || !Array.isArray(queries)) {
+                throw new ApiError('Invalid query format: Expected array of package queries', 400);
             }
 
-            // Call the service to query the packages
             const results = await PackageGetterService.queryPackages(queries);
-
-            // Send the response back to the client
-            res.json(results);
-            return;
+            res.status(200).json(results);
 
         } catch (error) {
+            console.error('[PackageController] Failed to process package queries:', error);
             next(error);
         }
     }
     
-    // DELETE /reset handler
-    static async resetRegistry(req: Request, res: Response) {
-        console.log('DELETE /reset');
-        res.status(200).json({ message: 'DELETE /reset' });
-    }
-
-    // GET /:id handler
-    static async getPackage(req: Request, res: Response) {
+    /**
+     * Processes DELETE /reset request to reset the registry
+     * @param req Express request
+     * @param res Express response
+     * @param next Next middleware function
+     * @param next Next middleware function
+     */
+    static async resetRegistry(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            console.log('GET /:id');
-            const id = req.params.id;
-            console.log('[PackageController] Requested package ID:', id);
-            if (!id) {
-                res.status(400).json({ message: 'Bad Request' });
-                return;
-            }
-            res.status(200).json({ message: 'GET /:id' });
+            console.log('[PackageController] Processing DELETE /reset request');
+            // TODO: Implement registry reset logic
+            res.status(200).json({ message: 'Registry reset successful' });
         } catch (error) {
-            console.error('[PackageController] An error occurred with the GET package/:id request:', error);
-            res.status(400).json({ message: 'Bad Request' });
-            return;
-        }
-
-    }
-
-    // PUT /:id handler
-    static async updatePackage(req: Request, res: Response) {
-        console.log('PUT /:id');
-        res.status(200).json({ message: 'PUT /:id' });
-    }
-
-    // POST /package handler
-    static async uploadPackage(req: Request, res: Response, next: NextFunction) {
-        console.log('POST /package');
-        try {
-            // Pull the Content, URL, debloat, and JSProgram from the request body
-            const { Content, URL, JSProgram, debloat } = req.body;
-
-            // Request contains Content
-            if (Content && !URL) {
-                console.log('[PackageController] Request contains Content.');
-
-                // Call the service to process the Content package
-                const result = await PackageUploadService.uploadContentType(Content, JSProgram, debloat);
-
-                // Send the response back to the client
-                res.status(200).json({ 
-                    ...(result ? { ...JSON.parse(JSON.stringify(result)) } : {})
-                 });
-                return;
-            }
-            // Request contains URL
-            else if (URL && !Content) {
-                console.log('[PackageController] Request contains URL.');
-                
-                // Call the service to process the URL package
-                const result = await PackageUploadService.uploadURLType(URL, JSProgram);
-
-                // Send the response back to the client
-                res.status(200).json({ 
-                    ...(result ? { ...JSON.parse(JSON.stringify(result)) } : {})
-                 });
-                return;
-            }
-            // Request contains both Content and URL, or neither
-            else {
-                console.log('[PackageController] Request does not contain Content or URL.');
-                throw new ApiError('Package data is formatted improperly.', 400);
-            }
-        } catch (error) {
+            console.error('[PackageController] Failed to reset registry:', error);
             next(error);
         }
     }
 
-    // GET /:id/rate handler
-    static async getPackageRating(req: Request, res: Response) {
-        console.log('GET /:id/rate');
-        res.status(200).json({ message: 'GET /:id/rate' });
+    /**
+     * Processes GET /:id request to fetch a specific package
+     * @param req Express request containing package ID
+     * @param res Express response
+     * @throws ApiError if package ID is invalid or not found
+     */
+    static async getPackage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { id } = req.params;
+            console.log(`[PackageController] Processing GET /${id} request`);
+
+            if (!id) {
+                throw new ApiError('Package ID is required', 400);
+            }
+
+            const result = await PackageGetterService.getPackageMetadataAndDataById(parseInt(id));
+
+            res.status(200).json(result);
+
+        } catch (error) {
+            console.error('[PackageController] Failed to fetch package:', error);
+            next(error);
+        }
     }
 
-    // GET /:id/cost handler
-    static async getPackageCost(req: Request, res: Response) {
-        console.log('GET /:id/cost');
-        res.status(200).json({ message: 'GET /:id/cost' });
+    /**
+     * Processes PUT /:id request to update a package
+     * @param req Express request containing package ID and update data
+     * @param res Express response
+     * @throws ApiError if update fails
+     */
+    static async updatePackage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { id } = req.params;
+            console.log(`[PackageController] Processing PUT /${id} request`);
+
+            if (!id) {
+                throw new ApiError('Package ID is required', 400);
+            }
+
+            // TODO: Implement package update logic
+            res.status(200).json({ message: `Package ${id} updated` });
+
+        } catch (error) {
+            console.error('[PackageController] Failed to update package:', error);
+            throw new ApiError('Failed to update package', error instanceof ApiError ? error.statusCode : 500);
+        }
     }
 
-    // GET /byRegEx handler
-    static async getPackagesByRegEx(req: Request, res: Response) {
-        console.log('GET /byRegEx');
-        res.status(200).json({ message: 'GET /byRegEx' });
+    /**
+     * Processes POST /package request to upload a new package
+     * @param req Express request containing package content or URL
+     * @param res Express response
+     * @param next Next middleware function
+     * @throws ApiError if package data is invalid or upload fails
+     */
+    static async uploadPackage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            console.log('[PackageController] Processing POST /package request');
+            const { Content, URL, JSProgram, debloat } = req.body;
+
+            if (Content && !URL) {
+                console.log('[PackageController] Processing Content upload');
+                const result = await PackageUploadService.uploadContentType(Content, JSProgram, debloat);
+                res.status(200).json(result);
+                return;
+            }
+            
+            if (URL && !Content) {
+                console.log('[PackageController] Processing URL upload');
+                const result = await PackageUploadService.uploadUrlType(URL, JSProgram);
+                res.status(200).json(result);
+                return;
+            }
+
+            throw new ApiError('Invalid package data: Provide either Content or URL, not both', 400);
+
+        } catch (error) {
+            console.error('[PackageController] Package upload failed:', error);
+            next(error);
+        }
     }
 
+    /**
+     * Processes GET /:id/rate request to get package rating
+     * @param req Express request containing package ID
+     * @param res Express response
+     * @throws ApiError if rating cannot be retrieved
+     */
+    static async getPackageRating(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { id } = req.params;
+            console.log(`[PackageController] Processing GET /${id}/rate request`);
+
+            if (!id) {
+                throw new ApiError('Package ID is required', 400);
+            }
+
+            const result = await PackageGetterService.getPackageRatingFromId(parseInt(id));
+            // TODO: Implement rating fetch logic
+            res.status(200).json(result);
+
+        } catch (error) {
+            console.error('[PackageController] Failed to fetch package rating:', error);
+            throw new ApiError('Failed to fetch package rating', error instanceof ApiError ? error.statusCode : 500);
+        }
+    }
+
+    /**
+     * Processes GET /:id/cost request to get package cost metrics
+     * @param req Express request containing package ID
+     * @param res Express response
+     * @throws ApiError if cost metrics cannot be retrieved
+     */
+    static async getPackageCost(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            console.log(`[PackageController] Processing GET /${id}/cost request`);
+
+            if (!id) {
+                throw new ApiError('Package ID is required', 400);
+            }
+
+            // TODO: Implement cost calculation logic
+            res.status(200).json({ message: `Package ${id} cost metrics` });
+
+        } catch (error) {
+            console.error('[PackageController] Failed to calculate package cost:', error);
+            throw new ApiError('Failed to calculate package cost', error instanceof ApiError ? error.statusCode : 500);
+        }
+    }
+
+    /**
+     * Processes GET /byRegEx request to search packages by regex
+     * @param req Express request containing search regex
+     * @param res Express response
+     * @throws ApiError if search fails or regex is invalid
+     */
+    static async getPackagesByRegEx(req: Request, res: Response): Promise<void> {
+        try {
+            console.log('[PackageController] Processing GET /byRegEx request');
+            const { regex } = req.query;
+
+            if (!regex || typeof regex !== 'string') {
+                throw new ApiError('Valid regex parameter is required', 400);
+            }
+
+            // TODO: Implement regex search logic
+            res.status(200).json({ message: `Packages matching ${regex}` });
+
+        } catch (error) {
+            console.error('[PackageController] Failed to search packages by regex:', error);
+            throw new ApiError('Failed to search packages', error instanceof ApiError ? error.statusCode : 500);
+        }
+    }
 }

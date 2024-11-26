@@ -4,6 +4,9 @@
  */
 
 import axios from 'axios';
+import AdmZip from 'adm-zip';
+import fs from 'fs';
+import path from 'path';
 import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
@@ -13,11 +16,27 @@ import { evaluateMetrics } from './evaluators/evaluateMetrics.js';
 import { 
     getPackageJsonFromContentBuffer, 
     extractNameAndVersionFromPackageJson, 
-    extractGitHubAttributesFromGitHubURL, 
+    extractGithubAttributesFromGithubUrl, 
     normalizeToGithubUrl, 
-    extractGitHubLinkFromPackageJson 
+    extractGithubUrlFromPackageJson 
 } from '../utils/packageHelpers.js';
 import octokit from '../utils/octokit.js';
+
+/**
+ * Debloat rules for removing unnecessary files
+ * Each rule is a regex pattern matching files to remove
+ */
+const DEBLOAT_RULES: Array<{
+    pattern: RegExp;
+    description: string;
+}> = [
+    { pattern: /\.test\.(js|ts|jsx|tsx)$/, description: 'Test files' },
+    { pattern: /\.(md|markdown)$/, description: 'Documentation files' },
+    { pattern: /__(tests|mocks|fixtures)__/, description: 'Test directories' },
+    { pattern: /\.(log|lock)$/, description: 'Log and lock files' },
+    { pattern: /^(tests?|spec|docs|examples?|samples?)\//, description: 'Common test/doc directories' }
+];
+
 
 /**
  * @class PackageUploadService
@@ -34,42 +53,47 @@ export class PackageUploadService {
      * @returns Object containing metadata and data of the uploaded package
      * @throws ApiError if package exists or invalid input
      */
-    static async uploadContentType(Content: string, JSProgram: string, debloat: boolean) {
+    static async uploadContentType(content: string, jsProgram: string, shouldDebloat: boolean) {
         try {
-            if (!Content) {
+            if (!content) {
                 throw new ApiError('Content cannot be empty', 400);
             }
 
             console.log('[PackageService] Processing Content type package');
 
             // Extract and validate package information
-            const packageJson = await getPackageJsonFromContentBuffer(Content);
+            const packageJson = await getPackageJsonFromContentBuffer(content);
             if (!packageJson) {
                 throw new ApiError('Invalid package.json in zip content', 400);
             }
 
-            const { Name, Version } = extractNameAndVersionFromPackageJson(packageJson);
-            if (!Name || !Version) {
+            const { name, version } = extractNameAndVersionFromPackageJson(packageJson);
+            if (!name || !version) {
                 throw new ApiError('Invalid name or version in package.json', 400);
             }
 
             // Check for existing package
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
             const existingMetadata = await packageMetadataRepository.findOne({ 
-                where: { name: Name, version: Version },
+                where: { name: name, version: version },
             });
 
             if (existingMetadata) {
-                throw new ApiError(`Package ${Name}@${Version} already exists`, 409);
+                throw new ApiError(`Package ${name}@${version} already exists`, 409);
+            }
+
+            // Check for debloat flag
+            if (shouldDebloat) {
+                content = await this.getDebloatedZipBuffer(content);
             }
 
             // Extract GitHub information
-            const githubLink = await extractGitHubLinkFromPackageJson(packageJson);
+            const githubLink = await extractGithubUrlFromPackageJson(packageJson);
             if (!githubLink) {
                 throw new ApiError('No GitHub repository found in package.json', 400);
             }
 
-            const { owner, repo } = extractGitHubAttributesFromGitHubURL(githubLink);
+            const { owner, repo } = extractGithubAttributesFromGithubUrl(githubLink);
             
             // Evaluate metrics
             const scorecard = await evaluateMetrics(owner, repo);
@@ -81,20 +105,20 @@ export class PackageUploadService {
             }
 
             // Save metadata
-            const metadata = packageMetadataRepository.create({ name: Name, version: Version });
+            const metadata = packageMetadataRepository.create({ name: name, version: version });
             await packageMetadataRepository.save(metadata);
-            console.log(`[PackageService] Saved metadata for ${Name}@${Version}`);
+            console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
             // Save package data
             const packageDataRepository = AppDataSource.getRepository(PackageData);
             const data = packageDataRepository.create({
                 packageMetadata: metadata,
-                content: Content,
-                debloat: debloat,
-                jsProgram: JSProgram,
+                content: content,
+                debloat: shouldDebloat,
+                jsProgram: jsProgram,
             });
             await packageDataRepository.save(data);
-            console.log(`[PackageService] Saved package data for ${Name}@${Version}`);
+            console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
             const packageRating = this.createPackageRatingFromScorecard(scorecard, metadata);
@@ -102,8 +126,15 @@ export class PackageUploadService {
             await packageRatingRepository.save(packageRating);
 
             return {
-                metadata: { Name, Version, ID: metadata.id },
-                data: { Content: data.content, JSProgram: data.jsProgram }
+                metadata: { 
+                    Name: metadata.name, 
+                    Version: metadata.version, 
+                    ID: metadata.id 
+                },
+                data: { 
+                    Content: data.content, 
+                    JSProgram: data.jsProgram 
+                }
             };
 
         } catch (error) {
@@ -120,34 +151,44 @@ export class PackageUploadService {
      * @returns Object containing metadata and data of the uploaded package
      * @throws ApiError if package exists or invalid input
      */
-    static async uploadURLType(URL: string, JSProgram: string) {
+    static async uploadUrlType(url: string, jsProgram: string) {
         try {
-            if (!URL) {
+            if (!url) {
                 throw new ApiError('URL cannot be empty', 400);
             }
 
             console.log('[PackageService] Processing URL type package');
 
             // Get content from URL
-            const Content = await this.getContentZipBufferFromGithubUrl(URL);
-            if (!Content) {
+            const contentFromUrl = await this.getContentZipBufferFromGithubUrl(url);
+            if (!contentFromUrl) {
                 throw new ApiError('Failed to fetch package content', 400);
             }
 
             // Extract package information
-            const packageJson = await getPackageJsonFromContentBuffer(Content);
+            const packageJson = await getPackageJsonFromContentBuffer(contentFromUrl);
             if (!packageJson) {
                 throw new ApiError('Invalid package.json in content', 400);
             }
 
-            const { Name, Version } = extractNameAndVersionFromPackageJson(packageJson);
-            if (!Name || !Version) {
+            const { name, version } = extractNameAndVersionFromPackageJson(packageJson);
+            if (!name || !version) {
                 throw new ApiError('Invalid name or version in package.json', 400);
             }
 
+            // Check for existing package
+            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+            const existingMetadata = await packageMetadataRepository.findOne({ 
+                where: { name: name, version: version },
+            });
+
+            if (existingMetadata) {
+                throw new ApiError(`Package ${name}@${version} already exists`, 409);
+            }
+
             // Process GitHub URL
-            const normalizedUrl = await normalizeToGithubUrl(URL);
-            const { owner, repo } = extractGitHubAttributesFromGitHubURL(normalizedUrl);
+            const normalizedUrl = await normalizeToGithubUrl(url);
+            const { owner, repo } = extractGithubAttributesFromGithubUrl(normalizedUrl);
 
             // Evaluate metrics
             const scorecard = await evaluateMetrics(owner, repo);
@@ -159,21 +200,20 @@ export class PackageUploadService {
             }
 
             // Save metadata
-            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
-            const metadata = packageMetadataRepository.create({ name: Name, version: Version });
+            const metadata = packageMetadataRepository.create({ name: name, version: version });
             await packageMetadataRepository.save(metadata);
-            console.log(`[PackageService] Saved metadata for ${Name}@${Version}`);
+            console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
             // Save package data
             const packageDataRepository = AppDataSource.getRepository(PackageData);
             const data = packageDataRepository.create({
                 packageMetadata: metadata,
-                content: Content,
-                debloat: false,
-                jsProgram: JSProgram,
+                content: contentFromUrl,
+                url: url,
+                jsProgram: jsProgram,
             });
             await packageDataRepository.save(data);
-            console.log(`[PackageService] Saved package data for ${Name}@${Version}`);
+            console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
             const packageRating = this.createPackageRatingFromScorecard(scorecard, metadata);
@@ -181,8 +221,16 @@ export class PackageUploadService {
             await packageRatingRepository.save(packageRating);
 
             return {
-                metadata: { Name, Version, ID: metadata.id },
-                data: { Content: data.content, JSProgram: data.jsProgram }
+                metadata: { 
+                    Name: metadata.name, 
+                    Version: metadata.version, 
+                    ID: metadata.id 
+                },
+                data: { 
+                    Content: data.content, 
+                    URL: data.url, 
+                    JSProgram: data.jsProgram 
+                }
             };
 
         } catch (error) {
@@ -201,7 +249,7 @@ export class PackageUploadService {
     private static async getContentZipBufferFromGithubUrl(URL: string): Promise<string> {
         try {
             const githubUrl = await normalizeToGithubUrl(URL);
-            const { owner, repo } = extractGitHubAttributesFromGitHubURL(githubUrl);
+            const { owner, repo } = extractGithubAttributesFromGithubUrl(githubUrl);
             const defaultBranch = await this.getDefaultBranch(owner, repo);
 
             const normalizedURL = `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`;
@@ -252,22 +300,22 @@ export class PackageUploadService {
             const packageRating = new PackageRating();
             packageRating.packageMetadata = metadata;
 
-            packageRating.bus_factor = scorecard.busFactor;
-            packageRating.bus_factor_latency = scorecard.busFactorLatency;
+            packageRating.busFactor = scorecard.busFactor;
+            packageRating.busFactorLatency = scorecard.busFactorLatency;
             packageRating.correctness = scorecard.correctness;
-            packageRating.correctness_latency = scorecard.correctnessLatency;
-            packageRating.ramp_up = scorecard.rampUp;
-            packageRating.ramp_up_latency = scorecard.rampUpLatency;
-            packageRating.responsive_maintainer = scorecard.responsiveMaintainer;
-            packageRating.responsive_maintainer_latency = scorecard.responsiveMaintainerLatency;
-            packageRating.license_score = scorecard.licenseScore;
-            packageRating.license_score_latency = scorecard.licenseScoreLatency;
-            packageRating.good_pinning_practice = scorecard.goodPinningPractice;
-            packageRating.good_pinning_practice_latency = scorecard.goodPinningPracticeLatency;
-            packageRating.pull_request = scorecard.pullRequest;
-            packageRating.pull_request_latency = scorecard.pullRequestLatency;
-            packageRating.net_score = scorecard.netScore;
-            packageRating.net_score_latency = scorecard.netScoreLatency;
+            packageRating.correctnessLatency = scorecard.correctnessLatency;
+            packageRating.rampUp = scorecard.rampUp;
+            packageRating.rampUpLatency = scorecard.rampUpLatency;
+            packageRating.responsiveMaintainer = scorecard.responsiveMaintainers;
+            packageRating.responsiveMaintainerLatency = scorecard.responsiveMaintainersLatency;
+            packageRating.licenseScore = scorecard.license;
+            packageRating.licenseScoreLatency = scorecard.licenseLatency;
+            packageRating.goodPinningPractice = scorecard.dependencyPinning;
+            packageRating.goodPinningPracticeLatency = scorecard.dependencyPinningLatency;
+            packageRating.pullRequest = scorecard.codeReview;
+            packageRating.pullRequestLatency = scorecard.codeReviewLatency;
+            packageRating.netScore = scorecard.netScore;
+            packageRating.netScoreLatency = scorecard.netScoreLatency;
 
             return packageRating;
 
@@ -277,4 +325,119 @@ export class PackageUploadService {
         }
     }
 
-}
+    
+
+        /**
+     * Removes unnecessary files from a package based on debloat rules
+     * @param Content - Base64 encoded zip content
+     * @throws ApiError if debloat process fails
+     */
+    private static async debloatPackage(Content: string, tempDir: string): Promise<void> {
+        try {
+            if (!Content) {
+                throw new ApiError('Content cannot be empty', 400);
+            }
+
+            console.log('[PackageService] Starting package debloat process');
+
+            // Create zip from content
+            const zipBuffer = Buffer.from(Content, 'base64');
+            const zip = new AdmZip(zipBuffer);
+
+            // Extract to temp directory
+            try {
+                zip.extractAllTo(tempDir, true);
+                console.log(`[PackageService] Extracted package to ${tempDir}`);
+            } catch (error) {
+                throw new ApiError('Failed to extract package content', 500);
+            }
+
+            // Process files recursively
+            await this.removeUnnecessaryFiles(tempDir);
+            console.log('[PackageService] Completed package debloat process');
+
+        } catch (error) {
+            console.error('[PackageService] Debloat process failed:', error);
+            throw new ApiError('Failed to debloat package', 500);
+        }
+    }
+
+    /**
+     * Recursively removes files matching debloat rules
+     * @param dir - Directory to process
+     * @throws ApiError if file operations fail
+     */
+    private static async removeUnnecessaryFiles(dir: string): Promise<void> {
+        try {
+            const entries = await fs.promises.readdir(dir);
+
+            for (const entry of entries) {
+                const fullPath = path.join(dir, entry);
+                const stats = await fs.promises.stat(fullPath);
+
+                if (stats.isDirectory()) {
+                    // Process subdirectory
+                    await this.removeUnnecessaryFiles(fullPath);
+
+                    // Remove if empty
+                    const remaining = await fs.promises.readdir(fullPath);
+                    if (remaining.length === 0) {
+                        await fs.promises.rmdir(fullPath);
+                        console.log(`[PackageService] Removed empty directory: ${fullPath}`);
+                    }
+                } else {
+                    // Check file against debloat rules
+                    const matchedRule = DEBLOAT_RULES.find(rule => rule.pattern.test(entry));
+                    if (matchedRule) {
+                        await fs.promises.unlink(fullPath);
+                        console.log(`[PackageService] Removed ${matchedRule.description}: ${fullPath}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`[PackageService] Error processing directory ${dir}:`, error);
+            throw new ApiError('Failed to process directory during debloat', 500);
+        }
+    }
+
+    /**
+     * Creates a debloated zip buffer from the processed content
+     * @param Content - Original base64 encoded zip content
+     * @returns Debloated base64 encoded zip content
+     * @throws ApiError if zip operations fail
+     */
+    private static async getDebloatedZipBuffer(Content: string): Promise<string> {
+        const tempDir = path.join(process.cwd(), 'temp', Date.now().toString());
+
+        try {
+            // Create temp directory
+            await fs.promises.mkdir(tempDir, { recursive: true });
+            console.log(`[PackageService] Created temporary directory: ${tempDir}`);
+
+            // Process package
+            await this.debloatPackage(Content, tempDir);
+
+            // Create new zip
+            const zip = new AdmZip();
+            zip.addLocalFolder(tempDir);
+            const zipBuffer = zip.toBuffer();
+
+            console.log('[PackageService] Created debloated zip package');
+            return zipBuffer.toString('base64');
+
+        } catch (error) {
+            console.error('[PackageService] Failed to create debloated package:', error);
+            throw new ApiError('Failed to create debloated package', 500);
+
+        } finally {
+            // Cleanup temp directory
+            try {
+                await fs.promises.rm(tempDir, { recursive: true, force: true });
+                console.log(`[PackageService] Cleaned up temporary directory: ${tempDir}`);
+            } catch (error) {
+                console.error(`[PackageService] Failed to cleanup temporary directory ${tempDir}:`, error);
+            }
+        }
+    }
+
+};
