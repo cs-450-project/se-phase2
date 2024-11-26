@@ -145,6 +145,16 @@ export class PackageUploadService {
                 throw new ApiError('Invalid name or version in package.json', 400);
             }
 
+            // Check for existing package
+            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+            const existingMetadata = await packageMetadataRepository.findOne({ 
+                where: { name: Name, version: Version },
+            });
+
+            if (existingMetadata) {
+                throw new ApiError(`Package ${Name}@${Version} already exists`, 409);
+            }
+
             // Process GitHub URL
             const normalizedUrl = await normalizeToGithubUrl(URL);
             const { owner, repo } = extractGitHubAttributesFromGitHubURL(normalizedUrl);
@@ -159,7 +169,6 @@ export class PackageUploadService {
             }
 
             // Save metadata
-            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
             const metadata = packageMetadataRepository.create({ name: Name, version: Version });
             await packageMetadataRepository.save(metadata);
             console.log(`[PackageService] Saved metadata for ${Name}@${Version}`);
@@ -258,14 +267,14 @@ export class PackageUploadService {
             packageRating.correctness_latency = scorecard.correctnessLatency;
             packageRating.ramp_up = scorecard.rampUp;
             packageRating.ramp_up_latency = scorecard.rampUpLatency;
-            packageRating.responsive_maintainer = scorecard.responsiveMaintainer;
-            packageRating.responsive_maintainer_latency = scorecard.responsiveMaintainerLatency;
-            packageRating.license_score = scorecard.licenseScore;
-            packageRating.license_score_latency = scorecard.licenseScoreLatency;
-            packageRating.good_pinning_practice = scorecard.goodPinningPractice;
-            packageRating.good_pinning_practice_latency = scorecard.goodPinningPracticeLatency;
-            packageRating.pull_request = scorecard.pullRequest;
-            packageRating.pull_request_latency = scorecard.pullRequestLatency;
+            packageRating.responsive_maintainer = scorecard.responsiveMaintainers;
+            packageRating.responsive_maintainer_latency = scorecard.responsiveMaintainersLatency;
+            packageRating.license_score = scorecard.license;
+            packageRating.license_score_latency = scorecard.licenseLatency;
+            packageRating.good_pinning_practice = scorecard.dependencyPinning;
+            packageRating.good_pinning_practice_latency = scorecard.dependencyPinningLatency;
+            packageRating.pull_request = scorecard.codeReview;
+            packageRating.pull_request_latency = scorecard.codeReviewLatency;
             packageRating.net_score = scorecard.netScore;
             packageRating.net_score_latency = scorecard.netScoreLatency;
 

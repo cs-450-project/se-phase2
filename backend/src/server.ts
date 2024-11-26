@@ -28,7 +28,7 @@ app.use('/package', packageRouter);
 
 // Routes that do not start with /package
 
-app.post('/packages', PackageController.getPackages);
+app.post('/packages', PackageController.getPackagesFromQueries);
 
 app.delete('/reset', PackageController.resetRegistry);
 
