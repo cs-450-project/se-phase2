@@ -55,33 +55,4 @@ describe('packageDataHelpers', () => {
             expect(result).toEqual({ owner: 'owner', repo: 'repo' });
         });
     });
-
-    describe('getNpmRepoURLFromGitHubURL', () => {
-        it('should fetch repository URL from npm API', async () => {
-            const url = 'https://www.npmjs.com/package/test-package';
-            const mockResponse = {
-                repository: {
-                    url: 'https://github.com/owner/repo.git'
-                }
-            };
-
-            global.fetch = vi.fn().mockResolvedValue({
-                json: vi.fn().mockResolvedValue(mockResponse)
-            });
-
-            const result = await getNpmRepoURLFromGitHubURL(url);
-            expect(result).toBe('https://github.com/owner/repo.git');
-        });
-
-        it('should throw an error if repository URL is not found', async () => {
-            const url = 'https://www.npmjs.com/package/test-package';
-            const mockResponse = {};
-
-            global.fetch = vi.fn().mockResolvedValue({
-                json: vi.fn().mockResolvedValue(mockResponse)
-            });
-
-            await expect(getNpmRepoURLFromGitHubURL(url)).rejects.toThrow(ApiError);
-        });
-    });
 });

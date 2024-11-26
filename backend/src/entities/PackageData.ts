@@ -6,7 +6,7 @@ import { PackageMetadata } from './PackageMetadata.js';
 
 export class PackageData {
     
-    @PrimaryColumn()
+    @PrimaryColumn('int')
     package_id!: number;
 
     @OneToOne(() => PackageMetadata)

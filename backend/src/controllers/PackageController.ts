@@ -1,7 +1,7 @@
 /**
  * @file PackageController.ts
  */
-
+import 'reflect-metadata';
 import { Request, Response, NextFunction } from 'express';
 import { PackageUploadService } from '../services/PackageUploadService.js';
 import { PackageGetterService } from '../services/PackageGetterService.js';
