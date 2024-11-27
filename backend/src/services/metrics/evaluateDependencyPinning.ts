@@ -79,7 +79,7 @@ function calculateDependencyScore(data: any): number {
     const dependencies = packageJson.dependencies || {};
     
     if (Object.keys(dependencies).length === 0) {
-        return 1.0;
+        return 0;
     }
 
     const pinnedCount = Object.entries(dependencies)

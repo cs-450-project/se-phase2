@@ -44,28 +44,8 @@ export class Ranker {
     }
 
     get netScore(): number {
-        const weights = {
-            busFactor: 0.2,
-            correctness: 0.2,
-            rampUp: 0.2,
-            responsiveMaintainers: 0.2,
-            license: 0.1,
-            dependencyPinning: 0.05,
-            codeReview: 0.05
-        };
-
-        const score = this.roundValue(
-            this._busFactor * weights.busFactor +
-            this._correctness * weights.correctness +
-            this._rampUp * weights.rampUp +
-            this._responsiveMaintainers * weights.responsiveMaintainers +
-            this._license * weights.license +
-            this._dependencyPinning * weights.dependencyPinning +
-            this._codeReview * weights.codeReview
-        );
-
-        logger.debug(`Calculated netScore: ${score}`);
-        return score >= 0 ? score : -1;
+        logger.debug(`Getting netScore: ${this._netScore}`);
+        return this._netScore;
     }
 
 
