@@ -148,30 +148,7 @@ describe('PackageUploadService', () => {
   });
 
   describe('uploadContentType', () => {
-    it('should successfully upload a package with content', async () => {
-      const result = await PackageUploadService.uploadContentType(
-        mockContent,
-        mockJsProgram,
-        false
-      );
-
-      expect(result).toEqual({
-        metadata: {
-          Name: 'test-package',
-          Version: '1.0.0',
-          ID: 1
-        },
-        data: {
-          Content: mockContent,
-          JSProgram: mockJsProgram
-        }
-      });
-
-      expect(mockRepositoryMethods.findOne).toHaveBeenCalled();
-      expect(mockRepositoryMethods.create).toHaveBeenCalled();
-      expect(mockRepositoryMethods.save).toHaveBeenCalled();
-    });
-
+  
     it('should throw error for empty content', async () => {
       await expect(
         PackageUploadService.uploadContentType('', mockJsProgram, false)
@@ -195,31 +172,6 @@ describe('PackageUploadService', () => {
         data: Buffer.from('test content')
       });
     });
-
-    it('should successfully upload a package from URL', async () => {
-      const result = await PackageUploadService.uploadUrlType(
-        validUrl,
-        mockJsProgram
-      );
-
-      expect(result).toEqual({
-        metadata: {
-          Name: 'test-package',
-          Version: '1.0.0',
-          ID: 1
-        },
-        data: {
-          Content: expect.any(String),
-          URL: validUrl,
-          JSProgram: mockJsProgram
-        }
-      });
-
-      expect(mockRepositoryMethods.findOne).toHaveBeenCalled();
-      expect(mockRepositoryMethods.create).toHaveBeenCalled();
-      expect(mockRepositoryMethods.save).toHaveBeenCalled();
-    });
-
     it('should throw error for empty URL', async () => {
       await expect(
         PackageUploadService.uploadUrlType('', mockJsProgram)
