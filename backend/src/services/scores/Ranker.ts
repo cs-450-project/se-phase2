@@ -44,7 +44,7 @@ export class Ranker {
     }
 
     get netScore(): number {
-        logger.debug(`Getting netScore: ${this._netScore}`);
+        logger.debug(`Calculated netScore: ${this._netScore}`);
         return this._netScore;
     }
 
