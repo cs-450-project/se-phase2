@@ -11,7 +11,7 @@ const packageRouter = express.Router();
 packageRouter.get('/:id', PackageController.getPackage);
 
 // PUT /:id
-packageRouter.put('/:id', PackageController.updatePackage);
+packageRouter.post('/:id', PackageController.updatePackage);
 
 // POST /package
 packageRouter.post('/', PackageController.uploadPackage);

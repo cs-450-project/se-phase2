@@ -4,6 +4,8 @@
  */
 
 import AdmZip from "adm-zip";
+import axios from "axios";
+import octokit from "./octokit.js";
 import { ApiError } from "./errors/ApiError.js";
 
 /**
@@ -248,5 +250,48 @@ export async function getNpmRepoUrlFromGithubUrl(url: string): Promise<string> {
         console.error('[PackageHelper] npm URL conversion failed:', error);
         if (error instanceof ApiError) throw error;
         throw new ApiError('Failed to get GitHub URL from npm package', 400);
+    }
+}
+
+/**
+     * Fetches and processes GitHub URL content
+     * @param URL - GitHub or npm package URL
+     * @returns Base64 encoded zip content
+     * @throws ApiError if URL is invalid or content cannot be fetched
+     */
+export async function getContentZipBufferFromGithubUrl(URL: string): Promise<string> {
+    try {
+        const githubUrl = await normalizeToGithubUrl(URL);
+        const { owner, repo } = extractGithubAttributesFromGithubUrl(githubUrl);
+        const defaultBranch = await getDefaultBranch(owner, repo);
+
+        const normalizedURL = `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`;
+        const response = await axios.get(normalizedURL, { 
+            responseType: 'arraybuffer',
+            timeout: 5000 // 5 second timeout
+        });
+
+        return Buffer.from(response.data, 'binary').toString('base64');
+
+    } catch (error) {
+        console.error('[PackageService] Failed to fetch GitHub content:', error);
+        throw new ApiError('Failed to fetch package content from GitHub', 400);
+    }
+}
+
+/**
+     * Gets the default branch of a GitHub repository
+     * @param owner - Repository owner
+     * @param repo - Repository name
+     * @returns Default branch name (e.g., main, master)
+     * @throws ApiError if branch cannot be determined
+     */
+export async function getDefaultBranch(owner: string, repo: string): Promise<string> {
+    try {
+        const response = await octokit.repos.get({ owner, repo });
+        return response.data.default_branch;
+    } catch (error) {
+        console.error('[PackageService] Failed to get default branch:', error);
+        throw new ApiError('Failed to determine repository default branch', 400);
     }
 }

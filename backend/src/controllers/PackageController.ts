@@ -7,6 +7,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PackageUploadService } from '../services/PackageUploadService.js';
 import { PackageGetterService } from '../services/PackageGetterService.js';
+import { PackageUpdateService } from '../services/PackageUpdateService.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { ApiError } from '../utils/errors/ApiError.js';
 
@@ -92,19 +93,37 @@ export class PackageController {
      */
     static async updatePackage(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            
+            // Destructure package ID from request parameters
             const { id } = req.params;
-            console.log(`[PackageController] Processing PUT /${id} request`);
 
-            if (!id) {
-                throw new ApiError('Package ID is required', 400);
+            // Destructure metadata and data objects from request body
+            const { metadata, data } = req.body;
+
+            // Destructure metadata and data objects
+            const { Name: metaName, Version: version, ID: pkgId } = metadata;
+            const { Name: dataName, Content: content, URL: url, debloat, JSProgram: jsProgram } = data;
+
+            if (!id || id !== pkgId) {
+                throw new ApiError('Package ID is required and must match metadata ID', 400);
             }
+            if (metaName !== dataName) {
+                throw new ApiError('Metadata and data names must match', 400);
+            }
+
+            if ((content && !url) || (!content && url)) {
+                
+            }
+
+            console.log(`[PackageController] Processing POST /package/${id} request`);
+
 
             // TODO: Implement package update logic
             res.status(200).json({ message: `Package ${id} updated` });
 
         } catch (error) {
             console.error('[PackageController] Failed to update package:', error);
-            throw new ApiError('Failed to update package', error instanceof ApiError ? error.statusCode : 500);
+            next(error);
         }
     }
 
