@@ -237,6 +237,7 @@ export class PackageUploadService {
         } catch (error) {
             console.error('[PackageService] URL upload failed:', error);
             if (error instanceof ApiError) throw error;
+            console.log(error);
             throw new ApiError('Failed to upload package from URL', 500);
         }
     }

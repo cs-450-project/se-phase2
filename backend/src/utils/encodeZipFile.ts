@@ -4,9 +4,17 @@
  */
 import { readFileSync } from 'fs';
 
-const encodeZipFileToBase64 = (filePath: string): string => {
-    const fileBuffer = readFileSync(filePath);
-    return fileBuffer.toString('base64');
+export const encodeZipFileToBase64 = (filePath: string): string => {
+    try {
+        const fileBuffer = readFileSync(filePath);
+        if (!fileBuffer) {
+            throw new Error('File could not be read');
+        }
+        return fileBuffer.toString('base64');
+    } catch (error) {
+        console.error('Error reading file:', error);
+        return '';
+    }
 };
 
 const base64Zip = encodeZipFileToBase64('/home/humphrey/se-phase2/swe-zip-tests/basic-package-master.zip');

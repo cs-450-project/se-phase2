@@ -112,8 +112,32 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<Rank
             ranker.codeReview = 0;
         }
 
-        // Calculate net score
-        ranker.netScore = ranker.netScore;
+        try {
+            const weights = {
+                busFactor: 0.2,
+                correctness: 0.2,
+                rampUp: 0.2,
+                responsiveMaintainers: 0.2,
+                license: 0.1,
+                dependencyPinning: 0.05,
+                codeReview: 0.05
+            };
+            const score = (
+                ranker.busFactor * weights.busFactor +
+                ranker.correctness * weights.correctness +
+                ranker.rampUp * weights.rampUp +
+                ranker.responsiveMaintainers * weights.responsiveMaintainers +
+                ranker.license * weights.license +
+                ranker.dependencyPinning * weights.dependencyPinning +
+                ranker.codeReview * weights.codeReview
+            ).toFixed(3);
+
+            ranker.netScore = Number(score);
+        } catch (error) {
+            logger.error(`Failed to calculate net score: ${error}`);
+            ranker.netScore = -1;    
+        }
+
         ranker.netScoreLatency = totalTime.stop();
         
         logger.debug(`Completed metrics evaluation for ${owner}/${repo}`);

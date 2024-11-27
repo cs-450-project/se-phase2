@@ -74,29 +74,79 @@ async function fetchWithRetry<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 function calculateDependencyScore(data: any): number {
-    const content = Buffer.from(data.content, 'base64').toString();
-    const packageJson = JSON.parse(content);
-    const dependencies = packageJson.dependencies || {};
-    
-    if (Object.keys(dependencies).length === 0) {
-        return 1.0;
+    try {
+        const content = Buffer.from(data.content, 'base64').toString();
+        const packageJson = JSON.parse(content);
+        
+        // Combine all dependency types
+        const dependencies = {
+            ...packageJson.dependencies,
+            ...packageJson.devDependencies,
+            ...packageJson.peerDependencies
+        };
+
+        if (Object.keys(dependencies).length === 0) {
+            return 0;
+        }
+
+        let totalScore = 0;
+        const totalDeps = Object.keys(dependencies).length;
+
+        Object.entries(dependencies).forEach(([_, version]) => {
+            if (typeof version !== 'string') return;
+            
+            // Exact version or tag (1.0.0, latest, etc)
+            if (isExactVersion(version)) {
+                totalScore += 1.0;
+            }
+            // Caret ranges (^1.0.0)
+            else if (version.startsWith('^')) {
+                totalScore += 0.8;
+            }
+            // Tilde ranges (~1.0.0)
+            else if (version.startsWith('~')) {
+                totalScore += 0.6;
+            }
+            // Version ranges (>=1.0.0 <2.0.0)
+            else if (version.includes(' ')) {
+                totalScore += 0.4;
+            }
+            // Git URLs or local paths
+            else if (isGitUrl(version) || isLocalPath(version)) {
+                totalScore += 0.5;
+            }
+            // Any other semver range
+            else if (semver.validRange(version)) {
+                totalScore += 0.3;
+            }
+        });
+
+        return Math.min(totalScore / totalDeps, 1);
+    } catch (error) {
+        logger.error('Error calculating dependency score:', error);
+        return 0;
     }
-
-    const pinnedCount = Object.entries(dependencies)
-        .filter(([_, version]) => 
-            typeof version === 'string' && 
-            semver.validRange(version as string) && 
-            isPinnedVersion(version as string)
-        ).length;
-
-    return pinnedCount / Object.keys(dependencies).length;
 }
 
-function isPinnedVersion(version: string): boolean {
-    return !version.startsWith('^') && 
-           !version.startsWith('~') && 
-           !version.includes('*') && 
-           !version.includes('x');
+function isExactVersion(version: string): boolean {
+    // Match exact versions (1.0.0) or tags (latest, next)
+    return (
+        /^\d+\.\d+\.\d+$/.test(version) || 
+        ['latest', 'next', 'stable'].includes(version)
+    );
+}
+
+function isGitUrl(version: string): boolean {
+    return (
+        version.includes('git') || 
+        version.includes('github') || 
+        version.includes('gitlab') || 
+        version.includes('bitbucket')
+    );
+}
+
+function isLocalPath(version: string): boolean {
+    return version.startsWith('file:') || version.startsWith('.');
 }
 
 function handleEmptyResponse(cacheKey: string): number {
