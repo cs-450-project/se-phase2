@@ -1,0 +1,16 @@
+<table>
+  <thead>
+    <tr>
+      <th>Package Name</th>
+      <th>ID</th>
+      <th>Version</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let pkg of packages">
+      <td>{{ pkg.name }}</td>
+      <td>{{ pkg.id }}</td>
+      <td>{{ pkg.version }}</td>
+    </tr>
+  </tbody>
+</table>
