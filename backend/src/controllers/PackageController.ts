@@ -75,7 +75,7 @@ export class PackageController {
                 throw new ApiError('Package ID is required', 400);
             }
 
-            const result = await PackageGetterService.getPackageMetadataAndDataById(parseInt(id));
+            const result = await PackageGetterService.getPackageMetadataAndDataById(id);
 
             res.status(200).json(result);
 
@@ -86,7 +86,7 @@ export class PackageController {
     }
 
     /**
-     * Processes PUT /:id request to update a package
+     * Processes POST /:id request to update a package
      * @param req Express request containing package ID and update data
      * @param res Express response
      * @throws ApiError if update fails
@@ -96,6 +96,8 @@ export class PackageController {
             
             // Destructure package ID from request parameters
             const { id } = req.params;
+
+            console.log(`[PackageController] Processing POST /package/${id} request`);
 
             // Destructure metadata and data objects from request body
             const { metadata, data } = req.body;
@@ -111,15 +113,20 @@ export class PackageController {
                 throw new ApiError('Metadata and data names must match', 400);
             }
 
-            if ((content && !url) || (!content && url)) {
-                
+            if ((!content && !url) || (content && url)) {
+                throw new ApiError('Provide either Content or URL, not both', 400);
             }
 
-            console.log(`[PackageController] Processing POST /package/${id} request`);
+            const results = await PackageUpdateService.updatePackage(dataName, version, pkgId, content, url, debloat, jsProgram);
 
-
-            // TODO: Implement package update logic
-            res.status(200).json({ message: `Package ${id} updated` });
+            if(results){
+                res.status(200).json({
+                    message: 'Version is updated.'
+                });
+                return;
+            } else {
+                throw new ApiError('Failed to update package', 500);
+            }
 
         } catch (error) {
             console.error('[PackageController] Failed to update package:', error);
@@ -176,7 +183,7 @@ export class PackageController {
                 throw new ApiError('Package ID is required', 400);
             }
 
-            const result = await PackageGetterService.getPackageRatingFromId(parseInt(id));
+            const result = await PackageGetterService.getPackageRatingFromId(id);
             // TODO: Implement rating fetch logic
             res.status(200).json(result);
 

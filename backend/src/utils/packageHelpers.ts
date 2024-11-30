@@ -151,6 +151,7 @@ export async function normalizeToGithubUrl(url: string): Promise<string> {
         let normalized = url
             .replace(/^(git:\/\/|git\+https:\/\/|https:\/\/|http:\/\/)/, '') // Remove all protocols
             .replace(/\.git$/, '')  // Remove .git suffix
+            .replace(/\/issues$/, '') // Remove issues suffix
             .replace(/\/\/+/g, '/') // Remove duplicate slashes
             .replace(/^github.com:/, '') // Remove SSH format
             .replace(/\/+$/, '');   // Remove trailing slashes

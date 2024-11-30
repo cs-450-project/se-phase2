@@ -3,7 +3,6 @@
  * Service contains the business logic for uploading a package to the database.
  */
 
-import axios from 'axios';
 import AdmZip from 'adm-zip';
 import fs from 'fs';
 import path from 'path';

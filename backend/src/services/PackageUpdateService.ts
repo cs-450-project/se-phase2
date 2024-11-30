@@ -1,3 +1,8 @@
+/**
+ * @file PackageUpdateService.ts
+ * Service contains the business logic for updating packages in the database.
+ */
+
 import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
 import { PackageUploadService } from "./PackageUploadService.js";
@@ -6,77 +11,181 @@ import { PackageData } from "../entities/PackageData.js";
 import { 
     getPackageJsonFromContentBuffer, 
     extractNameAndVersionFromPackageJson, 
-    extractGithubAttributesFromGithubUrl, 
     normalizeToGithubUrl, 
-    extractGithubUrlFromPackageJson, 
     getContentZipBufferFromGithubUrl
 } from '../utils/packageHelpers.js';
 
-
 /**
+ * Service class that handles package updates in the database
  * @class PackageUpdateService
- * Provides functionality to update package metadata and content.
  */
 export class PackageUpdateService {
-    
-    public static async updatePackage( name: string, version: string, id: string, content: string, url: string, debloat: boolean, jsProgram: string) {
+    /**
+     * Updates an existing package with new content or URL
+     * @param name - Package name
+     * @param version - New package version
+     * @param id - Package ID
+     * @param content - Base64 encoded package content (optional)
+     * @param url - Package URL (optional)
+     * @param debloat - Whether to debloat the package
+     * @param jsProgram - JavaScript program to include
+     * @returns Updated package data
+     * @throws ApiError if update fails or validation errors occur
+     */
+    public static async updatePackage(
+        name: string, 
+        version: string, 
+        id: string, 
+        content: string, 
+        url: string, 
+        debloat: boolean, 
+        jsProgram: string
+    ) {
         try {
-            // Check that name and ID matches valid package in the database
+            console.log(`[PackageUpdateService] Processing update for package ${name}@${version}`);
+
+            // Input validation
+            if (!name || !version || !id) {
+                throw new ApiError('Name, version and ID are required', 400);
+            }
+
+            // Verify package exists
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
             const existingMetadata = await packageMetadataRepository.findOne({ 
-                where: { name: name, id: parseFloat(id) },
+                where: { name: name, id: id },
             });
+
             if (!existingMetadata) {
-                throw new ApiError('Package not found', 404);
+                throw new ApiError(`Package ${name} with ID ${id} not found`, 404);
             }
 
-            // Check that the version does not already exist
+            // Check version uniqueness
             if (existingMetadata.version === version) {
-                throw new ApiError(`Package ${name} version ${version} already exists`, 400);
+                throw new ApiError(`Version ${version} already exists for package ${name}`, 409);
             }
 
+            // Get existing package data
             const packageDataRepository = AppDataSource.getRepository(PackageData);
             const existingData = await packageDataRepository.findOne({ 
-                where: { packageId: parseFloat(id) },
+                where: { packageId: id },
             });
 
-            // Process package update
-            if (existingData && content && !existingData.url) {
-                if(await this.validateUpdateContentTypeNameAndVersion(name, version, content)){
-                    return await PackageUploadService.uploadContentType(content, jsProgram, debloat);
-                }
-            } else if (existingData && url && existingData.url) {
-                if(await this.validateUpdateUrlTypeNameAndVersion(name, version, url)){
-                    return await PackageUploadService.uploadUrlType(url, jsProgram);
-                }
-            } else {
-                throw new ApiError('Cannot update package with different content type', 400);
+            if (!existingData) {
+                throw new ApiError(`Package data not found for ID ${id}`, 404);
             }
+
+            console.log(`[PackageUpdateService] Updating package ${name} from ${existingMetadata.version} to ${version}`);
+
+            // Process update based on original upload type
+            if (content && !existingData.url) {
+                return await this.handleContentTypeUpdate(name, version, content, jsProgram, debloat);
+            } 
+            
+            if (url && existingData.url) {
+                return await this.handleUrlTypeUpdate(name, version, url, jsProgram);
+            }
+
+            throw new ApiError('Must update package using original upload type (Content or URL)', 400);
+
         } catch (error) {
+            console.error('[PackageUpdateService] Update failed:', error);
             if (error instanceof ApiError) throw error;
             throw new ApiError('Failed to update package', 500);
         }
-
-    } 
-        
-    private static async validateUpdateContentTypeNameAndVersion(name: string, version: string, content: string) {
-        const packageJson = getPackageJsonFromContentBuffer(content);
-        const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
-        if (newName !== name || newVersion !== version) {
-            throw new ApiError('Package name and version in content type request do not match the given name and version', 400);
-        }
-        return true;
     }
 
-    private static async validateUpdateUrlTypeNameAndVersion(name: string, version: string, url: string) {
-        const githubUrl = await normalizeToGithubUrl(url);
-        const contentZipBuffer = await getContentZipBufferFromGithubUrl(githubUrl);
-        const packageJson = getPackageJsonFromContentBuffer(contentZipBuffer);
-        const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
-        if (newName !== name || newVersion !== version) {
-            throw new ApiError('Package name and version in URL type request do not match the given name and version', 400);
+    /**
+     * Handles updates for Content-type packages
+     * @private
+     */
+    private static async handleContentTypeUpdate(
+        name: string,
+        version: string,
+        content: string,
+        jsProgram: string,
+        debloat: boolean
+    ) {
+        try {
+            await this.validateUpdateContentTypeNameAndVersion(name, version, content);
+            return await PackageUploadService.uploadContentType(content, jsProgram, debloat);
+        } catch (error) {
+            console.error('[PackageUpdateService] Content-type update failed:', error);
+            throw error;
         }
-        return true;
     }
 
-};
+    /**
+     * Handles updates for URL-type packages
+     * @private
+     */
+    private static async handleUrlTypeUpdate(
+        name: string,
+        version: string,
+        url: string,
+        jsProgram: string
+    ) {
+        try {
+            await this.validateUpdateUrlTypeNameAndVersion(name, version, url);
+            return await PackageUploadService.uploadUrlType(url, jsProgram);
+        } catch (error) {
+            console.error('[PackageUpdateService] URL-type update failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Validates content-type package update data
+     * @private
+     */
+    private static async validateUpdateContentTypeNameAndVersion(
+        name: string,
+        version: string,
+        content: string
+    ): Promise<boolean> {
+        try {
+            const packageJson = await getPackageJsonFromContentBuffer(content);
+            const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
+
+            if (newName !== name || newVersion !== version) {
+                throw new ApiError(
+                    'Package name and version in content do not match request parameters',
+                    400
+                );
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[PackageUpdateService] Content validation failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Validates URL-type package update data
+     * @private
+     */
+    private static async validateUpdateUrlTypeNameAndVersion(
+        name: string,
+        version: string,
+        url: string
+    ): Promise<boolean> {
+        try {
+            const githubUrl = await normalizeToGithubUrl(url);
+            const contentZipBuffer = await getContentZipBufferFromGithubUrl(githubUrl);
+            const packageJson = await getPackageJsonFromContentBuffer(contentZipBuffer);
+            const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
+
+            if (newName !== name || newVersion !== version) {
+                throw new ApiError(
+                    'Package name and version from URL do not match request parameters',
+                    400
+                );
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[PackageUpdateService] URL validation failed:', error);
+            throw error;
+        }
+    }
+}

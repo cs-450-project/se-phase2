@@ -50,7 +50,7 @@ export class PackageGetterService {
     }
   }
 
-  static async getPackageMetadataAndDataById(id: number) {
+  static async getPackageMetadataAndDataById(id: string) {
     try {
       if (!id) {
         throw new ApiError('Package ID is required', 400);
@@ -89,7 +89,7 @@ export class PackageGetterService {
     }
   }
 
-  static async getPackageRatingFromId(id: number) {
+  static async getPackageRatingFromId(id: string) {
     try {
       if (!id) {
         throw new ApiError('Package ID is required', 400);
