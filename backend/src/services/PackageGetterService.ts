@@ -4,7 +4,7 @@
  * Supports querying by name, version, and ID.
  */
 
-import { Like } from 'typeorm';
+
 import semver from 'semver';
 import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
