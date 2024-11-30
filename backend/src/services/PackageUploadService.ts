@@ -3,7 +3,6 @@
  * Service contains the business logic for uploading a package to the database.
  */
 
-import axios from 'axios';
 import AdmZip from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
@@ -18,9 +17,10 @@ import {
     extractNameAndVersionFromPackageJson, 
     extractGithubAttributesFromGithubUrl, 
     normalizeToGithubUrl, 
-    extractGithubUrlFromPackageJson 
+    extractGithubUrlFromPackageJson,
+    getContentZipBufferFromGithubUrl 
 } from '../utils/packageHelpers.js';
-import octokit from '../utils/octokit.js';
+
 
 /**
  * Debloat rules for removing unnecessary files
@@ -160,7 +160,7 @@ export class PackageUploadService {
             console.log('[PackageService] Processing URL type package');
 
             // Get content from URL
-            const contentFromUrl = await this.getContentZipBufferFromGithubUrl(url);
+            const contentFromUrl = await getContentZipBufferFromGithubUrl(url);
             if (!contentFromUrl) {
                 throw new ApiError('Failed to fetch package content', 400);
             }
@@ -241,48 +241,9 @@ export class PackageUploadService {
         }
     }
 
-    /**
-     * Fetches and processes GitHub URL content
-     * @param URL - GitHub or npm package URL
-     * @returns Base64 encoded zip content
-     * @throws ApiError if URL is invalid or content cannot be fetched
-     */
-    private static async getContentZipBufferFromGithubUrl(URL: string): Promise<string> {
-        try {
-            const githubUrl = await normalizeToGithubUrl(URL);
-            const { owner, repo } = extractGithubAttributesFromGithubUrl(githubUrl);
-            const defaultBranch = await this.getDefaultBranch(owner, repo);
+    
 
-            const normalizedURL = `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`;
-            const response = await axios.get(normalizedURL, { 
-                responseType: 'arraybuffer',
-                timeout: 5000 // 5 second timeout
-            });
-
-            return Buffer.from(response.data, 'binary').toString('base64');
-
-        } catch (error) {
-            console.error('[PackageService] Failed to fetch GitHub content:', error);
-            throw new ApiError('Failed to fetch package content from GitHub', 400);
-        }
-    }
-
-    /**
-     * Gets the default branch of a GitHub repository
-     * @param owner - Repository owner
-     * @param repo - Repository name
-     * @returns Default branch name (e.g., main, master)
-     * @throws ApiError if branch cannot be determined
-     */
-    private static async getDefaultBranch(owner: string, repo: string): Promise<string> {
-        try {
-            const response = await octokit.repos.get({ owner, repo });
-            return response.data.default_branch;
-        } catch (error) {
-            console.error('[PackageService] Failed to get default branch:', error);
-            throw new ApiError('Failed to determine repository default branch', 400);
-        }
-    }
+    
 
     /**
      * Creates a PackageRating object from a scorecard

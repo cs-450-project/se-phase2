@@ -17,5 +17,9 @@ export const encodeZipFileToBase64 = (filePath: string): string => {
     }
 };
 
-const base64Zip = encodeZipFileToBase64('/home/humphrey/se-phase2/swe-zip-tests/basic-package-master.zip');
-console.log(base64Zip);
+var base64Zip = encodeZipFileToBase64('/home/humphrey/se-phase2/testing-zips/basic-package-bad-name.zip');
+console.log(base64Zip + '\n');
+var base64Zip = encodeZipFileToBase64('/home/humphrey/se-phase2/testing-zips/basic-package-v2.zip');
+console.log(base64Zip + '\n');
+var base64Zip = encodeZipFileToBase64('/home/humphrey/se-phase2/testing-zips/basic-package-v10.zip');
+console.log(base64Zip + '\n');

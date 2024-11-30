@@ -7,7 +7,7 @@ import { PackageMetadata } from './PackageMetadata.js';
 export class PackageData {
     
     @PrimaryColumn({ name: 'package_id' })
-    packageId!: number;
+    packageId!: string;
 
     @OneToOne(() => PackageMetadata)
     @JoinColumn({ name: 'package_id', referencedColumnName: 'id' })
