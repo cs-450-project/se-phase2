@@ -26,15 +26,23 @@ export class PackageController {
      */
     static async getPackagesFromQueries(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+
             console.log('[PackageController] Processing POST /packages request');
+
+            const offset = req.query.offset as string;
             const queries: PackageQuery[] = req.body;
             
             if (!queries || !Array.isArray(queries)) {
                 throw new ApiError('Invalid query format: Expected array of package queries', 400);
             }
 
-            const results = await PackageGetterService.queryPackages(queries);
-            res.status(200).json(results);
+            const { packages, nextOffset } = await PackageGetterService.queryPackages(queries, offset);
+            
+            if (nextOffset) {
+                res.setHeader('offset', nextOffset);
+            }
+            
+            res.status(200).json(packages);
 
         } catch (error) {
             console.error('[PackageController] Failed to process package queries:', error);

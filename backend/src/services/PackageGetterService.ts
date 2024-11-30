@@ -12,6 +12,7 @@ import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
 import { PackageRating } from "../entities/PackageRating.js";
 import { PackageQuery } from "../utils/types/PackageQuery.js";
+import { FormattedPackageMetadata } from "../utils/types/FormattedPackageMetadata.js";
 
 /**
  * Service class for package retrieval operations
@@ -20,43 +21,84 @@ export class PackageGetterService {
     /**
      * Query packages based on name and version criteria
      * @param queries Array of package queries
-     * @returns Matching PackageMetadata entries
+     * @param offset Pagination offset
+     * @returns Object containing results and next offset
      * @throws ApiError for invalid queries or server errors
      */
-    static async queryPackages(queries: PackageQuery[]): Promise<PackageMetadata[]> {
+    static async queryPackages(queries: PackageQuery[], offset?: string): Promise<{
+        packages: FormattedPackageMetadata[],
+        nextOffset: string | undefined
+    }> {
         try {
             if (!queries?.length) {
                 throw new ApiError('Invalid queries: Expected non-empty array', 400);
             }
 
-            console.log(`[PackageGetterService] Processing ${queries.length} package queries`);
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+            const pageSize = 10; // Define your desired page size
+            const currentOffset = offset ? parseInt(offset) : 0;
             
-            // Handle wildcard query
-            if (queries.some(q => q.Name?.includes("*"))) {
-                console.log('[PackageGetterService] Processing wildcard query');
-                return packageMetadataRepository.find();
-            }
+            let results: PackageMetadata[] = [];
 
-            // Process individual queries
-            const results = new Set<PackageMetadata>();
-            
-            for (const query of queries) {
-                if (!query.Name) {
-                    throw new ApiError('Package name is required', 400);
+            // Handle wildcard query for listing all packages
+            if (queries.length === 1 && queries[0].Name === '*') {
+                results = await packageMetadataRepository.find({
+                    skip: currentOffset,
+                    take: pageSize + 1, // Get one extra to check if there are more
+                    order: { name: 'ASC', version: 'DESC' }
+                });
+            } else {
+                // Process individual queries
+                const matchedPackages = new Set<PackageMetadata>();
+                
+                for (const query of queries) {
+                    if (!query.Name) {
+                        throw new ApiError('Package name is required', 400);
+                    }
+
+                    let packageMatches: PackageMetadata[] = [];
+                    
+                    // First find by name
+                    const nameMatches = await packageMetadataRepository.find({
+                        where: { name: query.Name },
+                        order: { version: 'DESC' }
+                    });
+
+                    // If version is specified, filter by version
+                    if (query.Version && nameMatches.length > 0) {
+                        packageMatches = nameMatches.filter(pkg => {
+                            return this.matchesVersionQuery(pkg.version, query.Version!);
+                        });
+                    } else {
+                        packageMatches = nameMatches;
+                    }
+
+                    packageMatches.forEach(pkg => matchedPackages.add(pkg));
                 }
 
-                const nameMatches = await this.findPackagesByName(query.Name);
-                const versionMatches = query.Version ? 
-                    await this.findPackagesByVersionRange(query.Version) : [];
-
-                nameMatches.forEach(pkg => results.add(pkg));
-                versionMatches.forEach(pkg => results.add(pkg));
+                // Apply pagination to the combined results
+                results = Array.from(matchedPackages)
+                    .sort((a, b) => a.name.localeCompare(b.name) || semver.rcompare(a.version, b.version))
+                    .slice(currentOffset, currentOffset + pageSize + 1);
             }
 
-            const finalResults = Array.from(results);
-            console.log(`[PackageGetterService] Found ${finalResults.length} unique matches`);
-            return finalResults;
+            // Check if there are more results
+            const hasMore = results.length > pageSize;
+            if (hasMore) {
+                results.pop(); // Remove the extra item we fetched
+            }
+
+            // Format results
+            const formattedResults = results.map(pkg => ({
+                Version: pkg.version,
+                Name: pkg.name,
+                ID: pkg.id
+            }));
+
+            return {
+                packages: formattedResults,
+                nextOffset: hasMore ? (currentOffset + pageSize).toString() : undefined
+            };
 
         } catch (error) {
             console.error('[PackageGetterService] Query failed:', error);
@@ -95,7 +137,18 @@ export class PackageGetterService {
                 throw new ApiError('Package data not found', 404);
             }
 
-            return { metadata, data };
+            return {
+                metadata: { 
+                    Name: metadata.name, 
+                    Version: metadata.version, 
+                    ID: metadata.id 
+                },
+                data: { 
+                    Content: data.content, 
+                    ...(data.url && { URL: data.url }),
+                    JSProgram: data.jsProgram 
+                }
+            };
 
         } catch (error) {
             console.error(`[PackageGetterService] Failed to get package ${id}:`, error);
@@ -153,22 +206,42 @@ export class PackageGetterService {
     }
 
     /**
-     * Find packages by name pattern
+     * Check if a version matches a version query
      * @private
      */
-    private static async findPackagesByName(name: string): Promise<PackageMetadata[]> {
+    private static matchesVersionQuery(version: string, query: string): boolean {
         try {
-            if (!name) {
-                throw new ApiError('Package name is required', 400);
+            query = query.trim();
+            
+            // Bounded range (e.g., "1.2.3-2.1.0")
+            if (query.includes('-')) {
+                const [minVersion, maxVersion] = query.split('-').map(v => v.trim());
+                
+                // Validate both versions are valid semver
+                if (!semver.valid(minVersion) || !semver.valid(maxVersion)) {
+                    console.error(`Invalid version range: ${query}`);
+                    return false;
+                }
+                
+                return semver.gte(version, minVersion) && 
+                    semver.lte(version, maxVersion);
+            }
+            
+            // Exact version match
+            if (semver.valid(query)) {
+                return semver.eq(version, query);
+            }
+            
+            // Caret or tilde ranges
+            if (query.startsWith('^') || query.startsWith('~')) {
+                return semver.satisfies(version, query);
             }
 
-            return await AppDataSource.getRepository(PackageMetadata)
-                .find({ where: { name: Like(`%${name}%`) } });
-
+            console.error(`Unsupported version query format: ${query}`);
+            return false;
         } catch (error) {
-            console.error(`[PackageGetterService] Name search failed: ${name}`, error);
-            if (error instanceof ApiError) throw error;
-            throw new ApiError('Failed to search by name', 500);
+            console.error(`Error processing version query: ${query}`, error);
+            return false;
         }
     }
 
@@ -192,42 +265,4 @@ export class PackageGetterService {
         return { type: 'exact', value: trimmed };
     }
 
-    /**
-     * Find packages matching version criteria
-     * @private
-     */
-    private static async findPackagesByVersionRange(version: string): Promise<PackageMetadata[]> {
-        try {
-            if (!version) {
-                throw new ApiError('Version is required', 400);
-            }
-
-            const allPackages = await AppDataSource.getRepository(PackageMetadata)
-                .find({ order: { version: 'DESC' } });
-
-            const { type, value } = this.parseVersionQuery(version);
-
-            return allPackages.filter(pkg => {
-                switch (type) {
-                    case 'exact':
-                        return semver.eq(pkg.version, value);
-                    case 'range': {
-                        const [min, max] = value.split(' ');
-                        return semver.gte(pkg.version, min) && 
-                               semver.lte(pkg.version, max);
-                    }
-                    case 'caret':
-                    case 'tilde':
-                        return semver.satisfies(pkg.version, value);
-                    default:
-                        return false;
-                }
-            });
-
-        } catch (error) {
-            console.error(`[PackageGetterService] Version search failed: ${version}`, error);
-            if (error instanceof ApiError) throw error;
-            throw new ApiError('Failed to search by version', 500);
-        }
-    }
-}
+};
