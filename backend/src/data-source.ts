@@ -21,7 +21,7 @@ export const AppDataSource = new DataSource({
     database: DB_DATABASE,
 
     // 'resets' the database schema every time the application starts
-    dropSchema: NODE_ENV === "development" ? true : false,
+    dropSchema: NODE_ENV === "development" ? false : false,
     // true: tells TypeORM to automatically synchronize the database schema with the entities
     // creates the table if it does not exist
     // false: tells TypeORM to not synchronize the database schema with the entities
