@@ -4,7 +4,7 @@ import { PackageMetadata } from './PackageMetadata.js';
 @Entity('package_rating')
 export class PackageRating {
     @PrimaryColumn({ name: 'package_id' })
-    packageId!: number;
+    packageId!: string;
 
     @OneToOne(() => PackageMetadata)
     @JoinColumn({ name: 'package_id', referencedColumnName: 'id' })
