@@ -1,6 +1,7 @@
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
+import { PackageCosts } from "../entities/PackageCosts.js";
 import { ApiError } from "../utils/errors/ApiError.js";
 import { getPackageJsonFromContentBuffer } from "../utils/packageHelpers.js";
 import fetch from 'node-fetch';
@@ -16,8 +17,30 @@ type PackageCost = Record<string, PackageCostInfo>;
 export class PackageCostService {
     private static readonly NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 
-    static async calculatePackageCost(id: string, includeDependencies: boolean = false): Promise<PackageCost> {
+    static async calculatePackageCost(id: string, includeDependencies: boolean = false) {
         try {
+
+            const packageCostsRepo = AppDataSource.getRepository(PackageCosts);
+            // Then in calculatePackageCost
+            const existingCost = await packageCostsRepo.findOne({ where: { packageId: id }});
+            if (existingCost && !includeDependencies) {
+                return {
+                    [id]: {
+                        totalCost: existingCost.totalCost
+                    }
+                };
+            }
+            if (existingCost && includeDependencies) {
+                return {
+                    [id]: {
+                        standaloneCost: existingCost.standaloneCost,
+                        totalCost: existingCost.totalCost
+                    },
+                    ...existingCost.dependencyCosts
+                };
+            }
+
+
             console.log(`[PackageCostService] Calculating cost for package ${id}, includeDependencies: ${includeDependencies}`);
 
             if (!id) {
@@ -54,19 +77,56 @@ export class PackageCostService {
             console.log(`[PackageCostService] Total dependency cost: ${totalDependencyCost}MB`);
             console.log(`[PackageCostService] Total package cost: ${packageCost + totalDependencyCost}MB`);
 
-            return {
-                [id]: {
-                    standaloneCost: packageCost,
-                    totalCost: packageCost + totalDependencyCost
-                },
-                ...dependencyCosts
-            };
+            const cost = await this.savePackageCost(id, packageCost, packageCost + totalDependencyCost, dependencyCosts);
+
+            if (!cost) {
+                throw new ApiError('Failed to save package cost', 500);
+            }
+
+            if (cost && !includeDependencies) {
+                return {
+                    [id]: {
+                        totalCost: cost.totalCost
+                    }
+                };
+            }
+            if (cost && includeDependencies) {
+                return {
+                    [id]: {
+                        standaloneCost: cost.standaloneCost,
+                        totalCost: cost.totalCost
+                    },
+                    ...cost.dependencyCosts
+                };
+            }
 
         } catch (error) {
             console.error('[PackageCostService] Failed to calculate cost:', error);
             if (error instanceof ApiError) throw error;
             throw new ApiError('Failed to calculate package cost', 500);
         }
+    }
+
+    private static async savePackageCost(id: string, standaloneCost: number, totalCost: number, dependecyCosts: PackageCost): Promise<PackageCosts> {
+        console.log('[PackageCostService] Saving new package cost entry');
+        
+        const packageCostsRepo = AppDataSource.getRepository(PackageCosts);
+
+        // Create or update the cost record
+        const cost = packageCostsRepo.create({
+            packageId: id,
+            standaloneCost: standaloneCost,
+            totalCost: totalCost,
+            dependencyCosts: Object.entries(dependecyCosts)
+                .filter(([key]) => key !== id)
+                .reduce((acc, [key, value]) => ({
+                    ...acc,
+                    [key]: value
+                }), {})
+        });
+
+        await packageCostsRepo.save(cost);
+        return cost;
     }
 
     private static async calculatePackageSize(data: PackageData): Promise<number> {
