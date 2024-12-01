@@ -10,7 +10,7 @@ export class PackageCosts {
     @PrimaryColumn({ name: 'package_id' })
     packageId!: string;
 
-    @OneToOne(() => PackageMetadata)
+    @OneToOne(() => PackageMetadata, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'package_id', referencedColumnName: 'id' })
     packageMetadata!: PackageMetadata;
 

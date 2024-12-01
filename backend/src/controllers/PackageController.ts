@@ -10,6 +10,7 @@ import { PackageGetterService } from '../services/PackageGetterService.js';
 import { PackageUpdateService } from '../services/PackageUpdateService.js';
 import { PackageCostService } from '../services/PackageCostService.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
+import { AppDataSource } from '../data-source.js';
 import { ApiError } from '../utils/errors/ApiError.js';
 
 /**
@@ -61,8 +62,13 @@ export class PackageController {
     static async resetRegistry(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             console.log('[PackageController] Processing DELETE /reset request');
-            // TODO: Implement registry reset logic
+        
+            // Use TRUNCATE CASCADE to clear all related tables
+            await AppDataSource.query('TRUNCATE TABLE package_metadata CASCADE');
+            
+            console.log('[PackageController] Registry reset complete');
             res.status(200).json({ message: 'Registry reset successful' });
+
         } catch (error) {
             console.error('[PackageController] Failed to reset registry:', error);
             next(error);
