@@ -8,6 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PackageUploadService } from '../services/PackageUploadService.js';
 import { PackageGetterService } from '../services/PackageGetterService.js';
 import { PackageUpdateService } from '../services/PackageUpdateService.js';
+import { PackageCostService } from '../services/PackageCostService.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { ApiError } from '../utils/errors/ApiError.js';
 
@@ -207,21 +208,26 @@ export class PackageController {
      * @param res Express response
      * @throws ApiError if cost metrics cannot be retrieved
      */
-    static async getPackageCost(req: Request, res: Response): Promise<void> {
+    static async getPackageCost(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params;
+            const includeDependencies = req.query.dependencies === 'true';
+
             console.log(`[PackageController] Processing GET /${id}/cost request`);
 
             if (!id) {
                 throw new ApiError('Package ID is required', 400);
             }
 
-            // TODO: Implement cost calculation logic
-            res.status(200).json({ message: `Package ${id} cost metrics` });
+            const sizeCost = await PackageCostService.calculatePackageCost(id, includeDependencies);
+            if (sizeCost) {
+                res.status(200).json(sizeCost);
+                return;
+            }
 
         } catch (error) {
             console.error('[PackageController] Failed to calculate package cost:', error);
-            throw new ApiError('Failed to calculate package cost', error instanceof ApiError ? error.statusCode : 500);
+            next(error);
         }
     }
 
