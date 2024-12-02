@@ -1,0 +1,99 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      LOG_LEVEL: 1
+      LOG_FILE: ./logs/test.log
+      GITHUB_TOKEN: ${{ secrets.PA_TOKEN }}
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: mypassword
+      DB_DATABASE: package_registry
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: package_registry
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.17.0'
+          cache: 'npm'
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Create Logs Directory
+        run: mkdir -p logs
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: npm run test
+
+      - name: Run Test Coverage  
+        working-directory: ./backend
+        run: npm run test:coverage
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.PA_TOKEN }}
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          fail_ci_if_error: true
+
+  frontend-test:
+    name: Frontend Tests  
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.17.0'
+          cache: 'npm'
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm run test:ci
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.PA_TOKEN }}
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: true
