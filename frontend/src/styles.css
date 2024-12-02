@@ -1,1 +1,48 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+  }
+  
+  nav ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    background-color: #1f1f1f;
+    margin: 0;
+  }
+  
+  nav li {
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  
+  .input-section,
+  .filter-section {
+    margin: 20px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  table th,
+  table td {
+    border: 1px solid #444;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  table th {
+    background-color: #333;
+  }
+  
+  .footer-links {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px;
+  }
+  

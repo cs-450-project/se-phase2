@@ -6,6 +6,7 @@
 import dotenv from 'dotenv';
 import 'reflect-metadata';
 import express from 'express';
+import cors from 'cors';
 import { Request, Response } from 'express';
 import { errorHandler } from './utils/middleware/errorHandler.js';
 
@@ -20,6 +21,7 @@ const app = express();
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
