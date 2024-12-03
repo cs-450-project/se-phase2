@@ -199,7 +199,7 @@ export class PackageCostService {
 
         try {
 
-            const packageJsonContent = getPackageJsonFromContentBuffer(data.content);
+            const packageJsonContent = await getPackageJsonFromContentBuffer(data.content);
             const packageJson = JSON.parse(packageJsonContent);
 
             console.log('Extracted dependencies:', packageJson.dependencies);

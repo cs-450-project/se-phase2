@@ -15,40 +15,14 @@
 // Ensure that we have the required libraries
 
 import logger from '../../utils/logger.js';
-// Import octokit
-import octokit from '../../utils/octokit.js';
 
-export async function evaluateRampUp(owner: string, repo: string) {
-    logger.debug(`Evaluating ramp-up score for ${owner}/${repo}`);
-
-    const rampScore = await getReadme(owner, repo);
-
-    logger.info(`Final ramp-up score for ${owner}/${repo}: ${rampScore}`);
+export async function evaluateRampUp(readmeContent: string) {
+    
+    const rampScore = await analyzeReadme(readmeContent);
     
     return rampScore;
 }// end displayRampupScore function
 
-//Function that will get the README file from the repository
-async function getReadme(owner: string, repo: string) {
-    try {
-        logger.debug(`Fetching README for ${owner}/${repo}`);
-        const readmeData = await octokit.repos.getReadme({
-            owner: owner,
-            repo: repo,
-        });
-
-        const readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
-        logger.debug(`Fetched README content for ${owner}/${repo}`);
-
-        //Return the content of the README file
-        return analyzeReadme(readmeContent);
-
-    } catch (error) {
-        logger.error(`Failed to access GitHub API for ${owner}/${repo}`);
-        logger.error(error);
-        return 0;
-    }
-}//end getReadme function
 
 async function analyzeReadme(readmeContent: string) {
     let rampScore = 0;

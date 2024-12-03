@@ -14,7 +14,7 @@ import { ApiError } from "./errors/ApiError.js";
  * @returns Package.json content as string
  * @throws ApiError if package.json cannot be found or extracted
  */
-export function getPackageJsonFromContentBuffer(contentBuffer: string): string {
+export async function getPackageJsonFromContentBuffer(contentBuffer: string): Promise<string> {
     try {
         if (!contentBuffer) {
             throw new ApiError('Content buffer cannot be empty', 400);
@@ -22,23 +22,27 @@ export function getPackageJsonFromContentBuffer(contentBuffer: string): string {
 
         console.log('[PackageHelper] Extracting package.json from content buffer');
         
-        // Decode the base64 encoded zip file to binary buffer
         const zipBuffer = Buffer.from(contentBuffer, 'base64');
-
-        // Load buffer as zip file and extract package.json
         const zip = new AdmZip(zipBuffer);
         const zipEntries = zip.getEntries();
-        const targetEntry = zipEntries.find(entry => entry.entryName.endsWith('package.json'));
+
+        // Find root package.json (shortest valid path)
+        const packageJsonEntries = zipEntries
+            .filter(entry => entry.entryName.endsWith('package.json'))
+            .sort((a, b) => a.entryName.length - b.entryName.length);
+
+        // Get the root-most package.json
+        const targetEntry = packageJsonEntries[0];
         
         if (!targetEntry) {
             throw new ApiError('Package.json not found in zip content', 400);
         }
 
-        // Parse package.json file
+        console.log('[PackageHelper] Using package.json from:', targetEntry.entryName);
+
         const fileData = targetEntry.getData();
         const packageJson = fileData.toString('utf8');
 
-        console.log('[PackageHelper] Successfully extracted package.json');
         return packageJson;
 
     } catch (error) {
@@ -54,23 +58,15 @@ export function getPackageJsonFromContentBuffer(contentBuffer: string): string {
  * @returns Object containing Name and Version
  * @throws ApiError if name or version is missing
  */
-export function extractNameAndVersionFromPackageJson(packageJson: string): { name: string, version: string } {
+export function extractNameAndVersionFromPackageJson(packageJson: string): { name: string | null, version: string } {
     try {
         if (!packageJson) {
             throw new ApiError('Package.json content cannot be empty', 400);
         }
 
         const packageData = JSON.parse(packageJson);
-        const name = packageData.name;
-        var version = packageData.version;
-
-        if (!name || name === '*') {
-            throw new ApiError('Package name not found in package.json', 400);
-        }
-
-        if (!version) {
-            version = '1.0.0';
-        }
+        const name = packageData.name || null;
+        var version = packageData.version || '1.0.0';
 
         console.log(`[PackageHelper] Extracted name: ${name}, version: ${version}`);
         return { name, version };
@@ -260,10 +256,8 @@ export async function getNpmRepoUrlFromGithubUrl(url: string): Promise<string> {
      * @returns Base64 encoded zip content
      * @throws ApiError if URL is invalid or content cannot be fetched
      */
-export async function getContentZipBufferFromGithubUrl(URL: string): Promise<string> {
+export async function getContentZipBufferFromGithubUrl(owner: string, repo: string): Promise<string> {
     try {
-        const githubUrl = await normalizeToGithubUrl(URL);
-        const { owner, repo } = extractGithubAttributesFromGithubUrl(githubUrl);
         const defaultBranch = await getDefaultBranch(owner, repo);
 
         const normalizedURL = `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`;
@@ -281,12 +275,12 @@ export async function getContentZipBufferFromGithubUrl(URL: string): Promise<str
 }
 
 /**
-     * Gets the default branch of a GitHub repository
-     * @param owner - Repository owner
-     * @param repo - Repository name
-     * @returns Default branch name (e.g., main, master)
-     * @throws ApiError if branch cannot be determined
-     */
+ * Gets the default branch of a GitHub repository
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @returns Default branch name (e.g., main, master)
+ * @throws ApiError if branch cannot be determined
+ */
 export async function getDefaultBranch(owner: string, repo: string): Promise<string> {
     try {
         const response = await octokit.repos.get({ owner, repo });
@@ -296,3 +290,4 @@ export async function getDefaultBranch(owner: string, repo: string): Promise<str
         throw new ApiError('Failed to determine repository default branch', 400);
     }
 }
+

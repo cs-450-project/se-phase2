@@ -4,7 +4,7 @@
  */
 
 import AdmZip from 'adm-zip';
-import fs from 'fs';
+import fs, { read } from 'fs';
 import path from 'path';
 import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
@@ -18,7 +18,7 @@ import {
     extractGithubAttributesFromGithubUrl, 
     normalizeToGithubUrl, 
     extractGithubUrlFromPackageJson,
-    getContentZipBufferFromGithubUrl 
+    getContentZipBufferFromGithubUrl
 } from '../utils/packageHelpers.js';
 
 
@@ -93,14 +93,15 @@ export class PackageUploadService {
                 throw new ApiError('No GitHub repository found in package.json', 400);
             }
 
-            const { owner, repo } = extractGithubAttributesFromGithubUrl(githubLink);
+            const normalizedUrl = await normalizeToGithubUrl(githubLink);
+            const { owner, repo } = extractGithubAttributesFromGithubUrl(normalizedUrl);
             
             // Evaluate metrics
-            const scorecard = await evaluateMetrics(owner, repo);
-            console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(scorecard)}`);
+            const { ranker, readmeContent } = await evaluateMetrics(owner, repo);
+            console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(ranker)}`);
 
             // Check if package meets quality standards
-            if (scorecard.netScore < 0.5) {
+            if (ranker.netScore < 0.5) {
                 throw new ApiError('Package does not meet quality standards', 424);
             }
 
@@ -116,12 +117,13 @@ export class PackageUploadService {
                 content: content,
                 debloat: shouldDebloat,
                 jsProgram: jsProgram,
+                ...(readmeContent && { readme: readmeContent })
             });
             await packageDataRepository.save(data);
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
-            const packageRating = this.createPackageRatingFromScorecard(scorecard, metadata);
+            const packageRating = this.createPackageRatingFromScorecard(ranker, metadata);
             const packageRatingRepository = AppDataSource.getRepository(PackageRating);
             await packageRatingRepository.save(packageRating);
 
@@ -133,7 +135,8 @@ export class PackageUploadService {
                 },
                 data: { 
                     Content: data.content, 
-                    JSProgram: data.jsProgram 
+                    JSProgram: data.jsProgram,
+                    README: data.readme
                 }
             };
 
@@ -159,8 +162,11 @@ export class PackageUploadService {
 
             console.log('[PackageService] Processing URL type package');
 
-            // Get content from URL
-            const contentFromUrl = await getContentZipBufferFromGithubUrl(url);
+            
+            // Process GitHub URL and fetch content
+            const normalizedUrl = await normalizeToGithubUrl(url);
+            const { owner, repo } = extractGithubAttributesFromGithubUrl(normalizedUrl);
+            const contentFromUrl = await getContentZipBufferFromGithubUrl(owner, repo);
             if (!contentFromUrl) {
                 throw new ApiError('Failed to fetch package content', 400);
             }
@@ -171,10 +177,9 @@ export class PackageUploadService {
                 throw new ApiError('Invalid package.json in content', 400);
             }
 
-            const { name, version } = extractNameAndVersionFromPackageJson(packageJson);
-            if (!name || !version) {
-                throw new ApiError('Invalid name or version in package.json', 400);
-            }
+            // Extract name and version, default to repo name
+            var { name, version } = extractNameAndVersionFromPackageJson(packageJson);
+            if (!name) name = repo;
 
             // Check for existing package
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
@@ -186,16 +191,12 @@ export class PackageUploadService {
                 throw new ApiError(`Package ${name}@${version} already exists`, 409);
             }
 
-            // Process GitHub URL
-            const normalizedUrl = await normalizeToGithubUrl(url);
-            const { owner, repo } = extractGithubAttributesFromGithubUrl(normalizedUrl);
-
             // Evaluate metrics
-            const scorecard = await evaluateMetrics(owner, repo);
-            console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(scorecard)}`);
+            const { ranker, readmeContent } = await evaluateMetrics(owner, repo);
+            console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(ranker)}`);
 
             // Check if package meets quality standards
-            if (scorecard.netScore < 0.5) {
+            if (ranker.netScore < 0.5) {
                 throw new ApiError('Package does not meet quality standards', 424);
             }
 
@@ -211,12 +212,13 @@ export class PackageUploadService {
                 content: contentFromUrl,
                 url: url,
                 jsProgram: jsProgram,
+                ...(readmeContent && { readme: readmeContent })
             });
             await packageDataRepository.save(data);
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
-            const packageRating = this.createPackageRatingFromScorecard(scorecard, metadata);
+            const packageRating = this.createPackageRatingFromScorecard(ranker, metadata);
             const packageRatingRepository = AppDataSource.getRepository(PackageRating);
             await packageRatingRepository.save(packageRating);
 
@@ -229,7 +231,8 @@ export class PackageUploadService {
                 data: { 
                     Content: data.content, 
                     URL: data.url, 
-                    JSProgram: data.jsProgram 
+                    JSProgram: data.jsProgram,
+                    README: data.readme
                 }
             };
 

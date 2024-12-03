@@ -8,6 +8,7 @@
 import logger from '../../utils/logger.js';
 import { Ranker } from "../scores/Ranker.js";
 import { Timer } from "../../utils/Timer.js";
+import octokit from '../../utils/octokit.js';
 import { ApiError } from "../../utils/errors/ApiError.js";
 
 // Import metric evaluation functions
@@ -26,7 +27,7 @@ import { evaluateCodeReview } from "../metrics/evaluateCodeReview.js";
  * @returns Ranker instance containing all metric scores and latencies
  * @throws ApiError if repository is invalid or metrics cannot be evaluated
  */
-export async function evaluateMetrics(owner: string, repo: string): Promise<Ranker> {
+export async function evaluateMetrics(owner: string, repo: string): Promise<{ ranker: Ranker, readmeContent: string}> {
     try {
         // Input validation
         if (!owner || !repo) {
@@ -39,6 +40,8 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<Rank
         const totalTime = new Timer();
         const factorTime = new Timer();
         
+        var readmeContent: string = '';
+
         totalTime.start();
 
         // Evaluate each metric in sequence with error handling
@@ -52,9 +55,33 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<Rank
             ranker.busFactor = 0;
         }
 
+        
+
+        
+
         try {
             factorTime.start();
-            ranker.correctness = Number(await evaluateCorrectness(owner, repo));
+
+            logger.debug(`Fetching README for ${owner}/${repo}`);
+            const readmeData = await octokit.repos.getReadme({
+                owner: owner,
+                repo: repo,
+            });
+            readmeContent = Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
+
+            ranker.rampUp = await evaluateRampUp(readmeContent);
+            ranker.rampUpLatency = factorTime.stop();
+            logger.debug(`RampUp: ${ranker.rampUp}, Latency: ${ranker.rampUpLatency}ms`);
+        } catch (error) {
+            logger.error(`RampUp evaluation failed: ${error}`);
+            ranker.rampUp = 0;
+        }
+
+        try {
+            factorTime.start();
+            // Check if a README exists (as found before)
+            const readme = !(readmeContent === '');
+            ranker.correctness = Number(await evaluateCorrectness(owner, repo, readme));
             ranker.correctnessLatency = factorTime.stop();
             logger.debug(`Correctness: ${ranker.correctness}, Latency: ${ranker.correctnessLatency}ms`);
         } catch (error) {
@@ -64,22 +91,12 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<Rank
 
         try {
             factorTime.start();
-            ranker.license = Number(await evaluateLicense(owner, repo));
+            ranker.license = Number(await evaluateLicense(owner, repo, readmeContent));
             ranker.licenseLatency = factorTime.stop();
             logger.debug(`License: ${ranker.license}, Latency: ${ranker.licenseLatency}ms`);
         } catch (error) {
             logger.error(`License evaluation failed: ${error}`);
             ranker.license = 0;
-        }
-
-        try {
-            factorTime.start();
-            ranker.rampUp = await evaluateRampUp(owner, repo);
-            ranker.rampUpLatency = factorTime.stop();
-            logger.debug(`RampUp: ${ranker.rampUp}, Latency: ${ranker.rampUpLatency}ms`);
-        } catch (error) {
-            logger.error(`RampUp evaluation failed: ${error}`);
-            ranker.rampUp = 0;
         }
 
         try {
@@ -143,7 +160,7 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<Rank
         logger.debug(`Completed metrics evaluation for ${owner}/${repo}`);
         logger.debug(`Net Score: ${ranker.netScore}, Total Latency: ${ranker.netScoreLatency}ms`);
 
-        return ranker;
+        return { ranker, readmeContent };
 
     } catch (error) {
         logger.error(`Metrics evaluation failed for ${owner}/${repo}: ${error}`);
