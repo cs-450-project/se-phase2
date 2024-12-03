@@ -22,6 +22,7 @@ vi.mock('../../../src/utils/logger', () => ({
 import { evaluateRampUp } from '../../../src/services/metrics/evaluateRampUp';
 import octokit from '../../../src/utils/octokit';
 import logger from '../../../src/utils/logger';
+import { read } from 'fs';
 
 describe('evaluateRampUp', () => {
   const octokitMock = octokit as unknown as {
@@ -52,16 +53,13 @@ describe('evaluateRampUp', () => {
       ],
     });
 
-    const result = await evaluateRampUp('owner', 'repo');
+    const result = await evaluateRampUp(readmeContent);
     expect(result).toBe(0);
   });
 
   it('should return 1 when README has all required sections', async () => {
-    octokitMock.repos.getReadme.mockResolvedValue({ data: { content: '' } });
-
-    octokitMock.repos.getReadme.mockResolvedValueOnce({
-        data: {
-          content: Buffer.from(`
+    
+    const readmeContent = `
             ## License
             ## Support
             ## Getting Started
@@ -70,30 +68,23 @@ describe('evaluateRampUp', () => {
             ## Contributing
             ## Documentation
             ## License
-            ## Contributing
-          `).toString('base64'),
-        },
-      });
+            ## Contributing`;
 
-    const result = await evaluateRampUp('owner', 'repo');
+    const result = await evaluateRampUp(readmeContent);
     expect(result).toBe(1);
   });
 
   it('should calculate the correct score based on present sections (0.4)', async () => {
 
-    octokitMock.repos.getReadme.mockResolvedValueOnce({
-      data: {
-        content: Buffer.from(`
-            ## Introduction
+    const readmeContent = `## 
+            Introduction
             Some introduction text.
 
             ## Usage
             How to use the project.
-            `).toString('base64'),
-      },
-    });
+            `;
 
-    const result = await evaluateRampUp('owner', 'repo');
+    const result = await evaluateRampUp(readmeContent);
     expect(result).toBe(0.4); // 0.2 for Introduction + 0.2 for Usage
   });
 
@@ -115,37 +106,17 @@ describe('evaluateRampUp', () => {
       MIT License.
     `;
 
-    octokitMock.repos.getReadme.mockResolvedValueOnce({
-      data: {
-        content: Buffer.from(readmeContent).toString('base64'),
-      },
-    });
-
-    const result = await evaluateRampUp('owner', 'repo');
+    const result = await evaluateRampUp(readmeContent);
     expect(result).toBe(0.8); // 0.2 for each section found
   });
 
   it('should return 0 when README is not found', async () => {
-    octokitMock.repos.getReadme.mockRejectedValueOnce({
-      status: 404,
-      message: 'Not Found',
-    });
+    const readmeContent = '';
 
-    const result = await evaluateRampUp('owner', 'repo');
+    const result = await evaluateRampUp(readmeContent);
     expect(result).toBe(0);
-    expect(logger.error).toHaveBeenCalledWith(
-      'Failed to access GitHub API for owner/repo',
-    );
+    
   });
 
-  it('should handle errors from octokit and return 0', async () => {
-    octokitMock.repos.getReadme.mockRejectedValueOnce(new Error('API error'));
 
-    const result = await evaluateRampUp('owner', 'repo');
-    expect(result).toBe(0);
-    expect(logger.error).toHaveBeenCalledWith(
-      'Failed to access GitHub API for owner/repo',
-    );
-    expect(logger.error).toHaveBeenCalledWith(expect.any(Error));
-  });
 });

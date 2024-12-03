@@ -25,7 +25,8 @@ export class PackageData {
     @Column({ name: 'js_program', nullable: true })
     jsProgram?: string;
 
-    
+    @Column({ name: 'readme', nullable: true, type: 'text' })
+    readme?: string;
     
 
 }

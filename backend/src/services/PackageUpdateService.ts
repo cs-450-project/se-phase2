@@ -12,7 +12,8 @@ import {
     getPackageJsonFromContentBuffer, 
     extractNameAndVersionFromPackageJson, 
     normalizeToGithubUrl, 
-    getContentZipBufferFromGithubUrl
+    getContentZipBufferFromGithubUrl,
+    extractGithubAttributesFromGithubUrl
 } from '../utils/packageHelpers.js';
 
 /**
@@ -171,7 +172,8 @@ export class PackageUpdateService {
     ): Promise<boolean> {
         try {
             const githubUrl = await normalizeToGithubUrl(url);
-            const contentZipBuffer = await getContentZipBufferFromGithubUrl(githubUrl);
+            const { owner, repo } = extractGithubAttributesFromGithubUrl(githubUrl);
+            const contentZipBuffer = await getContentZipBufferFromGithubUrl(owner, repo);
             const packageJson = await getPackageJsonFromContentBuffer(contentZipBuffer);
             const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
 

@@ -17,7 +17,7 @@ import logger from '../../utils/logger.js';
 import octokit from '../../utils/octokit.js';
 
 // Function to calculate correctness score based on contributors, README, and test files
-export async function evaluateCorrectness(owner: string, repo: string): Promise<number> {
+export async function evaluateCorrectness(owner: string, repo: string, readme: boolean): Promise<number> {
   logger.info(`Starting Correctness evaluation for repository: ${owner}/${repo}`);
   
   let score = 0;
@@ -29,8 +29,6 @@ export async function evaluateCorrectness(owner: string, repo: string): Promise<
     score += contributorScore;
     logger.debug(`Contributors count: ${contributorsCount}, Contributor score: ${contributorScore}`);
 
-    // 2. Check if README file exists
-    const readme = await readmeExists(owner, repo);
     if (readme) {
       score += 0.2;
       logger.info('README file found. Added 0.2 to the score.');
@@ -53,24 +51,6 @@ export async function evaluateCorrectness(owner: string, repo: string): Promise<
   }
 
   return score;
-}
-
-// Helper function to check if a file exists in the repository
-async function readmeExists(owner: string, repo: string): Promise<boolean> {
-  try {
-    logger.debug(`Checking for README file in repository: ${owner}/${repo}`);
-    const readmeData = await octokit.repos.getReadme({
-      owner: owner,
-      repo: repo,
-    });
-
-    const exists = readmeData.data && readmeData.data.content ? true : false;
-    logger.debug(`README file exists: ${exists}`);
-    return exists;
-  } catch (error) {
-    logger.error(`Error checking for README file in repository ${owner}/${repo}: ${(error as Error).message}`);
-    return false;
-  }
 }
 
 // Helper function to check if test files exist in the repository

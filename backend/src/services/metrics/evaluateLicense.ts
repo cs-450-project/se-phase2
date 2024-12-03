@@ -13,21 +13,21 @@ dotenv.config();
 // Variable that will keep track of the license score
 var licenseScore: number = 0;
 
-export async function evaluateLicense(owner: string, repo: string) {
+export async function evaluateLicense(owner: string, repo: string, readmeContent: string) {
     logger.info(`Starting license evaluation for ${owner}/${repo}`);
     licenseScore = 0;
 
-    await analyzeLicense(owner, repo);
+    await analyzeLicense(owner, repo, readmeContent);
 
     logger.info(`Completed license evaluation for ${owner}/${repo} with score: ${licenseScore}`);
     return licenseScore;
 }
 
 // Function that will analyze the license of the repository
-async function analyzeLicense(owner: string, repo: string) {
+async function analyzeLicense(owner: string, repo: string, readmeContent: string) {
     try {
         logger.debug(`Analyzing license for ${owner}/${repo}`);
-        const licenseKey = await getRepoLicense(owner, repo);
+        const licenseKey = await getRepoLicense(owner, repo, readmeContent);
 
         if (licenseKey && approvedLicensesIdentifiers.includes(licenseKey)) {
             licenseScore = 1;
@@ -41,7 +41,7 @@ async function analyzeLicense(owner: string, repo: string) {
 }
 
 // Function that will get the license information from the repository
-async function getRepoLicense(owner: string, repo: string): Promise<string | null> {
+async function getRepoLicense(owner: string, repo: string, readmeContent: string): Promise<string | null> {
     try {
         logger.debug(`Fetching license information for ${owner}/${repo}`);
         const { data } = await octokit.repos.get({ owner, repo });
@@ -51,23 +51,10 @@ async function getRepoLicense(owner: string, repo: string): Promise<string | nul
             return data.license.spdx_id;
         }
 
-        const readmeContent = await getReadme(owner, repo);
         return checkLicenseInReadme(readmeContent);
     } catch (error) {
         logger.error('Error fetching license information:', error);
         return null;
-    }
-}
-
-// Function that will get the README file from the repository
-async function getReadme(owner: string, repo: string): Promise<string> {
-    try {
-        logger.debug(`Fetching README content for ${owner}/${repo}`);
-        const readmeData = await octokit.repos.getReadme({ owner, repo });
-        return Buffer.from(readmeData.data.content, 'base64').toString('utf-8');
-    } catch (error) {
-        logger.error('Error fetching README content:', error);
-        throw error;
     }
 }
 
