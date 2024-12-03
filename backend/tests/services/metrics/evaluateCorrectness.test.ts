@@ -24,10 +24,6 @@ describe('evaluateCorrectness', () => {
             data: new Array(10) // 10 contributors
         } as any);
 
-        vi.mocked(octokit.repos.getReadme).mockResolvedValueOnce({
-            data: { content: 'readme content' }
-        } as any);
-
         vi.mocked(octokit.repos.getContent).mockResolvedValueOnce({
             data: {
                 content: Buffer.from(JSON.stringify({
@@ -36,7 +32,7 @@ describe('evaluateCorrectness', () => {
             }
         } as any);
 
-        const score = await evaluateCorrectness('owner', 'repo');
+        const score = await evaluateCorrectness('owner', 'repo', true);
         expect(score).toBeCloseTo(0.75); // 0.05 (contributors) + 0.2 (readme) + 0.5 (tests)
     });
 
@@ -45,8 +41,6 @@ describe('evaluateCorrectness', () => {
             data: new Array(10)
         } as any);
 
-        vi.mocked(octokit.repos.getReadme).mockRejectedValueOnce(new Error());
-
         vi.mocked(octokit.repos.getContent).mockResolvedValueOnce({
             data: {
                 content: Buffer.from(JSON.stringify({
@@ -55,7 +49,7 @@ describe('evaluateCorrectness', () => {
             }
         } as any);
 
-        const score = await evaluateCorrectness('owner', 'repo');
+        const score = await evaluateCorrectness('owner', 'repo', false);
         expect(score).toBeCloseTo(0.55); // 0.05 (contributors) + 0.5 (tests)
     });
 
@@ -64,13 +58,9 @@ describe('evaluateCorrectness', () => {
             data: new Array(10)
         } as any);
 
-        vi.mocked(octokit.repos.getReadme).mockResolvedValueOnce({
-            data: { content: 'readme content' }
-        } as any);
-
         vi.mocked(octokit.repos.getContent).mockRejectedValueOnce({ status: 404 });
 
-        const score = await evaluateCorrectness('owner', 'repo');
+        const score = await evaluateCorrectness('owner', 'repo', true);
         expect(score).toBeCloseTo(0.25); // 0.05 (contributors) + 0.2 (readme)
     });
 
@@ -89,7 +79,7 @@ describe('evaluateCorrectness', () => {
             }
         } as any);
 
-        const score = await evaluateCorrectness('owner', 'repo');
+        const score = await evaluateCorrectness('owner', 'repo', true);
         expect(score).toBeCloseTo(0.7); // 0.2 (readme) + 0.5 (tests)
     });
 });

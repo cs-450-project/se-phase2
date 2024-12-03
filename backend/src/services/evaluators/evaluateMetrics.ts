@@ -55,10 +55,6 @@ export async function evaluateMetrics(owner: string, repo: string): Promise<{ ra
             ranker.busFactor = 0;
         }
 
-        
-
-        
-
         try {
             factorTime.start();
 

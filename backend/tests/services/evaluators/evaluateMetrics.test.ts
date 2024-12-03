@@ -3,6 +3,7 @@ import { evaluateMetrics } from '../../../src/services/evaluators/evaluateMetric
 import { ApiError } from '../../../src/utils/errors/ApiError.js';
 import { Ranker } from '../../../src/services/scores/Ranker.js';
 import logger from '../../../src/utils/logger.js';
+import octokit from '../../../src/utils/octokit';
 import { evaluateBusFactor } from '../../../src/services/metrics/evaluateBusFactor.js';
 import { evaluateCorrectness } from '../../../src/services/metrics/evaluateCorrectness.js';
 import { evaluateLicense } from '../../../src/services/metrics/evaluateLicense.js';
@@ -20,6 +21,14 @@ vi.mock('../../../src/services/metrics/evaluateRampUp.js');
 vi.mock('../../../src/services/metrics/evaluateResponsiveMaintainers.js');
 vi.mock('../../../src/services/metrics/evaluateDependencyPinning.js');
 vi.mock('../../../src/services/metrics/evaluateCodeReview.js');
+
+vi.mock('../../../src/utils/octokit', () => ({
+    default: {
+        repos: {
+            getReadme: vi.fn()
+        }
+    }
+}));
 
 describe('evaluateMetrics', () => {
     beforeEach(() => {
@@ -42,7 +51,7 @@ describe('evaluateMetrics', () => {
     });
 
     it('should return a Ranker instance with all metrics evaluated', async () => {
-        const result = await evaluateMetrics('owner', 'repo');
+        const { ranker: result, readmeContent } = await evaluateMetrics('owner', 'repo');
         expect(result).toBeInstanceOf(Ranker);
         expect(result.netScore).toBeDefined();
         expect(result.netScoreLatency).toBeDefined();
@@ -51,13 +60,18 @@ describe('evaluateMetrics', () => {
     it('should handle metric evaluation failures gracefully', async () => {
         vi.mocked(evaluateBusFactor).mockImplementation(() => Promise.reject(new Error()));
         
-        const result = await evaluateMetrics('owner', 'repo');
+        const { ranker: result, readmeContent } = await evaluateMetrics('owner', 'repo');
         expect(result.busFactor).toBe(0);
         expect(logger.error).toHaveBeenCalled();
     });
 
     it('should calculate and set latencies for all metrics', async () => {
-        const result = await evaluateMetrics('owner', 'repo');
+        
+        vi.mocked(octokit.repos.getReadme).mockResolvedValueOnce({
+            data: { content: 'readme content' }
+        } as any);
+
+        const { ranker: result, readmeContent } = await evaluateMetrics('owner', 'repo');
         
         expect(result.busFactorLatency).toBeGreaterThanOrEqual(0);
         expect(result.correctnessLatency).toBeGreaterThanOrEqual(0);
