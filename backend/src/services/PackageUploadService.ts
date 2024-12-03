@@ -135,8 +135,7 @@ export class PackageUploadService {
                 },
                 data: { 
                     Content: data.content, 
-                    JSProgram: data.jsProgram,
-                    README: data.readme
+                    JSProgram: data.jsProgram
                 }
             };
 
@@ -211,8 +210,7 @@ export class PackageUploadService {
                 packageMetadata: metadata,
                 content: contentFromUrl,
                 url: url,
-                jsProgram: jsProgram,
-                ...(readmeContent && { readme: readmeContent })
+                jsProgram: jsProgram
             });
             await packageDataRepository.save(data);
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
