@@ -1,7 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PackageRating } from '../models/package-rating.model';
-import { MetricsService } from '../services/metrics.service';
+import { PackageRating } from '../../../models/package-ratings.model';
+import { MetricsService } from '../../../services/metrics.service';
+
 
 @Component({
   selector: 'app-metrics',

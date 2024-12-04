@@ -4,7 +4,7 @@ import { PackageData } from "../entities/PackageData.js";
 import { PackageCosts } from "../entities/PackageCosts.js";
 import { ApiError } from "../utils/errors/ApiError.js";
 import { getPackageJsonFromContentBuffer } from "../utils/packageHelpers.js";
-import fetch from 'node-fetch';
+import { fetch } from 'undici';
 import * as semver from 'semver';
 
 interface PackageCostInfo {

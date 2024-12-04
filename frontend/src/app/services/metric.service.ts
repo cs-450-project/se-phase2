@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { PackageRating } from '../models/package-rating.model';
-import { environment } from '../../environments/environment';
+import { PackageRating } from '../../models/package-ratings.model';
+import { environment } from '../../environments/environments';
 
 @Injectable({
   providedIn: 'root'
