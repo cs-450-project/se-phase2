@@ -4,6 +4,7 @@
       <th>Package Name</th>
       <th>ID</th>
       <th>Version</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -11,6 +12,14 @@
       <td>{{ pkg.name }}</td>
       <td>{{ pkg.id }}</td>
       <td>{{ pkg.version }}</td>
+      <td>
+        <button (click)="selectedPackageId = pkg.id">View Metrics</button>
+      </td>
     </tr>
   </tbody>
 </table>
+
+<app-metrics 
+  *ngIf="selectedPackageId" 
+  [packageId]="selectedPackageId">
+</app-metrics>

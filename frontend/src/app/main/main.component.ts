@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { MetricsComponent } from '../metrics/metrics.component';
 
 interface Package {
   name: string;
@@ -16,12 +17,13 @@ interface PackageQuery {
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MetricsComponent],
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.css'],
 })
 export class MainComponent implements OnInit {
   packages: Package[] = [];
+  selectedPackageId: string | null = null;
 
   constructor(private http: HttpClient) {}
 
