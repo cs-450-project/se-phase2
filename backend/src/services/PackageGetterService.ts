@@ -4,7 +4,6 @@
  * Supports querying by name, version, and ID.
  */
 
-
 import semver from 'semver';
 import { ApiError } from "../utils/errors/ApiError.js";
 import { AppDataSource } from "../data-source.js";
@@ -13,8 +12,10 @@ import { PackageData } from "../entities/PackageData.js";
 import { PackageRating } from "../entities/PackageRating.js";
 import { PackageQuery } from "../utils/types/PackageQuery.js";
 import { FormattedPackageMetadata } from "../utils/types/FormattedPackageMetadata.js";
+import { PackageRegExDto } from "../utils/types/PackageRegExDto.js";
 
 /**
+ * @class PackageGetterService
  * Service class for package retrieval operations
  */
 export class PackageGetterService {
@@ -206,6 +207,61 @@ export class PackageGetterService {
     }
 
     /**
+     * Get package cost by ID
+     * @param id Package ID
+     * @returns Package cost metrics
+     * @throws ApiError if cost not found
+     */
+    static async searchByRegex(regExDto: PackageRegExDto): Promise<FormattedPackageMetadata[]> {
+        try {
+
+            console.log(`[PackageGetterService] Searching by regex: ${regExDto.RegEx}`);
+            
+            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+
+            // Check that the regex query is provided
+            if (!regExDto?.RegEx) {
+                throw new ApiError('Regex query is required', 400);
+            }
+
+            // Ensure that the regex query is valid
+            try {
+                new RegExp(regExDto.RegEx);
+            } catch (error) {
+                throw new ApiError('Invalid regex query', 400);
+            }
+
+            // Search both name and readme by joining with PackageData
+            const packages = await packageMetadataRepository
+            .createQueryBuilder('pm')
+            .leftJoin(PackageData, 'pd', 'pd.package_id = pm.id')
+            // Use Postgres ~ operator for regex matching
+            .where('pm.name ~ :pattern', { pattern: regExDto.RegEx })
+            .orWhere('pd.readme ~ :pattern', { pattern: regExDto.RegEx })
+            .select(['pm.id', 'pm.name', 'pm.version'])
+            .distinct(true)
+            .getMany();
+
+            // Format results
+            if (!packages.length) {
+                return [];
+            }
+            const formattedResults = packages.map(pkg => ({
+                Version: pkg.version,
+                Name: pkg.name,
+                ID: pkg.id
+            }));
+
+            return formattedResults;
+
+        } catch (error) {
+            console.error('[PackageGetterService] Regex search failed:', error);
+            if (error instanceof ApiError) throw error;
+            throw new ApiError('Failed to search by regex', 500);
+        }
+    }
+
+    /**
      * Check if a version matches a version query
      * @private
      */
@@ -243,26 +299,6 @@ export class PackageGetterService {
             console.error(`Error processing version query: ${query}`, error);
             return false;
         }
-    }
-
-    /**
-     * Parse version query string
-     * @private
-     */
-    private static parseVersionQuery(query: string): {
-        type: 'exact' | 'range' | 'caret' | 'tilde';
-        value: string;
-    } {
-        if (!query?.trim()) {
-            throw new ApiError('Version query is required', 400);
-        }
-
-        const trimmed = query.trim();
-
-        if (trimmed.startsWith('^')) return { type: 'caret', value: trimmed };
-        if (trimmed.startsWith('~')) return { type: 'tilde', value: trimmed };
-        if (trimmed.includes(' ')) return { type: 'range', value: trimmed };
-        return { type: 'exact', value: trimmed };
     }
 
 };

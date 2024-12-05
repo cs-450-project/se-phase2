@@ -17,8 +17,9 @@ import {
 } from '../utils/packageHelpers.js';
 
 /**
- * Service class that handles package updates in the database
  * @class PackageUpdateService
+ * Service class that handles package updates in the database
+ * 
  */
 export class PackageUpdateService {
     /**
