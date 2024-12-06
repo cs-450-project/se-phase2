@@ -1,3 +1,9 @@
+<div>
+  <h1>Package Search</h1>
+  <app-search-form (searchResults)="onSearchResults($event)"></app-search-form>
+  <app-search-results [results]="packages"></app-search-results>
+</div>
+
 <table>
   <thead>
     <tr>
