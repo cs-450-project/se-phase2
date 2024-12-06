@@ -4,9 +4,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MetricsComponent } from '../metrics/metrics.component';
 
 interface Package {
-  name: string;
-  id: string;
-  version: string;
+  Name: string;
+  ID: string;
+  Version: string;
 }
 
 interface PackageQuery {

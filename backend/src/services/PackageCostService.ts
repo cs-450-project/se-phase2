@@ -1,3 +1,9 @@
+/**
+ * @file PackageCostService.ts
+ * Service for calculating package sizes and dependency costs.
+ * Handles both direct package measurements and npm registry lookups.
+ */
+
 import { AppDataSource } from "../data-source.js";
 import { PackageMetadata } from "../entities/PackageMetadata.js";
 import { PackageData } from "../entities/PackageData.js";
@@ -7,61 +13,67 @@ import { getPackageJsonFromContentBuffer } from "../utils/packageHelpers.js";
 import { fetch } from 'undici';
 import * as semver from 'semver';
 
+// Constants
+const MB_IN_BYTES = 1024 * 1024;
+const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
+
+/**
+ * Cost information for a single package
+ * @interface PackageCostInfo
+ */
 interface PackageCostInfo {
-    standaloneCost?: number;  // Only present when dependency=true
-    totalCost: number;        // Always present
+    /** Cost without dependencies (only present when dependency=true) */
+    standaloneCost?: number;
+    /** Total cost including dependencies (always present) */
+    totalCost: number;
 }
 
+/** Map of package IDs to their cost information */
 type PackageCost = Record<string, PackageCostInfo>;
 
+/**
+ * @class PackageCostService
+ * Service class for calculating package costs and dependencies
+ * Handles size calculations, dependency resolution, and caching
+ */
 export class PackageCostService {
-    private static readonly NPM_REGISTRY_URL = 'https://registry.npmjs.org';
-
-    static async calculatePackageCost(id: string, includeDependencies: boolean = false) {
+    /**
+     * Calculate total cost for a package and optionally its dependencies
+     * @param id - Package ID to calculate cost for
+     * @param includeDependencies - Whether to include dependency costs
+     * @returns Object containing costs for package and dependencies
+     * @throws ApiError if package not found or calculation fails
+     */
+    static async calculatePackageCost(id: string, includeDependencies: boolean = false): Promise<PackageCost> {
         try {
-
-            const packageCostsRepo = AppDataSource.getRepository(PackageCosts);
-            // Then in calculatePackageCost
-            const existingCost = await packageCostsRepo.findOne({ where: { packageId: id }});
-            if (existingCost && !includeDependencies) {
-                return {
-                    [id]: {
-                        totalCost: existingCost.totalCost
-                    }
-                };
-            }
-            if (existingCost && includeDependencies) {
-                return {
-                    [id]: {
-                        standaloneCost: existingCost.standaloneCost,
-                        totalCost: existingCost.totalCost
-                    },
-                    ...existingCost.dependencyCosts
-                };
-            }
-
-
-            console.log(`[PackageCostService] Calculating cost for package ${id}, includeDependencies: ${includeDependencies}`);
-
             if (!id) {
                 throw new ApiError('Package ID is required', 400);
             }
 
+            console.log(`[PackageCostService] Calculating cost for package ${id}`);
+
+            // Check cache first
+            const cachedCost = await this.getCachedCost(id, includeDependencies);
+            if (cachedCost) {
+                console.log(`[PackageCostService] Using cached cost for ${id}`);
+                return cachedCost;
+            }
+
+            // Get package data
             const packageMetadataRepo = AppDataSource.getRepository(PackageMetadata);
             const packageDataRepo = AppDataSource.getRepository(PackageData);
 
             const pkg = await packageMetadataRepo.findOne({ where: { id } });
             if (!pkg) {
-                console.error(`[PackageCostService] Package not found with ID: ${id}`);
                 throw new ApiError('Package not found', 404);
             }
 
             const data = await packageDataRepo.findOne({ where: { packageId: id } });
             if (!data) {
-                console.error(`[PackageCostService] Package data not found for ID: ${id}`);
                 throw new ApiError('Package data not found', 404);
             }
 
+            // Calculate base package cost
             const packageCost = await this.calculatePackageSize(data);
             console.log(`[PackageCostService] Base package cost: ${packageCost}MB`);
 
@@ -69,36 +81,23 @@ export class PackageCostService {
                 return { [id]: { totalCost: packageCost } };
             }
 
-            console.log('[PackageCostService] Calculating dependency costs...');
+            // Calculate dependency costs
+            console.log(`[PackageCostService] Calculating dependencies for ${id}`);
             const dependencyCosts = await this.calculateDependencyCosts(data);
-            const totalDependencyCost = Object.values(dependencyCosts)
+            
+            const totalCost = packageCost + Object.values(dependencyCosts)
                 .reduce((sum, dep) => sum + dep.totalCost, 0);
 
-            console.log(`[PackageCostService] Total dependency cost: ${totalDependencyCost}MB`);
-            console.log(`[PackageCostService] Total package cost: ${packageCost + totalDependencyCost}MB`);
+            // Save to cache
+            await this.savePackageCost(id, packageCost, totalCost, dependencyCosts);
 
-            const cost = await this.savePackageCost(id, packageCost, packageCost + totalDependencyCost, dependencyCosts);
-
-            if (!cost) {
-                throw new ApiError('Failed to save package cost', 500);
-            }
-
-            if (cost && !includeDependencies) {
-                return {
-                    [id]: {
-                        totalCost: cost.totalCost
-                    }
-                };
-            }
-            if (cost && includeDependencies) {
-                return {
-                    [id]: {
-                        standaloneCost: cost.standaloneCost,
-                        totalCost: cost.totalCost
-                    },
-                    ...cost.dependencyCosts
-                };
-            }
+            return {
+                [id]: {
+                    standaloneCost: packageCost,
+                    totalCost: totalCost
+                },
+                ...dependencyCosts
+            };
 
         } catch (error) {
             console.error('[PackageCostService] Failed to calculate cost:', error);
@@ -107,43 +106,96 @@ export class PackageCostService {
         }
     }
 
-    private static async savePackageCost(id: string, standaloneCost: number, totalCost: number, dependecyCosts: PackageCost): Promise<PackageCosts> {
-        console.log('[PackageCostService] Saving new package cost entry');
-        
-        const packageCostsRepo = AppDataSource.getRepository(PackageCosts);
+    /**
+     * Get cached cost calculation if available
+     * @private
+     */
+    private static async getCachedCost(id: string, includeDependencies: boolean): Promise<PackageCost | null> {
+        try {
+            const packageCostsRepo = AppDataSource.getRepository(PackageCosts);
+            const existingCost = await packageCostsRepo.findOne({ where: { packageId: id }});
 
-        // Create or update the cost record
-        const cost = packageCostsRepo.create({
-            packageId: id,
-            standaloneCost: standaloneCost,
-            totalCost: totalCost,
-            dependencyCosts: Object.entries(dependecyCosts)
-                .filter(([key]) => key !== id)
-                .reduce((acc, [key, value]) => ({
-                    ...acc,
-                    [key]: value
-                }), {})
-        });
+            if (!existingCost) return null;
 
-        await packageCostsRepo.save(cost);
-        return cost;
+            return includeDependencies ? {
+                [id]: {
+                    standaloneCost: existingCost.standaloneCost,
+                    totalCost: existingCost.totalCost
+                },
+                ...existingCost.dependencyCosts
+            } : {
+                [id]: { totalCost: existingCost.totalCost }
+            };
+
+        } catch (error) {
+            console.error('[PackageCostService] Cache lookup failed:', error);
+            return null;
+        }
     }
 
+    /**
+     * Save package cost to the database
+     * @param id Package ID
+     * @param standaloneCost Cost without dependencies
+     * @param totalCost Total cost including dependencies
+     * @param dependencyCosts Map of dependency costs
+     * @returns Saved PackageCosts entity
+     * @private
+     */
+    private static async savePackageCost(id: string, standaloneCost: number, totalCost: number, dependencyCosts: PackageCost): Promise<PackageCosts> {
+        try {
+            console.log('[PackageCostService] Saving new package cost entry');
+            
+            const packageCostsRepo = AppDataSource.getRepository(PackageCosts);
+
+            // Create or update the cost record
+            const cost = packageCostsRepo.create({
+                packageId: id,
+                standaloneCost: standaloneCost,
+                totalCost: totalCost,
+                dependencyCosts: Object.entries(dependencyCosts)
+                    .filter(([key]) => key !== id)
+                    .reduce((acc, [key, value]) => ({
+                        ...acc,
+                        [key]: value
+                    }), {})
+            });
+
+            await packageCostsRepo.save(cost);
+            return cost;
+
+        } catch (error) {
+            console.error('[PackageCostService] Failed to save package cost:', error);
+            throw new ApiError('Failed to save package cost', 500);
+        }
+    }
+
+    /**
+     * Calculate total size of package contents in MB
+     * @param data Package data containing content and JSProgram
+     * @returns Size in MB
+     * @throws ApiError if calculation fails
+     * @private
+     */
     private static async calculatePackageSize(data: PackageData): Promise<number> {
         try {
+            if (!data) {
+                throw new ApiError('Package data is required', 400);
+            }
+
             console.log('[PackageCostService] Calculating package size');
             let totalSize = 0;
 
             if (data.content) {
                 const contentSizeInBytes = Buffer.from(data.content, 'base64').length;
-                totalSize += contentSizeInBytes / (1024 * 1024);
-                console.log(`[PackageCostService] Content size: ${(contentSizeInBytes / (1024 * 1024)).toFixed(2)}MB`);
+                totalSize += contentSizeInBytes / MB_IN_BYTES;
+                console.log(`[PackageCostService] Content size: ${(contentSizeInBytes / MB_IN_BYTES).toFixed(2)}MB`);
             }
 
             if (data.jsProgram) {
                 const jsProgramSizeInBytes = Buffer.from(data.jsProgram).length;
-                totalSize += jsProgramSizeInBytes / (1024 * 1024);
-                console.log(`[PackageCostService] JSProgram size: ${(jsProgramSizeInBytes / (1024 * 1024)).toFixed(2)}MB`);
+                totalSize += jsProgramSizeInBytes / MB_IN_BYTES;
+                console.log(`[PackageCostService] JSProgram size: ${(jsProgramSizeInBytes / MB_IN_BYTES).toFixed(2)}MB`);
             }
 
             const finalSize = Number(totalSize.toFixed(2));
@@ -152,15 +204,26 @@ export class PackageCostService {
 
         } catch (error) {
             console.error('[PackageCostService] Failed to calculate package size:', error);
+            if (error instanceof ApiError) throw error;
             throw new ApiError('Failed to calculate package size', 500);
         }
     }
 
+    /**
+     * Calculate costs for all package dependencies
+     * @param data Package data containing dependencies
+     * @returns Map of dependency IDs to their costs
+     * @throws ApiError if calculation fails
+     * @private
+     */
     private static async calculateDependencyCosts(data: PackageData): Promise<PackageCost> {
         try {
+            if (!data) {
+                throw new ApiError('Package data is required', 400);
+            }
+
             console.log('[PackageCostService] Calculating dependency costs');
             const dependencies = await this.getDependenciesFromPackage(data);
-            console.log(dependencies);
             const costs: PackageCost = {};
 
             for (const [depName, versionRange] of Object.entries(dependencies)) {
@@ -176,7 +239,7 @@ export class PackageCostService {
                         console.log(`[PackageCostService] Dependency ${depId} cost: ${depCost}MB`);
                     }
                 } catch (error) {
-                    console.error(`[PackageCostService] Failed to calculate cost for ${depName}:`, error);
+                    console.error(`[PackageCostService] Failed to process dependency ${depName}:`, error);
                 }
             }
 
@@ -184,104 +247,164 @@ export class PackageCostService {
 
         } catch (error) {
             console.error('[PackageCostService] Failed to calculate dependency costs:', error);
+            if (error instanceof ApiError) throw error;
             throw new ApiError('Failed to calculate dependency costs', 500);
         }
     }
 
     /**
      * Extract dependencies from package.json
+     * @param data Package data containing content
+     * @returns Map of dependency names to version ranges
+     * @private
      */
     private static async getDependenciesFromPackage(data: PackageData): Promise<Record<string, string>> {
-        if (!data.content) {
-            console.log('No content found');
-            return {};
-        }
-
         try {
+            if (!data?.content) {
+                console.log('[PackageCostService] No content found');
+                return {};
+            }
 
             const packageJsonContent = await getPackageJsonFromContentBuffer(data.content);
             const packageJson = JSON.parse(packageJsonContent);
 
-            console.log('Extracted dependencies:', packageJson.dependencies);
-
+            console.log('[PackageCostService] Extracted dependencies:', packageJson.dependencies);
             return packageJson.dependencies || {};
 
         } catch (error) {
-            console.error('Error extracting dependencies:', error);
+            console.error('[PackageCostService] Failed to extract dependencies:', error);
             return {};
         }
     }
 
     /**
-     * Get cost for a single dependency
+     * Calculate cost for a single dependency
+     * @param packageName Name of the dependency
+     * @param versionRange Version range specification
+     * @returns Size in MB or null if not found
+     * @private
      */
     private static async getDependencyCost(packageName: string, versionRange: string): Promise<number | null> {
-        // First try local registry
-        const localPackage = await this.findLocalPackage(packageName, versionRange);
-        if (localPackage) {
-            const data = await AppDataSource.getRepository(PackageData)
-                .findOne({ where: { packageId: localPackage.id } });
-            if (data) {
-                return this.calculatePackageSize(data);
-            }
-        }
-
-        // Fallback to npm registry
         try {
-            const version = await this.resolveNpmVersion(packageName, versionRange);
-            if (!version) return null;
+            if (!packageName || !versionRange) {
+                throw new ApiError('Package name and version range required', 400);
+            }
 
-            const response = await fetch(`${this.NPM_REGISTRY_URL}/${packageName}/${version}`);
-            if (!response.ok) return null;
+            // Try local registry first
+            const localPackage = await this.findLocalPackage(packageName, versionRange);
+            if (localPackage) {
+                const data = await AppDataSource.getRepository(PackageData)
+                    .findOne({ where: { packageId: localPackage.id } });
+                if (data) {
+                    return this.calculatePackageSize(data);
+                }
+            }
 
-            const npmInfo = await response.json() as { dist?: { unpackedSize?: number } };
-            
-            const sizeInMB = (npmInfo.dist?.unpackedSize || 0) / (1024 * 1024);
-            return Number(sizeInMB.toFixed(2));
+            // Fallback to npm registry
+            return await this.getNpmPackageSize(packageName, versionRange);
 
         } catch (error) {
-            console.error(`Error getting npm package size for ${packageName}:`, error);
+            console.error(`[PackageCostService] Failed to get dependency cost for ${packageName}:`, error);
             return null;
         }
     }
 
     /**
-     * Find package in local registry
+     * Get package size from npm registry
+     * @param packageName Package name
+     * @param versionRange Version range
+     * @returns Size in MB or null if not found
+     * @private
      */
-    private static async findLocalPackage(name: string, versionRange: string): Promise<PackageMetadata | null> {
-        const packages = await AppDataSource.getRepository(PackageMetadata)
-            .find({ where: { name } });
+    private static async getNpmPackageSize(packageName: string, versionRange: string): Promise<number | null> {
+        try {
+            const version = await this.resolveNpmVersion(packageName, versionRange);
+            if (!version) return null;
 
-        return packages.find(pkg => semver.satisfies(pkg.version, versionRange)) || null;
+            const response = await fetch(`${NPM_REGISTRY_URL}/${packageName}/${version}`);
+            if (!response.ok) return null;
+
+            const npmInfo = await response.json() as { dist?: { unpackedSize?: number } };
+            if (!npmInfo.dist?.unpackedSize) return null;
+
+            const sizeInMB = npmInfo.dist.unpackedSize / MB_IN_BYTES;
+            return Number(sizeInMB.toFixed(2));
+
+        } catch (error) {
+            console.error(`[PackageCostService] Failed to get npm package size for ${packageName}:`, error);
+            return null;
+        }
     }
 
     /**
-     * Resolve npm version from version range
+     * Find package in local registry matching version criteria
+     * @param name Package name
+     * @param versionRange Version range to match
+     * @returns Matching package metadata or null
+     * @private
+     */
+    private static async findLocalPackage(name: string, versionRange: string): Promise<PackageMetadata | null> {
+        try {
+            const packages = await AppDataSource.getRepository(PackageMetadata)
+                .find({ where: { name } });
+
+            return packages.find(pkg => semver.satisfies(pkg.version, versionRange)) || null;
+
+        } catch (error) {
+            console.error(`[PackageCostService] Failed to find local package ${name}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Resolve specific version from npm registry
+     * @param packageName Package name
+     * @param versionRange Version range to resolve
+     * @returns Specific version or null if not found
+     * @private
      */
     private static async resolveNpmVersion(packageName: string, versionRange: string): Promise<string | null> {
         try {
-            const response = await fetch(`${this.NPM_REGISTRY_URL}/${packageName}`);
+            const response = await fetch(`${NPM_REGISTRY_URL}/${packageName}`);
             if (!response.ok) return null;
 
             const info = await response.json() as { versions: Record<string, any> };
             return semver.maxSatisfying(Object.keys(info.versions), versionRange) || null;
 
         } catch (error) {
-            console.error(`Error resolving npm version for ${packageName}:`, error);
+            console.error(`[PackageCostService] Failed to resolve npm version for ${packageName}:`, error);
             return null;
         }
     }
 
     /**
-     * Get package ID (either local ID or npm-style ID)
+     * Get unique identifier for a package
+     * @param packageName Package name
+     * @param versionRange Version range
+     * @returns Local package ID or npm-style identifier
+     * @throws ApiError if ID cannot be generated
+     * @private
      */
     private static async getPackageId(packageName: string, versionRange: string): Promise<string> {
-        const localPackage = await this.findLocalPackage(packageName, versionRange);
-        if (localPackage) {
-            return localPackage.id;
-        }
+        try {
+            if (!packageName || !versionRange) {
+                throw new ApiError('Package name and version range required', 400);
+            }
 
-        const npmVersion = await this.resolveNpmVersion(packageName, versionRange);
-        return `${packageName}@${npmVersion || versionRange}`;
+            // Try local package first
+            const localPackage = await this.findLocalPackage(packageName, versionRange);
+            if (localPackage) {
+                return localPackage.id;
+            }
+
+            // Fallback to npm-style ID
+            const npmVersion = await this.resolveNpmVersion(packageName, versionRange);
+            return `${packageName}@${npmVersion || versionRange}`;
+
+        } catch (error) {
+            console.error(`[PackageCostService] Failed to get package ID for ${packageName}:`, error);
+            if (error instanceof ApiError) throw error;
+            throw new ApiError('Failed to generate package ID', 500);
+        }
     }
 }
