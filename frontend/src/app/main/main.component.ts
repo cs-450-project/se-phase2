@@ -3,9 +3,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
 interface Package {
-  name: string;
-  id: string;
-  version: string;
+  Name: string;
+  ID: string;
+  Version: string;
 }
 
 interface PackageQuery {
