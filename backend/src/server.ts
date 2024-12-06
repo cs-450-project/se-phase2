@@ -18,12 +18,17 @@ dotenv.config();
 
 const app = express();
 
+app.use(cors());
+app.use(cors({ origin: 'http://localhost:4200' }));
+
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+
 
 const PORT = process.env.PORT || 3000;
+
+console.log('Starting server...');
 
 // Loads the package router indicating that all routes defined in the packageRouter will be prefixed with /package
 app.use('/package', packageRouter);
