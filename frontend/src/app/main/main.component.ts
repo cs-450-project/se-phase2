@@ -30,8 +30,9 @@ export class MainComponent implements OnInit {
   ngOnInit(): void {
     const requestBody: PackageQuery[] = [
       {
-        Version: '1.0.0-4.2.3',
         Name: '*',
+        Version: '1.0.0-4.2.3'
+        
       },
     ];
 
