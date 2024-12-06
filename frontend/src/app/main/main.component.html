@@ -14,6 +14,7 @@
       <td>{{ pkg.Version }}</td>
       <td>
         <button (click)="selectedPackageId = pkg.ID">View Metrics</button>
+        <button (click)="selectedCostId = pkg.ID">View Cost</button>
       </td>
     </tr>
   </tbody>
@@ -23,3 +24,8 @@
   *ngIf="selectedPackageId" 
   [packageId]="selectedPackageId">
 </app-metrics>
+
+<app-package-cost 
+  *ngIf="selectedCostId" 
+  [packageId]="selectedCostId">
+</app-package-cost>

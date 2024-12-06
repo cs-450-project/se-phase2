@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MetricsComponent } from '../metrics/metrics.component';
 import { PackageStateService } from '../services/package-state.service';
+import { PackageCostComponent } from '../package-cost/package-cost.component';
 
 interface Package {
   Name: string;
@@ -18,13 +19,14 @@ interface PackageQuery {
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule, MetricsComponent],
+  imports: [CommonModule, MetricsComponent, PackageCostComponent],
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.css'],
 })
 export class MainComponent implements OnInit {
   packages: Package[] = [];
   selectedPackageId: string | null = null;
+  selectedCostId: string | null = null; // Add this line
 
   constructor(
     private http: HttpClient,
