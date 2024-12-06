@@ -192,6 +192,7 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
+                return;
             }
 
             // Process package upload containing URL
@@ -207,6 +208,7 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
+                return;
             }
 
             throw new ApiError('Invalid package data: Provide either Content or URL, not both', 400);
