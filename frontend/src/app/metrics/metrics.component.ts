@@ -1,7 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { PackageRating } from '../models/package-ratings.model';
-import { MetricsService } from '../services/metrics.service';
 
 
 @Component({
@@ -69,6 +69,8 @@ import { MetricsService } from '../services/metrics.service';
   styles: [`
     .metrics-container {
       padding: 20px;
+      background: #1e1e1e;
+      color: #ffffff;
     }
 
     .metrics-grid {
@@ -81,51 +83,62 @@ import { MetricsService } from '../services/metrics.service';
     .metric-card {
       padding: 15px;
       border-radius: 8px;
-      background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: #2d2d2d;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      border: 1px solid #3d3d3d;
     }
 
     .score {
       font-size: 24px;
       font-weight: bold;
       margin: 10px 0;
+      color: #4ec9b0;
     }
 
     .latency {
-      font-size: 12px;
-      color: #666;
+      color: #808080;
     }
 
     .error {
-      color: red;
-      margin-top: 20px;
+      color: #f14c4c;
     }
   `]
 })
-export class MetricsComponent {
+export class MetricsComponent implements OnChanges {
   @Input() packageId: string = '';
   rating: PackageRating | null = null;
   error: string | null = null;
 
-  constructor(private metricsService: MetricsService) {}
+  constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    if (this.packageId) {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['packageId'] && changes['packageId'].currentValue) {
       this.loadMetrics();
     }
   }
 
   private loadMetrics() {
-    this.metricsService.getPackageRating(this.packageId)
-      .subscribe({
-        next: (data) => {
-          this.rating = data;
-          this.error = null;
-        },
-        error: (error) => {
-          this.error = 'Failed to load package metrics';
-          console.error('Error loading metrics:', error);
-        }
-      });
+    if (!this.packageId) {
+      console.error('No package ID provided');
+      return;
+    }
+    
+    console.log('Loading metrics for package:', this.packageId);
+    this.error = null;
+    this.rating = null;
+
+    this.http.get<PackageRating>(
+      `http://localhost:3000/package/${this.packageId}/rate`
+    ).subscribe({
+      next: (response) => {
+        this.rating = response;
+      },
+      error: (err) => {
+        this.error = err.status === 404 
+          ? `No metrics found for package ${this.packageId}` 
+          : `Failed to load package metrics: ${err.error?.message || err.message}`;
+        console.error('Error loading metrics:', err);
+      }
+    });
   }
 }
