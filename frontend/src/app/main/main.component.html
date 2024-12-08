@@ -16,6 +16,7 @@
         <button (click)="selectedPackageId = pkg.ID">View Metrics</button>
         <button (click)="selectedCostId = pkg.ID">View Cost</button>
         <button (click)="downloadPackage(pkg)">Download</button>
+        <button (click)="updatePackage(pkg)">Update</button>
       </td>
     </tr>
   </tbody>
@@ -44,3 +45,53 @@
   *ngIf="selectedCostId" 
   [packageId]="selectedCostId">
 </app-package-cost>
+
+<!-- Loading spinner for all updates -->
+<div *ngIf="isUploading" class="loading-container">
+  <div class="loading-spinner"></div>
+  <span>Updating package...</span>
+</div>
+
+<!-- File input and upload button only for content updates -->
+<input #fileInput 
+       type="file" 
+       accept=".zip" 
+       hidden
+       (change)="handleFileInput($event)">
+
+<button *ngIf="currentRequest"
+        [disabled]="isUploading"
+        (click)="onUploadClick()"
+        class="update-button">
+  Upload Update ZIP
+</button>
+
+<style>
+.update-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  color: #808080;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #3d3d3d;
+  border-top: 2px solid #4ec9b0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
