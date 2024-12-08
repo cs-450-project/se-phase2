@@ -7,22 +7,39 @@
       <thead>
         <tr>
           <th>Package Name</th>
-          <th>Version</th>
           <th>ID</th>
+          <th>Version</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let pkg of packages">
           <td>{{ pkg.Name }}</td>
-          <td>{{ pkg.Version }}</td>
           <td>{{ pkg.ID }}</td>
+          <td>{{ pkg.Version }}</td>
           <td>
             <button (click)="selectedPackageId = pkg.ID">View Metrics</button>
+            <button (click)="selectedCostId = pkg.ID">View Cost</button>
+            <button (click)="downloadPackage(pkg)">Download</button>
+            <button (click)="updatePackage(pkg)">Update</button>
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="pagination">
+    <button 
+      [disabled]="currentOffset === 0" 
+      (click)="previousPage()">
+      Previous
+    </button>
+    <span>Page {{ (currentOffset / pageSize) + 1 }}</span>
+    <button 
+      [disabled]="nextOffset === null"
+      (click)="nextPage()">
+      Next
+    </button>
   </div>
 
   <div *ngIf="packages.length === 0" class="no-results">
@@ -33,4 +50,37 @@
     *ngIf="selectedPackageId" 
     [packageId]="selectedPackageId">
   </app-metrics>
+
+  <app-package-cost 
+    *ngIf="selectedCostId" 
+    [packageId]="selectedCostId">
+  </app-package-cost>
+
+  <!-- Using global spinner -->
+  <div *ngIf="isUploading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <span>Updating package...</span>
+  </div>
+
+  <!-- File input and upload button -->
+  <input #fileInput 
+         type="file" 
+         accept=".zip" 
+         hidden
+         (change)="handleFileInput($event)">
+
+  <button *ngIf="currentRequest"
+          [disabled]="isUploading"
+          (click)="onUploadClick()"
+          class="update-button">
+    Upload Update ZIP
+  </button>
 </div>
+
+<style>
+.update-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+</style>
