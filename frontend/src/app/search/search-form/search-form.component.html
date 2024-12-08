@@ -1,8 +1,17 @@
-<div>
+
+<div class="search-container">
   <h2>Search Packages</h2>
   <form (ngSubmit)="onSearch()">
-    <label for="regex">Regex:</label>
-    <input type="text" id="regex" [(ngModel)]="regex" name="regex" required>
-    <button type="submit">Search</button>
+    <div class="form-group">
+      <input 
+        type="text" 
+        id="packageName" 
+        [(ngModel)]="packageName" 
+        name="packageName" 
+        placeholder="Enter package name..."
+        required
+        class="search-input">
+      <button type="submit" class="search-button">Search</button>
+    </div>
   </form>
 </div>

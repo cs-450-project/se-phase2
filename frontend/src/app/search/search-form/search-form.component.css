@@ -1,0 +1,31 @@
+/* src/app/search/search-form/search-form.component.css */
+.search-container {
+    margin: 20px;
+  }
+  
+  .form-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .search-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #1e1e1e;
+    color: #ffffff;
+  }
+  
+  .search-button {
+    padding: 8px 16px;
+    background-color: #2c2c2c;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .search-button:hover {
+    background-color: #3c3c3c;
+  }

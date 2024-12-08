@@ -1,31 +1,36 @@
-<div>
-  <h1>Package Search</h1>
+<div class="main-container">
+  <h1>Package Registry</h1>
   <app-search-form (searchResults)="onSearchResults($event)"></app-search-form>
-  <app-search-results [results]="packages"></app-search-results>
+  
+  <div *ngIf="packages.length > 0" class="results-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Package Name</th>
+          <th>Version</th>
+          <th>ID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pkg of packages">
+          <td>{{ pkg.Name }}</td>
+          <td>{{ pkg.Version }}</td>
+          <td>{{ pkg.ID }}</td>
+          <td>
+            <button (click)="selectedPackageId = pkg.ID">View Metrics</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="packages.length === 0" class="no-results">
+    No packages found
+  </div>
+
+  <app-metrics 
+    *ngIf="selectedPackageId" 
+    [packageId]="selectedPackageId">
+  </app-metrics>
 </div>
-
-<table>
-  <thead>
-    <tr>
-      <th>Package Name</th>
-      <th>ID</th>
-      <th>Version</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let pkg of packages">
-      <td>{{ pkg.Name }}</td>
-      <td>{{ pkg.ID }}</td>
-      <td>{{ pkg.Version }}</td>
-      <td>
-        <button (click)="selectedPackageId = pkg.ID">View Metrics</button>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<app-metrics 
-  *ngIf="selectedPackageId" 
-  [packageId]="selectedPackageId">
-</app-metrics>
