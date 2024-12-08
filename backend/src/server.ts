@@ -20,7 +20,7 @@ const app = express();
 
 // Configure CORS options
 const corsOptions = {
-  origin: 'http://localhost:4200',
+  origin: '*',
   exposedHeaders: ['offset'],
 };
 
