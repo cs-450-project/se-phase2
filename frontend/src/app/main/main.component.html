@@ -21,6 +21,20 @@
   </tbody>
 </table>
 
+<div class="pagination">
+  <button 
+    [disabled]="currentOffset === 0" 
+    (click)="previousPage()">
+    Previous
+  </button>
+  <span>Page {{ (currentOffset / pageSize) + 1 }}</span>
+  <button 
+  [disabled]="nextOffset === null"
+  (click)="nextPage()">
+  Next
+</button>
+</div>
+
 <app-metrics 
   *ngIf="selectedPackageId" 
   [packageId]="selectedPackageId">
