@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MetricsComponent } from '../metrics/metrics.component';
@@ -32,6 +32,21 @@ interface PackageDownload {
   data: PackageData;
 }
 
+interface UpdatePackageRequest {
+  metadata: {
+    Name: string;
+    Version: string;
+    ID: string;
+  };
+  data: {
+    Name: string;
+    Content?: string;
+    URL?: string;
+    JSProgram: string;
+    debloat: boolean;
+  };
+}
+
 @Component({
   selector: 'app-main',
   standalone: true,
@@ -44,6 +59,7 @@ interface PackageDownload {
   styleUrls: ['./main.component.css'],
 })
 export class MainComponent implements OnInit {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   packages: Package[] = [];
   selectedPackageId: string | null = null;
   selectedCostId: string | null = null;
@@ -51,6 +67,8 @@ export class MainComponent implements OnInit {
   currentOffset = 0;
   nextOffset: number | null = null;
   pageSize = 10;
+  public currentRequest: UpdatePackageRequest | null = null;
+  public isUploading = false;
 
   constructor(
     private http: HttpClient,
@@ -145,5 +163,95 @@ export class MainComponent implements OnInit {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  }
+
+  updatePackage(pkg: Package): void {
+    this.http
+      .get<any>(`http://localhost:3000/package/${pkg.ID}`)
+      .subscribe({
+        next: (response) => {
+          if (!response?.metadata || !response?.data) {
+            console.error('Invalid package data structure');
+            return;
+          }
+
+          const newVersion = window.prompt('Enter new package version:', response.metadata.Version);
+          if (!newVersion) return;
+
+          const debloat = window.confirm('Do you want to enable package debloating?\nClick Yes for debloating, No to skip debloating.');
+          const jsProgram = window.prompt('Enter JavaScript program:', 'console.log("test");');
+          if (!jsProgram) return;
+
+          const updateRequest: UpdatePackageRequest = {
+            metadata: {
+              Name: response.metadata.Name,
+              Version: newVersion,
+              ID: response.metadata.ID
+            },
+            data: {
+              Name: response.metadata.Name,
+              JSProgram: jsProgram,
+              debloat: debloat
+            }
+          };
+
+          if (response.data.URL) {
+            updateRequest.data.URL = response.data.URL;
+            this.updateUrlPackage(updateRequest);
+          } else {
+            this.promptForZipAndUpdate(updateRequest);
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching package:', error);
+        },
+      });
+  }
+
+  private updateUrlPackage(request: UpdatePackageRequest): void {
+    this.isUploading = true;  // Start loading
+    
+    this.http.post(`http://localhost:3000/package/${request.metadata.ID}`, request)
+      .subscribe({
+        next: () => {
+          console.log('Package updated successfully');
+          this.packageState.triggerRefresh();
+        },
+        error: (err) => console.error('Error updating package:', err),
+        complete: () => {
+          this.isUploading = false;  // End loading
+        }
+      });
+  }
+
+  private promptForZipAndUpdate(request: UpdatePackageRequest): void {
+    this.currentRequest = request;
+    alert('Click the "Upload Update ZIP" button below to select and upload your ZIP file.');
+  }
+
+  onUploadClick(): void {
+    if (this.currentRequest) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  handleFileInput(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.currentRequest) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Content = btoa(
+        new Uint8Array(reader.result as ArrayBuffer)
+          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+      
+      if (this.currentRequest?.data) {
+        this.currentRequest.data.Content = base64Content;
+        this.updateUrlPackage(this.currentRequest);
+        this.currentRequest = null; // Reset after processing
+      }
+    };
+    reader.readAsArrayBuffer(file);
   }
 }
