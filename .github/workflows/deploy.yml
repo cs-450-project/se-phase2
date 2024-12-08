@@ -53,7 +53,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ssh_key frontend/frontend-static.zip ${USER_NAME}@${HOSTNAME}:~/
 
           # SSH into EC2 and deploy
-          ssh -o StrictHostKeyChecking=no -i ssh_key ${USER_NAME}@${HOSTNAME} '
+          ssh -o StrictHostKeyChecking=no -i ssh_key ${USER_NAME}@${HOSTNAME} "
             # Unzip the file
             sudo rm -rf /var/www/acmeregistry/*
             sudo unzip -o ~/frontend-static.zip -d /var/www/acmeregistry
@@ -65,4 +65,4 @@ jobs:
 
             # Restart the server
             ./deploy.sh ${DB_PASSWORD} ${GITHUB_TOKEN}
-          '
+          "
