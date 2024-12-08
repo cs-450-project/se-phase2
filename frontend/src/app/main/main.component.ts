@@ -4,7 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MetricsComponent } from '../metrics/metrics.component';
 import { PackageStateService } from '../services/package-state.service';
 import { PackageCostComponent } from '../package-cost/package-cost.component';
-
+import { environment } from '../../environments/environment';
 interface Package {
   Name: string;
   ID: string;
@@ -89,7 +89,7 @@ export class MainComponent implements OnInit {
 
     this.http
       .post<Package[]>(
-        `http://localhost:3000/packages?offset=${this.currentOffset}`, 
+        `${environment.apiUrl}/packages?offset=${this.currentOffset}`, 
         [{ Name: '*', Version: '' }],
         { observe: 'response' }
       )
@@ -124,7 +124,7 @@ export class MainComponent implements OnInit {
     }
   }
   downloadPackage(pkg: Package) {
-    this.http.get<PackageDownload>(`http://localhost:3000/package/${pkg.ID}`)
+    this.http.get<PackageDownload>(`${environment.apiUrl}/package/${pkg.ID}`)
       .subscribe({
         next: (response) => {
           const { metadata, data } = response;
@@ -167,7 +167,7 @@ export class MainComponent implements OnInit {
 
   updatePackage(pkg: Package): void {
     this.http
-      .get<any>(`http://localhost:3000/package/${pkg.ID}`)
+      .get<any>(`${environment.apiUrl}/package/${pkg.ID}`)
       .subscribe({
         next: (response) => {
           if (!response?.metadata || !response?.data) {
@@ -211,7 +211,7 @@ export class MainComponent implements OnInit {
   private updateUrlPackage(request: UpdatePackageRequest): void {
     this.isUploading = true;  // Start loading
     
-    this.http.post(`http://localhost:3000/package/${request.metadata.ID}`, request)
+    this.http.post(`${environment.apiUrl}/package/${request.metadata.ID}`, request)
       .subscribe({
         next: () => {
           console.log('Package updated successfully');

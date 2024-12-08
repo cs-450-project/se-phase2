@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { PackageStateService } from '../services/package-state.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-package-upload',
@@ -192,7 +193,7 @@ export class PackageUploadComponent {
 
     try {
       const jsProgram = btoa(this.jsProgram); // Replace with actual program
-      await this.http.post('http://localhost:3000/package', {
+      await this.http.post(`${environment.apiUrl}/package`, {
         URL: this.packageUrl,
         JSProgram: jsProgram,
         Debloat: this.debloat
@@ -236,7 +237,7 @@ export class PackageUploadComponent {
       });
 
       // Send base64 encoded content
-      await this.http.post('http://localhost:3000/package', {
+      await this.http.post(`${environment.apiUrl}/package`, {
         Content: base64Content,
         JSProgram: this.jsProgram,
         debloat: this.debloat

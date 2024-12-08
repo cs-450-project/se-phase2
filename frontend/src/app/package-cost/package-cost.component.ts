@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../environments/environment';
 
 interface DependencyCost {
   standaloneCost: number;
@@ -129,7 +130,7 @@ export class PackageCostComponent implements OnInit, OnChanges {
     this.isLoading = true;
     this.error = null;
 
-    const url = `http://localhost:3000/package/${this.packageId}/cost?dependencies=${this.showDependencies}`;
+    const url = `${environment.apiUrl}/package/${this.packageId}/cost?dependencies=${this.showDependencies}`;
 
     this.http.get<any>(url)
       .subscribe({

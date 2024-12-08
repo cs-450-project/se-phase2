@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { PackageRating } from '../models/package-ratings.model';
-
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-metrics',
@@ -128,7 +128,7 @@ export class MetricsComponent implements OnChanges {
     this.rating = null;
 
     this.http.get<PackageRating>(
-      `http://localhost:3000/package/${this.packageId}/rate`
+      `${environment.apiUrl}/package/${this.packageId}/rate`
     ).subscribe({
       next: (response) => {
         this.rating = response;
