@@ -1,4 +1,4 @@
-name: Deploy
+name: Build and Deploy to EC2
 
 on:
   push:
@@ -7,13 +7,36 @@ on:
     branches: [main]
 
 jobs:
-  Deploy:
+
+  deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Build & Deploy
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build Angular app
+        run: |
+          cd frontend
+          npm run build
+      
+      - name: Create zip file
+        run: |
+          cd frontend
+          zip -r frontend-static.zip dist/
+
+      - name: Configure AWS credentials and environment variables
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           HOSTNAME: ${{ secrets.SSH_HOST }}
@@ -22,8 +45,24 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PA_TOKEN }}
 
         run: |
+          # Configure SSH key
           echo "$PRIVATE_KEY" > ssh_key
           chmod 600 ssh_key
-          ssh -o StrictHostKeyChecking=no -i ssh_key ${USER_NAME}@${HOSTNAME} "
-          ./deploy.sh ${DB_PASSWORD} ${GITHUB_TOKEN}
-          "
+
+          # Copy zip file to EC2
+          scp -o StrictHostKeyChecking=no -i ssh_key frontend/frontend-static.zip ${USER_NAME}@${HOSTNAME}:~/
+
+          # SSH into EC2 and deploy
+          ssh -o StrictHostKeyChecking=no -i ssh_key ${USER_NAME}@${HOSTNAME} '
+            # Unzip the file
+            sudo rm -rf /var/www/acmeregistry/*
+            sudo unzip -o ~/frontend-static.zip -d /var/www/acmeregistry
+            sudo chown -R www-data:www-data /var/www/acmeregistry
+            sudo chmod -R 755 /var/www/acmeregistry
+
+            # Clean up
+            rm ~/frontend-static.zip
+
+            # Restart the server
+            ./deploy.sh ${DB_PASSWORD} ${GITHUB_TOKEN}
+          '
