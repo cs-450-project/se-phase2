@@ -18,8 +18,14 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
-app.use(cors({ origin: 'http://localhost:4200' }));
+// Configure CORS options
+const corsOptions = {
+  origin: 'http://localhost:4200',
+  exposedHeaders: ['offset'],
+};
+
+// Use CORS middleware with the options
+app.use(cors(corsOptions));
 
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());

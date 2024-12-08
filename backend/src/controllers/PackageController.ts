@@ -43,6 +43,7 @@ export class PackageController {
             
             // Set offset header if next offset is available
             if (nextOffset) {
+                console.log(`[PackageController] Setting offset header to ${nextOffset}`);
                 res.setHeader('offset', nextOffset);
             }
             

@@ -48,10 +48,13 @@ export class MainComponent implements OnInit {
   selectedPackageId: string | null = null;
   selectedCostId: string | null = null;
   selectedDownloadId: string | null = null;
+  currentOffset = 0;
+  nextOffset: number | null = null;
+  pageSize = 10;
 
   constructor(
     private http: HttpClient,
-    private packageState: PackageStateService
+    private packageState: PackageStateService,
   ) {}
 
   ngOnInit(): void {
@@ -64,29 +67,43 @@ export class MainComponent implements OnInit {
     });
   }
 
-  private loadPackages(): void {
-    const requestBody: PackageQuery[] = [
-      {
-        Name: '*',
-        Version: '1.0.0-4.2.3'
-      },
-    ];
-
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
+  loadPackages(): void {
 
     this.http
-      .post<Package[]>('http://localhost:3000/packages', requestBody, { headers })
+      .post<Package[]>(
+        `http://localhost:3000/packages?offset=${this.currentOffset}`, 
+        [{ Name: '*', Version: '' }],
+        { observe: 'response' }
+      )
       .subscribe({
-        next: (data) => {
-          console.log(data);
-          this.packages = data;
+        next: (response) => {
+          if (!response.body) return;
+          
+          this.packages = response.body;
+
+          const offsetHeader = response.headers.get('offset');
+
+          if (offsetHeader !== null && !isNaN(parseInt(offsetHeader, 10))) {
+            this.nextOffset = parseInt(offsetHeader, 10);
+          } else {
+            this.nextOffset = null;
+          }
         },
-        error: (error) => {
-          console.error('There was an error!', error);
-        }
+        error: (error) => console.error('Error:', error)
       });
+  }
+  nextPage() {
+    if (this.nextOffset) {
+      this.currentOffset = this.nextOffset;
+      this.loadPackages();
+    }
+  }
+
+  previousPage() {
+    if (this.currentOffset > 0) {
+      this.currentOffset -= this.pageSize;
+      this.loadPackages();
+    }
   }
   downloadPackage(pkg: Package) {
     this.http.get<PackageDownload>(`http://localhost:3000/package/${pkg.ID}`)
