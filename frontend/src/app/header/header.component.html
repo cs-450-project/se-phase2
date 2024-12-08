@@ -1,9 +1,45 @@
-<nav>
-    <ul>
-      <li>Home</li>
-      <li>Metrics</li>
-      <li>API</li>
-      <li>About</li>
-    </ul>
-  </nav>
-  
+<nav class="header">
+  <h1 class="title">ACME Package Registry</h1>
+  <ul class="nav-links">
+    <li><a routerLink="/" routerLinkActive="disabled" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
+    <li><a routerLink="/upload" routerLinkActive="disabled">Upload</a></li>
+    <li><a routerLink="/about" routerLinkActive="disabled">About</a></li>
+  </ul>
+</nav>
+
+<style>
+.header {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.title {
+  color: #4ec9b0;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: #4ec9b0;
+  text-decoration: none;
+}
+
+.nav-links a:hover:not(.disabled) {
+  text-decoration: underline;
+}
+
+.disabled {
+  color: #666;
+  pointer-events: none;
+  cursor: default;
+}
+</style>
