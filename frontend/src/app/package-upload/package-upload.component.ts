@@ -39,9 +39,30 @@ import { PackageStateService } from '../services/package-state.service';
         </button>
       </div>
 
+      <!-- JavaScript Program -->
+      <div class="form-group">
+        <label>JavaScript Program:</label>
+        <textarea 
+          [(ngModel)]="jsProgram"
+          placeholder="Enter JavaScript program..."
+          rows="4">
+        </textarea>
+      </div>
+
+      <!-- Debloat Toggle -->
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" 
+                 [(ngModel)]="debloat">
+          Enable Package Debloating
+        </label>
+      </div>
+
       <!-- Status Messages -->
-      <div *ngIf="isLoading" class="status loading">
-        Uploading package...
+      <!-- Using global loading spinner -->
+      <div *ngIf="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <span>Uploading package...</span>
       </div>
       <div *ngIf="error" class="status error">
         {{ error }}
@@ -106,6 +127,27 @@ import { PackageStateService } from '../services/package-state.service';
       background: #224422;
       color: #44ff44;
     }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 8px;
+      background: #363636;
+      border: 1px solid #3d3d3d;
+      color: white;
+      border-radius: 4px;
+    }
+    
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #808080;
+      cursor: pointer;
+    }
   `]
 })
 export class PackageUploadComponent {
@@ -114,6 +156,8 @@ export class PackageUploadComponent {
   isLoading: boolean = false;
   error: string | null = null;
   success: string | null = null;
+  jsProgram: string = 'console.log("test");';
+  debloat: boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -147,10 +191,11 @@ export class PackageUploadComponent {
     this.success = null;
 
     try {
-      const jsProgram = btoa('console.log("test");'); // Replace with actual program
+      const jsProgram = btoa(this.jsProgram); // Replace with actual program
       await this.http.post('http://localhost:3000/package', {
         URL: this.packageUrl,
-        JSProgram: jsProgram
+        JSProgram: jsProgram,
+        Debloat: this.debloat
       }).toPromise();
       
       this.success = 'Package uploaded successfully!';
@@ -193,7 +238,8 @@ export class PackageUploadComponent {
       // Send base64 encoded content
       await this.http.post('http://localhost:3000/package', {
         Content: base64Content,
-        JSProgram: btoa('console.log("test");')
+        JSProgram: this.jsProgram,
+        debloat: this.debloat
       }).toPromise();
 
       this.success = 'Package uploaded successfully!';

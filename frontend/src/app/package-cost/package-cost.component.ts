@@ -33,9 +33,9 @@ interface PackageCosts {
         </label>
       </div>
       
-      <div *ngIf="isLoading" class="loading">
+      <div *ngIf="isLoading" class="loading-container">
         <div class="loading-spinner"></div>
-        Calculating costs...
+        <span>Calculating costs...</span>
       </div>
 
       <div *ngIf="!isLoading && costs" class="costs">
@@ -51,26 +51,6 @@ interface PackageCosts {
             <span>{{ formatSize(costs.standaloneCost) }}</span>
           </div>
         </div>
-
-        <!-- Dependencies costs -->
-        <div *ngIf="costs.dependencyCosts" class="dependencies">
-          <h4>Dependencies</h4>
-          <div *ngFor="let dep of getDependencies()" class="package-cost">
-            <h5>{{ dep.id }}</h5>
-            <div class="cost-item">
-              <span>Total Size:</span>
-              <span>{{ formatSize(dep.costs.totalCost) }}</span>
-            </div>
-            <div class="cost-item">
-              <span>Standalone Size:</span>
-              <span>{{ formatSize(dep.costs.standaloneCost) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="error" class="error">
-        {{ error }}
       </div>
     </div>
   `,
@@ -82,12 +62,14 @@ interface PackageCosts {
       margin: 10px 0;
       color: white;
     }
+    
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
+
     .toggle {
       color: #808080;
       display: flex;
@@ -95,60 +77,27 @@ interface PackageCosts {
       gap: 8px;
       cursor: pointer;
     }
-    input[type="checkbox"] {
-      accent-color: #4ec9b0;
-    }
+
     .package-cost {
       margin-bottom: 15px;
       padding: 10px;
       border-bottom: 1px solid #3d3d3d;
     }
-    .main {
-      background: #363636;
-      border-radius: 4px;
-    }
-    .dependencies {
-      margin-top: 20px;
-    }
+
     .cost-item {
       display: flex;
       justify-content: space-between;
       margin: 5px 0;
     }
+
     h4 {
       margin: 0 0 10px 0;
       color: #4ec9b0;
     }
-    h5 {
-      margin: 0 0 8px 0;
-      color: #9cdcfe;
-    }
-    .loading {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #808080;
-      padding: 20px 0;
-    }
-    .loading-spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #3d3d3d;
-      border-top: 2px solid #4ec9b0;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .error {
-      color: #f14c4c;
-    }
+
     .package-id {
       color: #808080;
       font-size: 0.9em;
-      font-weight: normal;
     }
   `]
 })

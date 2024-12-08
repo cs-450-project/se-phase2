@@ -46,13 +46,13 @@
   [packageId]="selectedCostId">
 </app-package-cost>
 
-<!-- Loading spinner for all updates -->
+<!-- Using global spinner -->
 <div *ngIf="isUploading" class="loading-container">
   <div class="loading-spinner"></div>
   <span>Updating package...</span>
 </div>
 
-<!-- File input and upload button only for content updates -->
+<!-- File input and upload button -->
 <input #fileInput 
        type="file" 
        accept=".zip" 
@@ -71,27 +71,5 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.loading-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 0;
-  color: #808080;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #3d3d3d;
-  border-top: 2px solid #4ec9b0;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 </style>
