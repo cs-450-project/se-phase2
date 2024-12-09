@@ -7,7 +7,7 @@ module.exports = {
       script: './dist/server.js',
       // Add memory management settings
       node_args: '--max-old-space-size=1024', // Allocate 1GB heap per instance
-      max_memory_restart: '1.2G',  // Restart if process exceeds 1.2GB
+      max_memory_restart: '1200M',  // Restart if process exceeds 1.2GB
       
       // Adjust clustering for better stability
       instances: '2',  // Start with 2 instances instead of max
