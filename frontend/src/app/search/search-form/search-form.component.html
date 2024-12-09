@@ -1,0 +1,26 @@
+<section role="search" aria-label="Package Search">
+  <div class="search-container">
+    <h2 id="search-heading">Search Packages</h2>
+    <form (ngSubmit)="onSearch()" aria-labelledby="search-heading">
+      <div class="form-group">
+        <label for="packageName" class="visually-hidden">Search for package</label>
+        <input 
+          type="text" 
+          id="packageName" 
+          [(ngModel)]="packageName" 
+          name="packageName" 
+          placeholder="Enter package name..."
+          required
+          class="search-input"
+          (input)="onSearch()"
+          aria-label="Search for package">
+        <button 
+          type="submit" 
+          class="search-button"
+          aria-label="Search packages">
+          Search
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
