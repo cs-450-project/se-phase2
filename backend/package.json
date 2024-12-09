@@ -8,6 +8,7 @@
     "dev": "nodemon",
     "start": "npx tsc; node dist/server.js",
     "build": "npx tsc",
+    "type-check": "tsc --noEmit",
     "test": "npx vitest"
   },
   "author": "",
