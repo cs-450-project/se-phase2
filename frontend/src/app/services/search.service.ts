@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -13,6 +12,11 @@ export class SearchService {
 
   searchPackagesByName(name: string): Observable<any> {
     const query = [{ Name: name }];
+    return this.http.post<any>(this.apiUrl, query);
+  }
+
+  getAllPackages(): Observable<any> {
+    const query = [{ Name: '*' }];
     return this.http.post<any>(this.apiUrl, query);
   }
 }
