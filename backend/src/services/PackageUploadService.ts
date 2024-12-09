@@ -45,6 +45,71 @@ const DEBLOAT_RULES: Array<{
  */
 export class PackageUploadService {
     
+    private static readonly CHUNK_SIZE = 16384; // 16KB chunks
+
+    private static async savePackageData(
+        metadata: PackageMetadata,
+        content: string | Buffer,
+        jsProgram: string,
+        options: { url?: string, debloat?: boolean, readme?: string, packageJson?: Record<string, any> }
+    ) {
+        const packageDataRepository = AppDataSource.getRepository(PackageData);
+        
+        // Create a temprary table for large content
+        await AppDataSource.query(`
+            CREATE TEMPORARY TABLE IF NOT EXISTS temp_content (
+                chunk_data BYTEA,
+                chunk_order INTEGER)
+        `);
+
+        try {
+            // Stream content in chunks
+            const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content, 'base64');
+            const chunks = Math.ceil(contentBuffer.length / this.CHUNK_SIZE);
+
+            for (let i = 0; i < chunks; i++) {
+                const chunk = contentBuffer.slice(
+                    i * this.CHUNK_SIZE,
+                    (i + 1) * this.CHUNK_SIZE
+                );
+
+                await AppDataSource.query(
+                    'INSERT INTO temp_content (chunk_data, chunk_order) VALUES ($1, $2)',
+                    [chunk, i]
+                );
+            }
+
+            // Modified query to properly handle ordering within aggregation
+            const [result] = await AppDataSource.query(`
+                SELECT string_agg(encode(chunk_data, 'base64'), '' ORDER BY chunk_order) as content
+                FROM temp_content
+            `);
+
+            // Create package data with the combined content
+            const data = packageDataRepository.create({
+                packageMetadata: metadata,
+                content: Buffer.from(result.content, 'base64'),
+                contentSize: contentBuffer.length,
+                ...options,
+                jsProgram
+            });
+
+            await packageDataRepository.save(data);
+
+            // Drop temporary table
+            await AppDataSource.query('DROP TABLE temp_content');
+
+            return data;
+            
+        } catch (error) {
+            // Drop temporary table on error
+            await AppDataSource.query('DROP TABLE IF EXISTS temp_content');
+            console.error('[PackageService] Failed to save package data:', error);
+            throw error;
+        }
+        
+    }
+
     /**
      * Uploads a package using Base64 encoded zip content
      * @param Content - Base64 encoded zip file
@@ -110,16 +175,8 @@ export class PackageUploadService {
             await packageMetadataRepository.save(metadata);
             console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
-            // Save package data
-            const packageDataRepository = AppDataSource.getRepository(PackageData);
-            const data = packageDataRepository.create({
-                packageMetadata: metadata,
-                content: content,
-                debloat: shouldDebloat,
-                jsProgram: jsProgram,
-                ...(readmeContent && { readme: readmeContent })
-            });
-            await packageDataRepository.save(data);
+            const data = await this.savePackageData(metadata, content, jsProgram, { debloat: shouldDebloat, readme: readmeContent, packageJson: JSON.parse(packageJson) });
+
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
@@ -134,7 +191,7 @@ export class PackageUploadService {
                     ID: metadata.id 
                 },
                 data: { 
-                    Content: data.content, 
+                    Content: data.content?.toString('base64'), 
                     JSProgram: data.jsProgram
                 }
             };
@@ -204,15 +261,7 @@ export class PackageUploadService {
             await packageMetadataRepository.save(metadata);
             console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
-            // Save package data
-            const packageDataRepository = AppDataSource.getRepository(PackageData);
-            const data = packageDataRepository.create({
-                packageMetadata: metadata,
-                content: contentFromUrl,
-                url: url,
-                jsProgram: jsProgram
-            });
-            await packageDataRepository.save(data);
+            const data = await this.savePackageData(metadata, contentFromUrl, jsProgram, { url: url, readme: readmeContent, packageJson: JSON.parse(packageJson) });
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
@@ -227,7 +276,7 @@ export class PackageUploadService {
                     ID: metadata.id 
                 },
                 data: { 
-                    Content: data.content, 
+                    Content: data.content?.toString('base64'), 
                     URL: data.url, 
                     JSProgram: data.jsProgram
                 }

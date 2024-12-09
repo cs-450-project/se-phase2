@@ -59,31 +59,27 @@ export class PackageCostService {
                 return cachedCost;
             }
 
-            // Get package data
-            const packageMetadataRepo = AppDataSource.getRepository(PackageMetadata);
-            const packageDataRepo = AppDataSource.getRepository(PackageData);
+            // Get the package data to access both content size and package.json
+            const packageData = await AppDataSource.getRepository(PackageData)
+                .createQueryBuilder('data')
+                .select(['data.contentSize', 'data.jsProgram', 'data.packageJson'])
+                .where('data.packageId = :id', { id })
+                .getOne();
 
-            const pkg = await packageMetadataRepo.findOne({ where: { id } });
-            if (!pkg) {
-                throw new ApiError('Package not found', 404);
-            }
-
-            const data = await packageDataRepo.findOne({ where: { packageId: id } });
-            if (!data) {
+            if (!packageData) {
                 throw new ApiError('Package data not found', 404);
             }
 
-            // Calculate base package cost
-            const packageCost = await this.calculatePackageSize(data);
+            // Calculate base package cost using the stored content size
+            const packageCost = await this.calculatePackageSize(packageData);
             console.log(`[PackageCostService] Base package cost: ${packageCost}MB`);
 
             if (!includeDependencies) {
                 return { [id]: { totalCost: packageCost } };
             }
 
-            // Calculate dependency costs
-            console.log(`[PackageCostService] Calculating dependencies for ${id}`);
-            const dependencyCosts = await this.calculateDependencyCosts(data);
+            // Calculate dependency costs using stored package.json
+            const dependencyCosts = await this.calculateDependencyCosts(packageData);
             
             const totalCost = packageCost + Object.values(dependencyCosts)
                 .reduce((sum, dep) => sum + dep.totalCost, 0);
@@ -186,10 +182,10 @@ export class PackageCostService {
             console.log('[PackageCostService] Calculating package size');
             let totalSize = 0;
 
-            if (data.content) {
-                const contentSizeInBytes = Buffer.from(data.content, 'base64').length;
-                totalSize += contentSizeInBytes / MB_IN_BYTES;
-                console.log(`[PackageCostService] Content size: ${(contentSizeInBytes / MB_IN_BYTES).toFixed(2)}MB`);
+            // Use the stored content size instead of loading the content
+            if (data.contentSize) {
+                totalSize += data.contentSize / MB_IN_BYTES;
+                console.log(`[PackageCostService] Content size: ${(data.contentSize / MB_IN_BYTES).toFixed(2)}MB`);
             }
 
             if (data.jsProgram) {
@@ -260,13 +256,12 @@ export class PackageCostService {
      */
     private static async getDependenciesFromPackage(data: PackageData): Promise<Record<string, string>> {
         try {
-            if (!data?.content) {
-                console.log('[PackageCostService] No content found');
+            // Use the stored package.json instead of extracting from content
+            const packageJson = data.packageJson;
+            if (!packageJson) {
+                console.log('[PackageCostService] No package.json found');
                 return {};
             }
-
-            const packageJsonContent = await getPackageJsonFromContentBuffer(data.content);
-            const packageJson = JSON.parse(packageJsonContent);
 
             console.log('[PackageCostService] Extracted dependencies:', packageJson.dependencies);
             return packageJson.dependencies || {};
