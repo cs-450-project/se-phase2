@@ -229,8 +229,7 @@ export class PackageUploadService {
                 data: { 
                     Content: data.content, 
                     URL: data.url, 
-                    JSProgram: data.jsProgram,
-                    README: data.readme
+                    JSProgram: data.jsProgram
                 }
             };
 

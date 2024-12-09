@@ -5,6 +5,7 @@ module.exports = {
     {
       name: 'acme-registry-production',
       script: './dist/server.js',
+      raw: true,
       instances: 'max',
       exec_mode: 'cluster',
       env: {
@@ -16,7 +17,7 @@ module.exports = {
         DB_DATABASE: process.env.DB_DATABASE || 'package_registry',
         DB_PASSWORD: process.env.DB_PASSWORD,
         GITHUB_TOKEN: process.env.GITHUB_TOKEN,
-        API_URL: 'http://api.acmeregistry.xyz'
+        API_URL: 'https://api.acmeregistry.xyz'
       }
     }
   ]

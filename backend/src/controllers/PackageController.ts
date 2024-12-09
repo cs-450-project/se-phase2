@@ -131,7 +131,9 @@ export class PackageController {
 
             // Return response with package metadata and data
             res.status(200).json(result);
-            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
+            const truncatedResult = JSON.stringify(result, null, 2).split('\n').slice(0, 10).join('\n') + '\n... (truncated)';
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncatedResult}\n-------------------------------------------------`));
+            return;
 
         } catch (error) {
             console.error(chalk.red('[PackageController] Failed to fetch package:'), error);
@@ -229,7 +231,9 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
-                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
+
+                const truncatedResult = JSON.stringify(result, null, 2).split('\n').slice(0, 10).join('\n') + '\n... (truncated)';
+                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncatedResult}\n-------------------------------------------------`));
                 return;
             }
 
@@ -246,7 +250,8 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
-                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
+                const truncatedResult = JSON.stringify(result, null, 2).split('\n').slice(0, 10).join('\n') + '\n... (truncated)';
+                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncatedResult}\n-------------------------------------------------`));
                 return;
             }
 
