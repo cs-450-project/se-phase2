@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 /**
  * @file PackageController.ts
  * Controller handles HTTP requests for package management endpoints.
@@ -28,12 +30,19 @@ export class PackageController {
      * @throws ApiError if query format is invalid
      */
     static async getPackagesFromQueries(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log('[PackageController] Processing POST /packages request');
+        console.log(chalk.blue('[PackageController] Processing POST /packages request'));
         try {
 
             // Destructure offset and queries from request
             const offset = req.query.offset as string;
             const queries: PackageQuery[] = req.body;
+
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> POST /packages\nBody: ${JSON.stringify(req.body, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
+
             if (!queries || !Array.isArray(queries)) {
                 throw new ApiError('Invalid query format: Expected array of package queries', 400);
             }
@@ -43,16 +52,17 @@ export class PackageController {
             
             // Set offset header if next offset is available
             if (nextOffset) {
-                console.log(`[PackageController] Setting offset header to ${nextOffset}`);
+                console.log(chalk.yellow(`[PackageController] Setting offset header to ${nextOffset}`));
                 res.setHeader('offset', nextOffset);
             }
             
             // Return response with package query results
             res.status(200).json(packages);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(packages, null, 2)}\n-------------------------------------------------`));
             return;
 
         } catch (error) {
-            console.error('[PackageController] Failed to process package queries:', error);
+            console.error(chalk.red('[PackageController] Failed to process package queries:'), error);
             next(error);
         }
     }
@@ -65,21 +75,27 @@ export class PackageController {
      * @throws ApiError if registry reset fails
      */
     static async resetRegistry(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log('[PackageController] Processing DELETE /reset request');
+        console.log(chalk.blue('[PackageController] Processing DELETE /reset request'));
         try {
             
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> DELETE /reset\nBody: ${JSON.stringify(req.body, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
+
             // Use TRUNCATE CASCADE to clear all related tables
             await AppDataSource.query('TRUNCATE TABLE package_metadata CASCADE');
             
-            console.log('[PackageController] Registry reset complete');
+            console.log(chalk.blue('[PackageController] Registry reset complete'));
             
             // Return response with success message
-            res.status(200).json({
-                message: 'Registry reset successful' 
-            });
+            const response = { message: 'Registry reset successful' };
+            res.status(200).json(response);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(response, null, 2)}\n-------------------------------------------------`));
 
         } catch (error) {
-            console.error('[PackageController] Failed to reset registry:', error);
+            console.error(chalk.red('[PackageController] Failed to reset registry:'), error);
             next(error);
         }
     }
@@ -91,11 +107,18 @@ export class PackageController {
      * @throws ApiError if package ID is invalid or not found
      */
     static async getPackage(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log(`[PackageController] Processing GET /:id request`);
+        console.log(chalk.blue(`[PackageController] Processing GET /:id request`));
         try {
 
             // Destructure package ID from request parameters
             const { id } = req.params;
+
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> GET /${id}\nParams: ${JSON.stringify(req.params, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
+
             if (!id) {
                 throw new ApiError('Package ID is required', 400);
             }
@@ -108,9 +131,10 @@ export class PackageController {
 
             // Return response with package metadata and data
             res.status(200).json(result);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
 
         } catch (error) {
-            console.error('[PackageController] Failed to fetch package:', error);
+            console.error(chalk.red('[PackageController] Failed to fetch package:'), error);
             next(error);
         }
     }
@@ -123,11 +147,17 @@ export class PackageController {
      * @throws ApiError if update fails
      */
     static async updatePackage(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log(`[PackageController] Processing POST /package/:id request`);
+        console.log(chalk.blue(`[PackageController] Processing POST /package/:id request`));
         try {
 
             // Destructure package ID from request parameters
             const { id } = req.params;
+
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> POST /package/${id}\nParams: ${JSON.stringify(req.params, null, 2)}\nBody: ${JSON.stringify(req.body, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
 
             // Destructure metadata and data objects from request body
             const { metadata, data } = req.body;
@@ -155,13 +185,13 @@ export class PackageController {
             }
 
             // Return response with update result
-            res.status(200).json({
-                message: 'Version is updated.'
-            });
+            const response = { message: 'Version is updated.' };
+            res.status(200).json(response);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(response, null, 2)}\n-------------------------------------------------`));
             return;
 
         } catch (error) {
-            console.error('[PackageController] Failed to update package:', error);
+            console.error(chalk.red('[PackageController] Failed to update package:'), error);
             next(error);
         }
     }
@@ -174,15 +204,21 @@ export class PackageController {
      * @throws ApiError if package data is invalid or upload fails
      */
     static async uploadPackage(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log('[PackageController] Processing POST /package request');
+        console.log(chalk.blue('[PackageController] Processing POST /package request'));
         try {
             
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> POST /package\nBody: ${JSON.stringify(req.body, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
+
             // Destructure package data from request body
             const { Content, URL, JSProgram, debloat } = req.body;
 
             // Process package upload containing content
             if (Content && !URL) {
-                console.log('[PackageController] Processing Content upload');
+                console.log(chalk.blue('[PackageController] Processing Content upload'));
                 
                 // Call uploadContentType service method
                 const result = await PackageUploadService.uploadContentType(Content, JSProgram, debloat);
@@ -193,12 +229,13 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
+                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
                 return;
             }
 
             // Process package upload containing URL
             if (URL && !Content) {
-                console.log('[PackageController] Processing URL upload');
+                console.log(chalk.blue('[PackageController] Processing URL upload'));
                 
                 // Call uploadUrlType service method
                 const result = await PackageUploadService.uploadUrlType(URL, JSProgram);
@@ -209,13 +246,14 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
+                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
                 return;
             }
 
             throw new ApiError('Invalid package data: Provide either Content or URL, not both', 400);
 
         } catch (error) {
-            console.error('[PackageController] Package upload failed:', error);
+            console.error(chalk.red('[PackageController] Package upload failed:'), error);
             next(error);
         }
     }
@@ -228,11 +266,18 @@ export class PackageController {
      * @throws ApiError if rating cannot be retrieved
      */
     static async getPackageRating(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log(`[PackageController] Processing GET /:id/rate request`);
+        console.log(chalk.blue(`[PackageController] Processing GET /:id/rate request`));
         try {
 
             // Destructure package ID from request parameters
             const { id } = req.params;
+
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> GET /${id}/rate\nParams: ${JSON.stringify(req.params, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
+
             if (!id) {
                 throw new ApiError('Package ID is required', 400);
             }
@@ -246,10 +291,11 @@ export class PackageController {
 
             // Return response with package rating
             res.status(200).json(result);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
             return;
 
         } catch (error) {
-            console.error('[PackageController] Failed to fetch package rating:', error);
+            console.error(chalk.red('[PackageController] Failed to fetch package rating:'), error);
             next(error);
         }
     }
@@ -261,12 +307,18 @@ export class PackageController {
      * @throws ApiError if cost metrics cannot be retrieved
      */
     static async getPackageCost(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log(`[PackageController] Processing GET /:id/cost request`);
+        console.log(chalk.blue(`[PackageController] Processing GET /:id/cost request`));
         try {
 
             // Destructure package ID from request parameters and optional dependencies query parameter
             const { id } = req.params;
             const includeDependencies = req.query.dependencies === 'true';
+
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> GET /${id}/cost\nParams: ${JSON.stringify(req.params, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
 
             // Validate package ID
             if (!id) {
@@ -282,25 +334,32 @@ export class PackageController {
             
             // Return response with package cost metrics
             res.status(200).json(result);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
             return;
 
         } catch (error) {
-            console.error('[PackageController] Failed to calculate package cost:', error);
+            console.error(chalk.red('[PackageController] Failed to calculate package cost:'), error);
             next(error);
         }
     }
 
     /**
-     * Processes POAT /byRegEx request to search packages by regex
+     * Processes POST /byRegEx request to search packages by regex
      * @param req Express request containing search regex
      * @param res Express response
      * @param next Next middleware function
      * @throws ApiError if search fails or regex is invalid
      */
     static async getPackagesByRegEx(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log('[PackageController] Processing POST /byRegEx request');
+        console.log(chalk.blue('[PackageController] Processing POST /byRegEx request'));
         try {
             
+            try {
+                console.log(chalk.magenta(`------>[REQUEST]-------> POST /byRegEx\nBody: ${JSON.stringify(req.body, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
+            } catch (error) {
+                console.error(chalk.red('Error outputting request: '), error);
+            }
+
             // Destructure regex from request body as data transfer object
             const regex = req.body as PackageRegExDto;
             if (!regex) {
@@ -316,10 +375,11 @@ export class PackageController {
 
             // Return response with search results
             res.status(200).json(result);
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${JSON.stringify(result, null, 2)}\n-------------------------------------------------`));
             return;
 
         } catch (error) {
-            console.error('[PackageController] Failed to search packages by regex:', error);
+            console.error(chalk.red('[PackageController] Failed to search packages by regex:'), error);
             next(error);
         }
     }

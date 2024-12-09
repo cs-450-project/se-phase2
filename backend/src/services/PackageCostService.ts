@@ -10,7 +10,7 @@ import { PackageData } from "../entities/PackageData.js";
 import { PackageCosts } from "../entities/PackageCosts.js";
 import { ApiError } from "../utils/errors/ApiError.js";
 import { getPackageJsonFromContentBuffer } from "../utils/packageHelpers.js";
-import { fetch } from 'undici';
+import fetch from 'node-fetch';
 import * as semver from 'semver';
 
 // Constants
