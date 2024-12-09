@@ -31,6 +31,17 @@
 .nav-links a {
   color: #4ec9b0;
   text-decoration: none;
+  /* Add minimum dimensions for accessibility */
+  min-width: 44px;
+  min-height: 44px;
+  /* Add padding and make inline-block for dimensions to work */
+  padding: 12px;
+  display: inline-block;
+  /* Increase text size and adjust line height */
+  font-size: 1.2rem;
+  line-height: 44px;
+  /* Center text */
+  text-align: center;
 }
 
 .nav-links a:hover:not(.disabled) {

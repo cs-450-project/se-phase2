@@ -1,46 +1,80 @@
-<app-search-form (searchResults)="onSearchResults($event)"></app-search-form>
-<table>
-  <thead>
-    <tr>
-      <th>Package Name</th>
-      <th>ID</th>
-      <th>Version</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let pkg of packages">
-      <td>{{ pkg.Name }}</td>
-      <td>{{ pkg.ID }}</td>
-      <td>{{ pkg.Version }}</td>
-      <td>
-        <button (click)="selectedPackageId = pkg.ID">View Metrics</button>
-        <button (click)="selectedCostId = pkg.ID">View Cost</button>
-        <button (click)="downloadPackage(pkg)">Download</button>
-        <button (click)="updatePackage(pkg)">Update</button>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<!-- Skip Links Navigation -->
+<nav aria-label="Skip links">
+  <a href="#packages-table" class="skip-link">Skip to package list</a>
+  <a href="#pagination" class="skip-link">Skip to pagination</a>
+  <a href="#package-details" class="skip-link">Skip to package details</a>
+</nav>
 
-<div class="pagination">
+<!-- Search Form -->
+<app-search-form (searchResults)="onSearchResults($event)"></app-search-form>
+
+<!-- Main Table -->
+<section id="packages-table" role="region" aria-label="Package List">
+  <table>
+    <thead>
+      <tr>
+        <th>Package Name</th>
+        <th>ID</th>
+        <th>Version</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let pkg of packages">
+        <td>{{ pkg.Name }}</td>
+        <td>{{ pkg.ID }}</td>
+        <td>{{ pkg.Version }}</td>
+        <td>
+          <button 
+            (click)="selectedPackageId = pkg.ID" 
+            [attr.aria-label]="'View metrics for ' + pkg.Name">
+            View Metrics
+          </button>
+          <button 
+            (click)="selectedCostId = pkg.ID" 
+            [attr.aria-label]="'View cost for ' + pkg.Name">
+            View Cost
+          </button>
+          <button 
+            (click)="downloadPackage(pkg)" 
+            [attr.aria-label]="'Download ' + pkg.Name">
+            Download
+          </button>
+          <button 
+            (click)="updatePackage(pkg)" 
+            [attr.aria-label]="'Update ' + pkg.Name">
+            Update
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Pagination -->
+<nav id="pagination" class="pagination" aria-label="Pagination">
   <button 
-    [disabled]="currentOffset === 0" 
+    [disabled]="currentOffset === 0"
+    [attr.aria-label]="'Go to previous page'"
     (click)="previousPage()">
     Previous
   </button>
   <span>Page {{ (currentOffset / pageSize) + 1 }}</span>
   <button 
-  [disabled]="nextOffset === null"
-  (click)="nextPage()">
-  Next
-</button>
-</div>
+    [disabled]="nextOffset === null"
+    [attr.aria-label]="'Go to next page'"
+    (click)="nextPage()">
+    Next
+  </button>
+</nav>
 
-<app-metrics 
-  *ngIf="selectedPackageId" 
-  [packageId]="selectedPackageId">
-</app-metrics>
+<!-- Package Details -->
+<section id="package-details" role="region" aria-label="Package Details">
+  <app-metrics 
+    *ngIf="selectedPackageId"
+    [packageId]="selectedPackageId">
+  </app-metrics>
+</section>
 
 <app-package-cost 
   *ngIf="selectedCostId" 
