@@ -5,9 +5,23 @@ module.exports = {
     {
       name: 'acme-registry-production',
       script: './dist/server.js',
-      raw: true,
-      instances: 'max',
+      // Add memory management settings
+      node_args: '--max-old-space-size=1024', // Allocate 1GB heap per instance
+      max_memory_restart: '1.2G',  // Restart if process exceeds 1.2GB
+      
+      // Adjust clustering for better stability
+      instances: '2',  // Start with 2 instances instead of max
       exec_mode: 'cluster',
+      
+      // Add graceful shutdown
+      kill_timeout: 3000,  // Give processes 3 seconds to finish
+      wait_ready: true,  // Wait for ready signal
+      listen_timeout: 10000,  // Wait 10s for process to boot
+      
+      // Add error handling
+      exp_backoff_restart_delay: 100,  // Exponential backoff for restarts
+      
+      // Keep your existing environment variables
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
