@@ -11,6 +11,7 @@ import { PackageUploadService } from '../services/PackageUploadService.js';
 import { PackageGetterService } from '../services/PackageGetterService.js';
 import { PackageUpdateService } from '../services/PackageUpdateService.js';
 import { PackageCostService } from '../services/PackageCostService.js';
+import { truncateResponse } from '../utils/truncateResponse.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { PackageRegExDto } from '../utils/types/PackageRegExDto.js';
 import { AppDataSource } from '../data-source.js';
@@ -131,8 +132,8 @@ export class PackageController {
 
             // Return response with package metadata and data
             res.status(200).json(result);
-            const truncatedResult = JSON.stringify(result, null, 2).split('\n').slice(0, 10).join('\n') + '\n... (truncated)';
-            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncatedResult}\n-------------------------------------------------`));
+            console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
+            
             return;
 
         } catch (error) {
@@ -231,9 +232,7 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
-
-                const truncatedResult = JSON.stringify(result, null, 2).split('\n').slice(0, 10).join('\n') + '\n... (truncated)';
-                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncatedResult}\n-------------------------------------------------`));
+                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
                 return;
             }
 
@@ -250,8 +249,7 @@ export class PackageController {
 
                 // Return response with package upload result
                 res.status(200).json(result);
-                const truncatedResult = JSON.stringify(result, null, 2).split('\n').slice(0, 10).join('\n') + '\n... (truncated)';
-                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncatedResult}\n-------------------------------------------------`));
+                console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
                 return;
             }
 
