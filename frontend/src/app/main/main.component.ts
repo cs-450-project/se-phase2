@@ -4,7 +4,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MetricsComponent } from '../metrics/metrics.component';
 import { PackageStateService } from '../services/package-state.service';
 import { PackageCostComponent } from '../package-cost/package-cost.component';
+import { SearchModule } from '../search/search.module';
 import { environment } from '../../environments/environment';
+
 interface Package {
   Name: string;
   ID: string;
@@ -54,6 +56,7 @@ interface UpdatePackageRequest {
     CommonModule, 
     MetricsComponent, 
     PackageCostComponent,
+    SearchModule
   ],
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.css'],
@@ -83,16 +86,34 @@ export class MainComponent implements OnInit {
       console.log('Refreshing packages');
       this.loadPackages();
     });
+
+    const requestBody: PackageQuery[] = [
+      {
+        Name: '*',
+        Version: '1.0.0-4.2.3'
+      },
+    ];
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    this.http
+      .post<Package[]>(`${environment.apiUrl}/packages`, requestBody, { headers })
+      .subscribe({
+        next: (data) => {
+          console.log(data);
+          this.packages = data;
+        },
+        error: (error) => {
+          console.error('There was an error!', error);
+        },
+      });
   }
 
   loadPackages(): void {
-
     this.http
-      .post<Package[]>(
-        `${environment.apiUrl}/packages?offset=${this.currentOffset}`, 
-        [{ Name: '*', Version: '' }],
-        { observe: 'response' }
-      )
+      .post<Package[]>(`${environment.apiUrl}/packages?offset=${this.currentOffset}`, [{ Name: '*', Version: '' }], { observe: 'response' })
       .subscribe({
         next: (response) => {
           if (!response.body) return;
@@ -110,6 +131,7 @@ export class MainComponent implements OnInit {
         error: (error) => console.error('Error:', error)
       });
   }
+
   nextPage() {
     if (this.nextOffset) {
       this.currentOffset = this.nextOffset;
@@ -123,6 +145,7 @@ export class MainComponent implements OnInit {
       this.loadPackages();
     }
   }
+
   downloadPackage(pkg: Package) {
     this.http.get<PackageDownload>(`${environment.apiUrl}/package/${pkg.ID}`)
       .subscribe({
@@ -253,5 +276,9 @@ export class MainComponent implements OnInit {
       }
     };
     reader.readAsArrayBuffer(file);
+  }
+
+  onSearchResults(results: Package[]): void {
+    this.packages = results;
   }
 }
