@@ -24,7 +24,7 @@
         <td>{{ pkg.Name }}</td>
         <td>{{ pkg.ID }}</td>
         <td>{{ pkg.Version }}</td>
-        <td>
+        <td class="action-buttons">
           <button 
             (click)="selectedPackageId = pkg.ID" 
             [attr.aria-label]="'View metrics for ' + pkg.Name">
