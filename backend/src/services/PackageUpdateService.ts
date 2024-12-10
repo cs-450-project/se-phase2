@@ -57,8 +57,7 @@ export class PackageUpdateService {
             // Get existing package data
             const packageDataRepository = AppDataSource.getRepository(PackageData);
             const existingData = await packageDataRepository.findOne({
-                where: { packageId: id },
-                select: ['url']
+                where: { packageId: id }
             });
             
             if (!existingData) {

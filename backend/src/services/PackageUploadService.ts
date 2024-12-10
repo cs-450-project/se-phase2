@@ -56,50 +56,20 @@ export class PackageUploadService {
     ) {
         const packageDataRepository = AppDataSource.getRepository(PackageData);
         
-        // Create a temprary table for large content
-        await AppDataSource.query(`
-            CREATE TEMPORARY TABLE IF NOT EXISTS temp_content (
-                chunk_data BYTEA,
-                chunk_order INTEGER)
-        `);
-
         try {
-            // Stream content in chunks
-            content = Buffer.isBuffer(content) ? content : Buffer.from(content, 'base64');
-            const chunks = Math.ceil(content.length / this.CHUNK_SIZE);
-
-            for (let i = 0; i < chunks; i++) {
-                const chunk = content.subarray(
-                    i * this.CHUNK_SIZE,
-                    (i + 1) * this.CHUNK_SIZE
-                );
-
-                await AppDataSource.query(
-                    'INSERT INTO temp_content (chunk_data, chunk_order) VALUES ($1, $2)',
-                    [chunk, i]
-                );
-            }
-
-            // Modified query to properly handle ordering within aggregation
-            const [result] = await AppDataSource.query(`
-                SELECT string_agg(encode(chunk_data, 'base64'), '' ORDER BY chunk_order) as content
-                FROM temp_content
-            `);
-
-            // Create package data with the combined content
+            // Ensure content is a Buffer
+            const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content, 'base64');
+            
+            // Create and save package data directly
             const data = packageDataRepository.create({
                 packageMetadata: metadata,
-                content: Buffer.from(result.content, 'base64'),
-                contentSize: content.length,
+                content: contentBuffer,
+                contentSize: contentBuffer.length,
                 ...options,
                 jsProgram
             });
-
+    
             await packageDataRepository.save(data);
-
-            // Drop temporary table
-            await AppDataSource.query('DROP TABLE temp_content');
-
             return data;
             
         } catch (error) {
