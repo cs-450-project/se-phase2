@@ -166,11 +166,6 @@ export class PackageUploadService {
             const { ranker, readmeContent } = await evaluateMetrics(owner, repo);
             console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(ranker)}`);
 
-            // Check if package meets quality standards
-            if (ranker.netScore < 0.5) {
-                throw new ApiError('Package does not meet quality standards', 424);
-            }
-
             // Save metadata
             const metadata = packageMetadataRepository.create({ name: name, version: version });
             await packageMetadataRepository.save(metadata);
@@ -193,7 +188,7 @@ export class PackageUploadService {
                 },
                 data: { 
                     Content: data.content?.toString('base64'), 
-                    JSProgram: data.jsProgram
+                    ...(data.jsProgram && { JSProgram: data.jsProgram })
                 }
             };
 
@@ -245,7 +240,7 @@ export class PackageUploadService {
             console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(ranker)}`);
 
             // Check if package meets quality standards
-            if (ranker.netScore < 0.5) {
+            if (ranker.netScore < 0.4) {
                 throw new ApiError('Package does not meet quality standards', 424);
             }
 
@@ -274,7 +269,7 @@ export class PackageUploadService {
                 data: { 
                     Content: data.content?.toString('base64'), 
                     URL: data.url, 
-                    JSProgram: data.jsProgram
+                    ...(data.jsProgram && { JSProgram: data.jsProgram })
                 }
             };
 
