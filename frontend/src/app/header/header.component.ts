@@ -1,12 +1,14 @@
+// header.component.ts
 import { Component, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { SearchModule } from '../search/search.module';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SearchModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
@@ -20,6 +22,11 @@ export class HeaderComponent implements OnDestroy {
         this.isAboutPage = event.urlAfterRedirects === '/about';
       }
     });
+  }
+
+  onSearchResults(results: any[]): void {
+    // Emit results to main component through a service
+    this.router.navigate(['/'], { state: { searchResults: results } });
   }
 
   ngOnDestroy(): void {

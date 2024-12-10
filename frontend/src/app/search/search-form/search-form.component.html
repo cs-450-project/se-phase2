@@ -9,11 +9,11 @@
           id="packageName" 
           [(ngModel)]="packageName" 
           name="packageName" 
-          placeholder="Enter package name..."
+          placeholder="Enter package name (e.g., lodash@4.0.0)..."
           required
           class="search-input"
           (input)="onSearch()"
-          aria-label="Search for package">
+          aria-label="Search for package by name and optional version">
         <button 
           type="submit" 
           class="search-button"
@@ -22,5 +22,6 @@
         </button>
       </div>
     </form>
+    <small class="search-hint">Tip: Use name&#64;version format for version search</small>
   </div>
 </section>
