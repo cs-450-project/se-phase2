@@ -178,7 +178,7 @@ export class PackageCostComponent implements OnInit, OnChanges {
     this.isLoading = true;
     this.error = null;
 
-    const url = `${environment.apiUrl}/package/${this.packageId}/cost?dependency=${this.showDependencies}`;
+    const url = `${environment.apiUrl}/package/${this.packageId}/cost?dependencies=${this.showDependencies}`;
 
     this.http.get<any>(url)
       .subscribe({
