@@ -21,7 +21,7 @@ export const AppDataSource = new DataSource({
     database: DB_DATABASE,
 
     // 'resets' the database schema every time the application starts
-    dropSchema: NODE_ENV === "development" ? false : false,
+    dropSchema: NODE_ENV === "development" ? true : true,
     // true: tells TypeORM to automatically synchronize the database schema with the entities
     // creates the table if it does not exist
     // false: tells TypeORM to not synchronize the database schema with the entities
@@ -29,4 +29,9 @@ export const AppDataSource = new DataSource({
     synchronize: NODE_ENV === "development" ? true : true,
     logging: NODE_ENV === "development" ? false : false,
     entities: ["dist/entities/*.js"],
+    // Database connection timeout to handle larger data
+    maxQueryExecutionTime: 30000,
+    extra: {
+        max: 30
+    }
 });

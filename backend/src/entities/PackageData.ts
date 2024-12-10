@@ -13,8 +13,11 @@ export class PackageData {
     @JoinColumn({ name: 'package_id', referencedColumnName: 'id' })
     packageMetadata!: PackageMetadata;
     
-    @Column({ name: 'content', nullable: true })
-    content?: string;
+    @Column({ name: 'content', type: 'bytea', nullable: true })
+    content?: Buffer;
+
+    @Column({ name: 'content_size', type: 'integer', nullable: true })
+    contentSize?: number;
 
     @Column({ name: 'url', nullable: true })
     url?: string;
@@ -27,6 +30,8 @@ export class PackageData {
 
     @Column({ name: 'readme', nullable: true, type: 'text' })
     readme?: string;
-    
 
+    @Column({ name: 'package_json', type: 'jsonb', nullable: true })
+    packageJson?: Record<string, any>;
+    
 }

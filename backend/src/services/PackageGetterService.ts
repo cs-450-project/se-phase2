@@ -13,6 +13,26 @@ import { PackageRating } from "../entities/PackageRating.js";
 import { PackageQuery } from "../utils/types/PackageQuery.js";
 import { FormattedPackageMetadata } from "../utils/types/FormattedPackageMetadata.js";
 import { PackageRegExDto } from "../utils/types/PackageRegExDto.js";
+import { QueryRunner } from 'typeorm';
+
+
+// Define interfaces for our return types
+interface PackageMetadataResponse {
+    Name: string;
+    Version: string;
+    ID: string;
+}
+
+interface PackageDataResponse {
+    Content?: string;
+    URL?: string;
+    JSProgram?: string;
+}
+
+interface PackageResponse {
+    metadata: PackageMetadataResponse;
+    data: PackageDataResponse;
+}
 
 /**
  * @class PackageGetterService
@@ -114,7 +134,9 @@ export class PackageGetterService {
      * @returns Package metadata and data
      * @throws ApiError if package not found
      */
-    static async getPackageMetadataAndDataById(id: string) {
+    static async getPackageMetadataAndDataById(id: string): Promise<PackageResponse> {
+        let queryRunner: QueryRunner | null = null;
+
         try {
             if (!id) {
                 throw new ApiError('Package ID is required', 400);
@@ -130,24 +152,28 @@ export class PackageGetterService {
                 throw new ApiError('Package not found', 404);
             }
 
-            // Get associated data
-            const data = await AppDataSource.getRepository(PackageData)
-                .findOne({ where: { packageId: id } });
+            // Get the content size and other package data
+            const packageData = await AppDataSource.getRepository(PackageData)
+                .createQueryBuilder('data')
+                .select(['data.content', 'data.url', 'data.jsProgram'])
+                .where('data.packageId = :id', { id })
+                .getOne();
 
-            if (!data) {
+            if (!packageData) {
                 throw new ApiError('Package data not found', 404);
             }
 
+            // Structure the response with proper typing
             return {
-                metadata: { 
-                    Name: metadata.name, 
-                    Version: metadata.version, 
-                    ID: metadata.id 
+                metadata: {
+                    Name: metadata.name,
+                    Version: metadata.version,
+                    ID: metadata.id
                 },
-                data: { 
-                    Content: data.content, 
-                    ...(data.url && { URL: data.url }),
-                    JSProgram: data.jsProgram 
+                data: {
+                    Content: packageData.content?.toString('base64'),
+                    ...(packageData.url && { URL: packageData.url }),
+                    JSProgram: packageData.jsProgram
                 }
             };
 
