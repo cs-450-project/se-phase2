@@ -217,14 +217,14 @@ export class PackageController {
             }
 
             // Destructure package data from request body
-            const { Content, URL, JSProgram, debloat } = req.body;
+            const { Name, Version, Content, URL, JSProgram, debloat } = req.body;
 
             // Process package upload containing content
             if (Content && !URL) {
                 console.log(chalk.blue('[PackageController] Processing Content upload'));
                 
                 // Call uploadContentType service method
-                const result = await PackageUploadService.uploadContentType(Content, JSProgram, debloat);
+                const result = await PackageUploadService.uploadContentType(Name, Version, Content, JSProgram, debloat);
 
                 if (!result) {
                     throw new ApiError('Failed to upload package', 500);
@@ -241,7 +241,7 @@ export class PackageController {
                 console.log(chalk.blue('[PackageController] Processing URL upload'));
                 
                 // Call uploadUrlType service method
-                const result = await PackageUploadService.uploadUrlType(URL, JSProgram);
+                const result = await PackageUploadService.uploadUrlType(Name, Version, URL, JSProgram);
                 
                 if (!result) {
                     throw new ApiError('Failed to upload package', 500);
