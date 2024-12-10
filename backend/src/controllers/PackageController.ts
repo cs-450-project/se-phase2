@@ -231,7 +231,7 @@ export class PackageController {
                 }
 
                 // Return response with package upload result
-                res.status(200).json(result);
+                res.status(201).json(result);
                 console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
                 return;
             }
@@ -248,7 +248,7 @@ export class PackageController {
                 }
 
                 // Return response with package upload result
-                res.status(200).json(result);
+                res.status(201).json(result);
                 console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
                 return;
             }
