@@ -58,22 +58,22 @@ export async function getPackageJsonFromContentBuffer(contentBuffer: string): Pr
  * @returns Object containing Name and Version
  * @throws ApiError if name or version is missing
  */
-export function extractNameAndVersionFromPackageJson(packageJson: string): { name: string | null, version: string } {
+export function extractNameAndVersionFromPackageJson(packageJson: string): { packageJsonName: string | null, packageJsonVersion: string | null } {
     try {
         if (!packageJson) {
             throw new ApiError('Package.json content cannot be empty', 400);
         }
 
         const packageData = JSON.parse(packageJson);
-        const name = packageData.name || null;
-        var version = packageData.version || '1.0.0';
+        const packageJsonName = packageData.name || null;
+        var packageJsonVersion = packageData.version || null;
 
-        console.log(`[PackageHelper] Extracted name: ${name}, version: ${version}`);
-        return { name, version };
+        console.log(`[PackageHelper] Extracted name: ${packageJsonName}, version: ${packageJsonVersion}`);
+        return { packageJsonName, packageJsonVersion };
     } catch (error) {
         console.error('[PackageHelper] Failed to extract name and version:', error);
         if (error instanceof ApiError) throw error;
-        throw new ApiError('Failed to parse package.json content', 400);
+        throw new ApiError('Failed to extract name and version from package.json', 400);
     }
 }
 
@@ -256,11 +256,11 @@ export async function getNpmRepoUrlFromGithubUrl(url: string): Promise<string> {
      * @returns Base64 encoded zip content
      * @throws ApiError if URL is invalid or content cannot be fetched
      */
-export async function getContentZipBufferFromGithubUrl(owner: string, repo: string): Promise<Buffer> {
+export async function getContentZipBufferFromGithubUrl(version: string, owner: string, repo: string): Promise<Buffer> {
     try {
-        const defaultBranch = await getDefaultBranch(owner, repo);
+        const branchOrVersion = version || await getDefaultBranch(owner, repo);
 
-        const normalizedURL = `https://github.com/${owner}/${repo}/archive/${defaultBranch}.zip`;
+        const normalizedURL = `https://github.com/${owner}/${repo}/archive/${branchOrVersion}.zip`;
         const response = await axios.get(normalizedURL, { 
             responseType: 'arraybuffer',
             timeout: 5000 // 5 second timeout
@@ -269,8 +269,20 @@ export async function getContentZipBufferFromGithubUrl(owner: string, repo: stri
         return Buffer.from(response.data);
 
     } catch (error) {
-        console.error('[PackageService] Failed to fetch GitHub content:', error);
-        throw new ApiError('Failed to fetch package content from GitHub', 400);
+        console.error('[PackageService] Failed to fetch GitHub content... retrying');
+        if (axios.isAxiosError(error) && error.response?.status === 404 && version) {
+            // Add a 'v' prefix to the version and try again
+            const vVersion = version ? `v${version}` : '';
+            const normalizedURL = `https://github.com/${owner}/${repo}/archive/${vVersion}.zip`;
+            const response = await axios.get(normalizedURL, { 
+                responseType: 'arraybuffer',
+                timeout: 5000 // 5 second timeout
+            });
+            return Buffer.from(response.data);
+        } else {
+            console.error('[PackageService] Failed to fetch GitHub content:', error);
+            throw new ApiError('Failed to fetch package content from GitHub', 400);
+        }
     }
 }
 
