@@ -15,6 +15,7 @@ import { truncateResponse } from '../utils/truncateResponse.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { PackageRegExDto } from '../utils/types/PackageRegExDto.js';
 import { AppDataSource } from '../data-source.js';
+import { PackageMetadata } from '../entities/PackageMetadata.js';
 import { ApiError } from '../utils/errors/ApiError.js';
 
 /**
@@ -162,12 +163,26 @@ export class PackageController {
                 console.error(chalk.red('Error outputting request: '), error);
             }
 
+            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+            const existingMetadata = await packageMetadataRepository.findOne({ 
+                where: { id: id },
+            });
+
+            if (!existingMetadata) {
+                throw new ApiError(`Package with ID ${id} not found`, 404);
+            }
+
             // Destructure metadata and data objects from request body
             const { metadata, data } = req.body;
 
+            if (!metadata || !data) {
+                throw new ApiError('Metadata and data objects are required', 400);
+            }
+            
             // Destructure metadata and data objects
             const { Name: metaName, Version: version, ID: pkgId } = metadata;
             const { Name: dataName, Content: content, URL: url, debloat, JSProgram: jsProgram } = data;
+            
 
             // Validate request data
             if (!id || id !== pkgId) {
