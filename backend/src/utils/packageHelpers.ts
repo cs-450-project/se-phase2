@@ -256,7 +256,7 @@ export async function getNpmRepoUrlFromGithubUrl(url: string): Promise<string> {
      * @returns Base64 encoded zip content
      * @throws ApiError if URL is invalid or content cannot be fetched
      */
-export async function getContentZipBufferFromGithubUrl(owner: string, repo: string): Promise<string> {
+export async function getContentZipBufferFromGithubUrl(owner: string, repo: string): Promise<Buffer> {
     try {
         const defaultBranch = await getDefaultBranch(owner, repo);
 
@@ -266,7 +266,7 @@ export async function getContentZipBufferFromGithubUrl(owner: string, repo: stri
             timeout: 5000 // 5 second timeout
         });
 
-        return Buffer.from(response.data, 'binary').toString('base64');
+        return Buffer.from(response.data);
 
     } catch (error) {
         console.error('[PackageService] Failed to fetch GitHub content:', error);
@@ -291,3 +291,25 @@ export async function getDefaultBranch(owner: string, repo: string): Promise<str
     }
 }
 
+
+export async function getPackageJsonFromGithubUrl(owner: string, repo: string): Promise<string> {
+    try {
+        const response = await octokit.repos.getContent({
+            owner,
+            repo,
+            path: 'package.json',
+        });
+
+        // The response content is Base64 encoded, so we need to decode it
+        if ('content' in response.data && !Array.isArray(response.data)) {
+            const content = Buffer.from(response.data.content, 'base64').toString();
+            return content;
+        }
+
+        throw new ApiError('Failed to get package.json from GitHub repository', 400);
+    } catch (error) {
+        console.error('[PackageService] Failed to get package.json:', error);
+        if (error instanceof ApiError) throw error;
+        throw new ApiError('Failed to get package.json from GitHub repository', 400);
+    }
+}

@@ -18,7 +18,8 @@ import {
     extractGithubAttributesFromGithubUrl, 
     normalizeToGithubUrl, 
     extractGithubUrlFromPackageJson,
-    getContentZipBufferFromGithubUrl
+    getContentZipBufferFromGithubUrl,
+    getPackageJsonFromGithubUrl
 } from '../utils/packageHelpers.js';
 
 
@@ -64,11 +65,11 @@ export class PackageUploadService {
 
         try {
             // Stream content in chunks
-            const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content, 'base64');
-            const chunks = Math.ceil(contentBuffer.length / this.CHUNK_SIZE);
+            content = Buffer.isBuffer(content) ? content : Buffer.from(content, 'base64');
+            const chunks = Math.ceil(content.length / this.CHUNK_SIZE);
 
             for (let i = 0; i < chunks; i++) {
-                const chunk = contentBuffer.slice(
+                const chunk = content.subarray(
                     i * this.CHUNK_SIZE,
                     (i + 1) * this.CHUNK_SIZE
                 );
@@ -89,7 +90,7 @@ export class PackageUploadService {
             const data = packageDataRepository.create({
                 packageMetadata: metadata,
                 content: Buffer.from(result.content, 'base64'),
-                contentSize: contentBuffer.length,
+                contentSize: content.length,
                 ...options,
                 jsProgram
             });
@@ -222,16 +223,8 @@ export class PackageUploadService {
             // Process GitHub URL and fetch content
             const normalizedUrl = await normalizeToGithubUrl(url);
             const { owner, repo } = extractGithubAttributesFromGithubUrl(normalizedUrl);
-            const contentFromUrl = await getContentZipBufferFromGithubUrl(owner, repo);
-            if (!contentFromUrl) {
-                throw new ApiError('Failed to fetch package content', 400);
-            }
 
-            // Extract package information
-            const packageJson = await getPackageJsonFromContentBuffer(contentFromUrl);
-            if (!packageJson) {
-                throw new ApiError('Invalid package.json in content', 400);
-            }
+            const packageJson = await getPackageJsonFromGithubUrl(owner, repo);
 
             // Extract name and version, default to repo name
             var { name, version } = extractNameAndVersionFromPackageJson(packageJson);
@@ -255,6 +248,9 @@ export class PackageUploadService {
             if (ranker.netScore < 0.5) {
                 throw new ApiError('Package does not meet quality standards', 424);
             }
+
+            // Fetch content from URL
+            const contentFromUrl = await getContentZipBufferFromGithubUrl(owner, repo);
 
             // Save metadata
             const metadata = packageMetadataRepository.create({ name: name, version: version });

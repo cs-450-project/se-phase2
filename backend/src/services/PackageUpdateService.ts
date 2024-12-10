@@ -15,6 +15,7 @@ import {
     getContentZipBufferFromGithubUrl,
     extractGithubAttributesFromGithubUrl
 } from '../utils/packageHelpers.js';
+import { PackageJsonHelper } from "../utils/packageJsonHelper.js";
 
 /**
  * @class PackageUpdateService
@@ -80,11 +81,11 @@ export class PackageUpdateService {
 
             // Process update based on original upload type
             if (content && !existingData.url) {
-                return await this.handleContentTypeUpdate(name, version, content, jsProgram, debloat);
+                return await this.handleContentTypeUpdate(id, name, version, content, jsProgram, debloat);
             } 
             
             if (url && existingData.url) {
-                return await this.handleUrlTypeUpdate(name, version, url, jsProgram);
+                return await this.handleUrlTypeUpdate(id, name, version, url, jsProgram);
             }
 
             throw new ApiError('Must update package using original upload type (Content or URL)', 400);
@@ -101,6 +102,7 @@ export class PackageUpdateService {
      * @private
      */
     private static async handleContentTypeUpdate(
+        id: string,
         name: string,
         version: string,
         content: string,
@@ -108,7 +110,7 @@ export class PackageUpdateService {
         debloat: boolean
     ) {
         try {
-            await this.validateUpdateContentTypeNameAndVersion(name, version, content);
+            await this.validateUpdateContentTypeNameAndVersion(id, name, version);
             return await PackageUploadService.uploadContentType(content, jsProgram, debloat);
         } catch (error) {
             console.error('[PackageUpdateService] Content-type update failed:', error);
@@ -121,13 +123,14 @@ export class PackageUpdateService {
      * @private
      */
     private static async handleUrlTypeUpdate(
+        id: string,
         name: string,
         version: string,
         url: string,
         jsProgram: string
     ) {
         try {
-            await this.validateUpdateUrlTypeNameAndVersion(name, version, url);
+            await this.validateUpdateUrlTypeNameAndVersion(id, name, version);
             return await PackageUploadService.uploadUrlType(url, jsProgram);
         } catch (error) {
             console.error('[PackageUpdateService] URL-type update failed:', error);
@@ -140,15 +143,15 @@ export class PackageUpdateService {
      * @private
      */
     private static async validateUpdateContentTypeNameAndVersion(
+        id: string,
         name: string,
-        version: string,
-        content: string
+        version: string
     ): Promise<boolean> {
         try {
-            const packageJson = await getPackageJsonFromContentBuffer(content);
-            const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
+            const packageJson = await PackageJsonHelper.getPackageJson(id);
+            const newName = packageJson.name;
 
-            if (newName !== name || newVersion !== version) {
+            if (newName !== name) {
                 throw new ApiError(
                     'Package name and version in content do not match request parameters',
                     400
@@ -167,18 +170,15 @@ export class PackageUpdateService {
      * @private
      */
     private static async validateUpdateUrlTypeNameAndVersion(
+        id: string,
         name: string,
-        version: string,
-        url: string
+        version: string
     ): Promise<boolean> {
         try {
-            const githubUrl = await normalizeToGithubUrl(url);
-            const { owner, repo } = extractGithubAttributesFromGithubUrl(githubUrl);
-            const contentZipBuffer = await getContentZipBufferFromGithubUrl(owner, repo);
-            const packageJson = await getPackageJsonFromContentBuffer(contentZipBuffer);
-            const { name: newName, version: newVersion } = extractNameAndVersionFromPackageJson(packageJson);
-
-            if (newName !== name || newVersion !== version) {
+            const packageJson = await PackageJsonHelper.getPackageJson(id);
+            const newName = packageJson.name;
+            
+            if (newName !== name) {
                 throw new ApiError(
                     'Package name and version from URL do not match request parameters',
                     400
