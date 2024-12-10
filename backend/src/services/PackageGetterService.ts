@@ -173,7 +173,7 @@ export class PackageGetterService {
                 data: {
                     Content: packageData.content?.toString('base64'),
                     ...(packageData.url && { URL: packageData.url }),
-                    JSProgram: packageData.jsProgram
+                    ...(packageData.jsProgram && { JSProgram: packageData.jsProgram })
                 }
             };
 
