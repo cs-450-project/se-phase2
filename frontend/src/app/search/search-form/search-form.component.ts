@@ -1,4 +1,5 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+// src/app/search/search-form/search-form.component.ts
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { SearchService } from '../../services/search.service';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -8,7 +9,7 @@ import { Subject } from 'rxjs';
   templateUrl: './search-form.component.html',
   styleUrls: ['./search-form.component.css']
 })
-export class SearchFormComponent {
+export class SearchFormComponent implements OnInit {
   packageName: string = '';
   @Output() searchResults = new EventEmitter<any[]>();
   private searchTerms = new Subject<string>();
@@ -19,18 +20,22 @@ export class SearchFormComponent {
     this.searchTerms.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap((term: string) => 
-        term ? this.searchService.searchPackagesByName(term) : this.searchService.getAllPackages()
-      )
-    ).subscribe(
-      (results) => {
-        console.log('Search results:', results);
+      switchMap((term: string) => {
+        if (!term) {
+          return this.searchService.getAllPackages();
+        }
+        // Parse name@version format
+        const [name, version] = term.split('@');
+        return this.searchService.searchPackagesByName(name, version);
+      })
+    ).subscribe({
+      next: (results) => {
         this.searchResults.emit(results);
       },
-      (error) => {
+      error: (error) => {
         console.error('Search error:', error);
       }
-    );
+    });
   }
 
   onSearch(): void {

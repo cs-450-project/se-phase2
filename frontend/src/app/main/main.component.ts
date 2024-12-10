@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MetricsComponent } from '../metrics/metrics.component';
@@ -6,6 +6,7 @@ import { PackageStateService } from '../services/package-state.service';
 import { PackageCostComponent } from '../package-cost/package-cost.component';
 import { SearchModule } from '../search/search.module';
 import { environment } from '../../environments/environment';
+import { Subscription } from 'rxjs';
 
 interface Package {
   Name: string;
@@ -61,7 +62,7 @@ interface UpdatePackageRequest {
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.css'],
 })
-export class MainComponent implements OnInit {
+export class MainComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   packages: Package[] = [];
   selectedPackageId: string | null = null;
@@ -72,6 +73,7 @@ export class MainComponent implements OnInit {
   pageSize = 10;
   public currentRequest: UpdatePackageRequest | null = null;
   public isUploading = false;
+  private searchSubscription!: Subscription;
 
   constructor(
     private http: HttpClient,
@@ -109,6 +111,18 @@ export class MainComponent implements OnInit {
           console.error('There was an error!', error);
         },
       });
+
+    this.searchSubscription = this.packageState.searchResults$.subscribe(
+      results => {
+        this.packages = results;
+      }
+    );
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
   }
 
   loadPackages(): void {
@@ -238,7 +252,7 @@ export class MainComponent implements OnInit {
       .subscribe({
         next: () => {
           console.log('Package updated successfully');
-          this.packageState.triggerRefresh();
+          this.packageState.refresh();
         },
         error: (err) => console.error('Error updating package:', err),
         complete: () => {

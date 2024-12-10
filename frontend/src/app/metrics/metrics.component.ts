@@ -71,6 +71,8 @@ import { environment } from '../../environments/environment';
       padding: 20px;
       background: #1e1e1e;
       color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
     .metrics-grid {
@@ -80,12 +82,24 @@ import { environment } from '../../environments/environment';
       margin-top: 20px;
     }
 
+    @media (min-width: 1024px) {
+      .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
     .metric-card {
       padding: 15px;
       border-radius: 8px;
       background: #2d2d2d;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       border: 1px solid #3d3d3d;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
 
     .score {
@@ -101,6 +115,8 @@ import { environment } from '../../environments/environment';
 
     .error {
       color: #f14c4c;
+      margin-top: 20px;
+      font-weight: bold;
     }
   `]
 })

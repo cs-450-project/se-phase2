@@ -1,1 +1,60 @@
-<p>package-upload works!</p>
+<div class="upload-container">
+    <h2>Upload Package</h2>
+    
+    <!-- URL Upload -->
+    <div class="upload-section">
+      <h3>Upload from URL</h3>
+      <input type="text" 
+             [(ngModel)]="packageUrl" 
+             placeholder="NPM or GitHub URL"
+             [disabled]="isLoading">
+      <button (click)="uploadFromUrl()" 
+              [disabled]="!packageUrl || isLoading">
+        Upload from URL
+      </button>
+    </div>
+  
+    <!-- File Upload -->
+    <div class="upload-section">
+      <h3>Upload ZIP File</h3>
+      <input type="file" 
+             accept=".zip"
+             (change)="onFileSelected($event)"
+             [disabled]="isLoading">
+      <button (click)="uploadFile()" 
+              [disabled]="!selectedFile || isLoading">
+        Upload File
+      </button>
+    </div>
+  
+    <!-- JavaScript Program -->
+    <div class="form-group">
+      <label>JavaScript Program:</label>
+      <textarea 
+        [(ngModel)]="jsProgram"
+        placeholder="Enter JavaScript program..."
+        rows="4">
+      </textarea>
+    </div>
+  
+    <!-- Debloat Toggle -->
+    <div class="form-group">
+      <label class="toggle">
+        <input type="checkbox" 
+               [(ngModel)]="debloat">
+        Enable Package Debloating
+      </label>
+    </div>
+  
+    <!-- Status Messages -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <span>Uploading package...</span>
+    </div>
+    <div *ngIf="error" class="status error">
+      {{ error }}
+    </div>
+    <div *ngIf="success" class="status success">
+      {{ success }}
+    </div>
+  </div>
