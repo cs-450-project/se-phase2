@@ -47,8 +47,8 @@ describe('packageHelpers', () => {
 
             const result = extractNameAndVersionFromPackageJson(packageJson);
             expect(result).toEqual({ 
-                name: 'test-package', 
-                version: '1.0.0' 
+                packageJsonName: 'test-package', 
+                packageJsonVersion: '1.0.0' 
             });
         });
 
@@ -59,20 +59,20 @@ describe('packageHelpers', () => {
 
             const result = extractNameAndVersionFromPackageJson(packageJson);
             expect(result).toEqual({ 
-                name: null, 
-                version: '1.0.0' 
+                packageJsonName: null, 
+                packageJsonVersion: '1.0.0' 
             });
         });
 
-        it('should use default version if version is missing', () => {
+        it('should return null version if version is missing', () => {
             const packageJson = JSON.stringify({ 
                 name: 'test-package' 
             });
 
             const result = extractNameAndVersionFromPackageJson(packageJson);
             expect(result).toEqual({ 
-                name: 'test-package', 
-                version: '1.0.0' 
+                packageJsonName: 'test-package', 
+                packageJsonVersion: null 
             });
         });
 

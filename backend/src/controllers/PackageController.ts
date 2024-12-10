@@ -1,3 +1,4 @@
+// Chalk - For coloring console logs
 import chalk from 'chalk';
 
 /**
@@ -15,6 +16,7 @@ import { truncateResponse } from '../utils/truncateResponse.js';
 import { PackageQuery } from '../utils/types/PackageQuery.js';
 import { PackageRegExDto } from '../utils/types/PackageRegExDto.js';
 import { AppDataSource } from '../data-source.js';
+import { PackageMetadata } from '../entities/PackageMetadata.js';
 import { ApiError } from '../utils/errors/ApiError.js';
 
 /**
@@ -162,12 +164,26 @@ export class PackageController {
                 console.error(chalk.red('Error outputting request: '), error);
             }
 
+            const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
+            const existingMetadata = await packageMetadataRepository.findOne({ 
+                where: { id: id },
+            });
+
+            if (!existingMetadata) {
+                throw new ApiError(`Package with ID ${id} not found`, 404);
+            }
+
             // Destructure metadata and data objects from request body
             const { metadata, data } = req.body;
 
+            if (!metadata || !data) {
+                throw new ApiError('Metadata and data objects are required', 400);
+            }
+            
             // Destructure metadata and data objects
             const { Name: metaName, Version: version, ID: pkgId } = metadata;
             const { Name: dataName, Content: content, URL: url, debloat, JSProgram: jsProgram } = data;
+            
 
             // Validate request data
             if (!id || id !== pkgId) {
@@ -217,21 +233,21 @@ export class PackageController {
             }
 
             // Destructure package data from request body
-            const { Content, URL, JSProgram, debloat } = req.body;
+            const { Name, Version, Content, URL, JSProgram, debloat } = req.body;
 
             // Process package upload containing content
             if (Content && !URL) {
                 console.log(chalk.blue('[PackageController] Processing Content upload'));
                 
                 // Call uploadContentType service method
-                const result = await PackageUploadService.uploadContentType(Content, JSProgram, debloat);
+                const result = await PackageUploadService.uploadContentType(Name, Version, Content, JSProgram, debloat);
 
                 if (!result) {
                     throw new ApiError('Failed to upload package', 500);
                 }
 
                 // Return response with package upload result
-                res.status(200).json(result);
+                res.status(201).json(result);
                 console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
                 return;
             }
@@ -241,14 +257,14 @@ export class PackageController {
                 console.log(chalk.blue('[PackageController] Processing URL upload'));
                 
                 // Call uploadUrlType service method
-                const result = await PackageUploadService.uploadUrlType(URL, JSProgram);
+                const result = await PackageUploadService.uploadUrlType(Name, Version, URL, JSProgram);
                 
                 if (!result) {
                     throw new ApiError('Failed to upload package', 500);
                 }
 
                 // Return response with package upload result
-                res.status(200).json(result);
+                res.status(201).json(result);
                 console.log(chalk.green(`------>[RESPONSE]-------> 200 OK\nBody: ${truncateResponse(result)}\n-------------------------------------------------`));
                 return;
             }
@@ -315,7 +331,7 @@ export class PackageController {
 
             // Destructure package ID from request parameters and optional dependencies query parameter
             const { id } = req.params;
-            const includeDependencies = req.query.dependencies === 'true';
+            const includeDependencies = req.query.dependency === 'true';
 
             try {
                 console.log(chalk.magenta(`------>[REQUEST]-------> GET /${id}/cost\nParams: ${JSON.stringify(req.params, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));

@@ -18,7 +18,8 @@ import {
     extractGithubAttributesFromGithubUrl, 
     normalizeToGithubUrl, 
     extractGithubUrlFromPackageJson,
-    getContentZipBufferFromGithubUrl
+    getContentZipBufferFromGithubUrl,
+    getPackageJsonFromGithubUrl
 } from '../utils/packageHelpers.js';
 
 
@@ -45,6 +46,41 @@ const DEBLOAT_RULES: Array<{
  */
 export class PackageUploadService {
     
+    private static readonly CHUNK_SIZE = 16384; // 16KB chunks
+
+    private static async savePackageData(
+        metadata: PackageMetadata,
+        content: string | Buffer,
+        jsProgram: string,
+        options: { url?: string, debloat?: boolean, readme?: string, packageJson?: Record<string, any> }
+    ) {
+        const packageDataRepository = AppDataSource.getRepository(PackageData);
+        
+        try {
+            // Ensure content is a Buffer
+            const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content, 'base64');
+            
+            // Create and save package data directly
+            const data = packageDataRepository.create({
+                packageMetadata: metadata,
+                content: contentBuffer,
+                contentSize: contentBuffer.length,
+                ...options,
+                jsProgram
+            });
+    
+            await packageDataRepository.save(data);
+            return data;
+            
+        } catch (error) {
+            // Drop temporary table on error
+            await AppDataSource.query('DROP TABLE IF EXISTS temp_content');
+            console.error('[PackageService] Failed to save package data:', error);
+            throw error;
+        }
+        
+    }
+
     /**
      * Uploads a package using Base64 encoded zip content
      * @param Content - Base64 encoded zip file
@@ -53,7 +89,7 @@ export class PackageUploadService {
      * @returns Object containing metadata and data of the uploaded package
      * @throws ApiError if package exists or invalid input
      */
-    static async uploadContentType(content: string, jsProgram: string, shouldDebloat: boolean) {
+    static async uploadContentType(reqName:string, reqVersion: string, content: string, jsProgram: string, shouldDebloat: boolean) {
         try {
             if (!content) {
                 throw new ApiError('Content cannot be empty', 400);
@@ -67,9 +103,12 @@ export class PackageUploadService {
                 throw new ApiError('Invalid package.json in zip content', 400);
             }
 
-            const { name, version } = extractNameAndVersionFromPackageJson(packageJson);
-            if (!name || !version) {
-                throw new ApiError('Invalid name or version in package.json', 400);
+            const { packageJsonName, packageJsonVersion } = extractNameAndVersionFromPackageJson(packageJson);
+            const name = reqName || packageJsonName;
+            const version = reqVersion || packageJsonVersion || '1.0.0';
+
+            if (!name) {
+                throw new ApiError('Package name not found', 400);
             }
 
             // Check for existing package
@@ -100,26 +139,13 @@ export class PackageUploadService {
             const { ranker, readmeContent } = await evaluateMetrics(owner, repo);
             console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(ranker)}`);
 
-            // Check if package meets quality standards
-            if (ranker.netScore < 0.5) {
-                throw new ApiError('Package does not meet quality standards', 424);
-            }
-
             // Save metadata
             const metadata = packageMetadataRepository.create({ name: name, version: version });
             await packageMetadataRepository.save(metadata);
             console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
-            // Save package data
-            const packageDataRepository = AppDataSource.getRepository(PackageData);
-            const data = packageDataRepository.create({
-                packageMetadata: metadata,
-                content: content,
-                debloat: shouldDebloat,
-                jsProgram: jsProgram,
-                ...(readmeContent && { readme: readmeContent })
-            });
-            await packageDataRepository.save(data);
+            const data = await this.savePackageData(metadata, content, jsProgram, { debloat: shouldDebloat, readme: readmeContent, packageJson: JSON.parse(packageJson) });
+
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
@@ -134,8 +160,8 @@ export class PackageUploadService {
                     ID: metadata.id 
                 },
                 data: { 
-                    Content: data.content, 
-                    JSProgram: data.jsProgram
+                    Content: data.content?.toString('base64'), 
+                    ...(data.jsProgram && { JSProgram: data.jsProgram })
                 }
             };
 
@@ -153,7 +179,7 @@ export class PackageUploadService {
      * @returns Object containing metadata and data of the uploaded package
      * @throws ApiError if package exists or invalid input
      */
-    static async uploadUrlType(url: string, jsProgram: string) {
+    static async uploadUrlType(reqName: string, reqVersion: string, url: string, jsProgram: string) {
         try {
             if (!url) {
                 throw new ApiError('URL cannot be empty', 400);
@@ -165,20 +191,15 @@ export class PackageUploadService {
             // Process GitHub URL and fetch content
             const normalizedUrl = await normalizeToGithubUrl(url);
             const { owner, repo } = extractGithubAttributesFromGithubUrl(normalizedUrl);
-            const contentFromUrl = await getContentZipBufferFromGithubUrl(owner, repo);
-            if (!contentFromUrl) {
-                throw new ApiError('Failed to fetch package content', 400);
-            }
 
-            // Extract package information
-            const packageJson = await getPackageJsonFromContentBuffer(contentFromUrl);
-            if (!packageJson) {
-                throw new ApiError('Invalid package.json in content', 400);
-            }
+            const packageJson = await getPackageJsonFromGithubUrl(owner, repo);
 
             // Extract name and version, default to repo name
-            var { name, version } = extractNameAndVersionFromPackageJson(packageJson);
-            if (!name) name = repo;
+            var { packageJsonName, packageJsonVersion } = extractNameAndVersionFromPackageJson(packageJson);
+            
+            // Find first truthy value from request, package.json, and defaults
+            const name = reqName || packageJsonName || repo;
+            const version = reqVersion || packageJsonVersion || '1.0.0';
 
             // Check for existing package
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
@@ -195,24 +216,19 @@ export class PackageUploadService {
             console.log(`[PackageService] Metrics evaluation complete: ${JSON.stringify(ranker)}`);
 
             // Check if package meets quality standards
-            if (ranker.netScore < 0.5) {
+            if (ranker.netScore < 0.4) {
                 throw new ApiError('Package does not meet quality standards', 424);
             }
+
+            // Fetch content from URL
+            const contentFromUrl = await getContentZipBufferFromGithubUrl(version, owner, repo);
 
             // Save metadata
             const metadata = packageMetadataRepository.create({ name: name, version: version });
             await packageMetadataRepository.save(metadata);
             console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
-            // Save package data
-            const packageDataRepository = AppDataSource.getRepository(PackageData);
-            const data = packageDataRepository.create({
-                packageMetadata: metadata,
-                content: contentFromUrl,
-                url: url,
-                jsProgram: jsProgram
-            });
-            await packageDataRepository.save(data);
+            const data = await this.savePackageData(metadata, contentFromUrl, jsProgram, { url: url, readme: readmeContent, packageJson: JSON.parse(packageJson) });
             console.log(`[PackageService] Saved package data for ${name}@${version}`);
 
             // Save package rating
@@ -227,9 +243,9 @@ export class PackageUploadService {
                     ID: metadata.id 
                 },
                 data: { 
-                    Content: data.content, 
+                    Content: data.content?.toString('base64'), 
                     URL: data.url, 
-                    JSProgram: data.jsProgram
+                    ...(data.jsProgram && { JSProgram: data.jsProgram })
                 }
             };
 
