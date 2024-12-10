@@ -315,7 +315,7 @@ export class PackageController {
 
             // Destructure package ID from request parameters and optional dependencies query parameter
             const { id } = req.params;
-            const includeDependencies = req.query.dependencies === 'true';
+            const includeDependencies = req.query.dependency === 'true';
 
             try {
                 console.log(chalk.magenta(`------>[REQUEST]-------> GET /${id}/cost\nParams: ${JSON.stringify(req.params, null, 2)}\nQuery: ${JSON.stringify(req.query, null, 2)}\n-------------------------------------------------`));
