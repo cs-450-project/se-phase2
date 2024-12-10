@@ -1,3 +1,4 @@
+// Chalk - For coloring console logs
 import chalk from 'chalk';
 
 /**
