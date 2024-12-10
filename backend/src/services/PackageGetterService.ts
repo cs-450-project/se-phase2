@@ -270,7 +270,7 @@ export class PackageGetterService {
 
             // Format results
             if (!packages.length) {
-                return [];
+                throw new ApiError('No packages found', 404);
             }
             const formattedResults = packages.map(pkg => ({
                 Version: pkg.version,
