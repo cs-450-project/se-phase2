@@ -1,10 +1,10 @@
 /* Modern Theme Styles */
 :host {
-  --primary-color: #6c5ce7;
+  --primary-color: #5f4ef8;
   --secondary-color: #a367fc;
   --accent-color: #00cec9;
   --background-dark: #2d3436;
-  --text-light: #dfe6e9;
+  --text-light: #f1f7f8;
   --success-color: #00b894;
   --warning-color: #fdcb6e;
   --error-color: #ff7675;
