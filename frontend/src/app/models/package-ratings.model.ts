@@ -15,4 +15,6 @@ export interface PackageRating {
     PullRequestLatency: number;
     NetScore: number;
     NetScoreLatency: number;
+    Name: string;
+    Version: string;
   }

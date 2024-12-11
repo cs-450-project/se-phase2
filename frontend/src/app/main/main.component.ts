@@ -67,6 +67,8 @@ export class MainComponent implements OnInit, OnDestroy {
   packages: Package[] = [];
   selectedPackageId: string | null = null;
   selectedCostId: string | null = null;
+  selectedPackageName: string | null = null;
+  selectedPackageVersion: string | null = null;
   selectedDownloadId: string | null = null;
   currentOffset = 0;
   nextOffset: number | null = null;
@@ -123,6 +125,13 @@ export class MainComponent implements OnInit, OnDestroy {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
+  }
+
+  selectPackage(pkg: Package): void {
+    this.selectedPackageId = pkg.ID;
+    this.selectedPackageName = pkg.Name;
+    this.selectedPackageVersion = pkg.Version;
+    this.packageState.setSelectedPackage(pkg); // Notify the state service about the selected package
   }
 
   loadPackages(): void {

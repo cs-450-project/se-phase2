@@ -74,83 +74,101 @@ interface PackageCosts {
   `,
   styles: [`
     .cost-card {
-      background: #2d2d2d;
-      padding: 15px;
-      border-radius: 8px;
-      margin: 10px 0;
-      color: white;
+      padding: 20px;
+      background: var(--background-dark);
+      color: var(--text-light);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
+
     .toggle {
-      color: #808080;
+      color: var(--text-light);
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
     }
+
     input[type="checkbox"] {
-      accent-color: #4ec9b0;
+      accent-color: var(--accent-color);
     }
+
     .package-cost {
       margin-bottom: 15px;
-      padding: 10px;
-      border-bottom: 1px solid #3d3d3d;
+      padding: 15px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      border: 1px solid var(--accent-color);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
+    .package-cost:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    }
+
     .main {
-      background: #363636;
-      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
     }
+
     .dependencies {
       margin-top: 20px;
     }
+
     .cost-item {
       display: flex;
       justify-content: space-between;
       margin: 5px 0;
     }
+
     h4 {
       margin: 0 0 10px 0;
-      color: #4ec9b0;
+      color: var(--accent-color);
     }
+
     h5 {
       margin: 0 0 8px 0;
-      color: #9cdcfe;
+      color: var(--secondary-color);
     }
+
     .loading {
       display: flex;
       align-items: center;
       gap: 10px;
-      color: #808080;
+      color: var(--text-light);
       padding: 20px 0;
     }
+
     .loading-spinner {
       width: 20px;
       height: 20px;
-      border: 2px solid #3d3d3d;
-      border-top: 2px solid #4ec9b0;
+      border: 2px solid var(--text-light);
+      border-top: 2px solid var(--accent-color);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+
+    .error {
+      color: var(--error-color);
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .error {
-      color: #f14c4c;
-    }
-    .package-id {
-      color: #808080;
-      font-size: 0.9em;
-      font-weight: normal;
-    }
   `]
 })
-export class PackageCostComponent implements OnInit, OnChanges {
+export class PackageCostComponent {
   @Input() packageId: string = '';
   showDependencies = false;
   costs: PackageCosts | null = null;

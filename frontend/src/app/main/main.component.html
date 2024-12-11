@@ -70,7 +70,9 @@
 <section id="package-details" role="region" aria-label="Package Details">
   <app-metrics 
     *ngIf="selectedPackageId"
-    [packageId]="selectedPackageId">
+    [packageId]="selectedPackageId"
+    [name]="selectedPackageName || ''"
+    [version]="selectedPackageVersion || ''">
   </app-metrics>
 </section>
 
