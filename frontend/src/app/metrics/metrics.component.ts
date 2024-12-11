@@ -4,13 +4,29 @@ import { HttpClient } from '@angular/common/http';
 import { PackageRating } from '../models/package-ratings.model';
 import { environment } from '../../environments/environment';
 
+interface MetricEntry {
+  value: number;
+  latency: number;
+}
+
+interface PackageMetrics {
+  packageId: string;
+  name: string;
+  version: string;
+  metrics: {
+    [key: string]: MetricEntry;
+  };
+}
+
 @Component({
   selector: 'app-metrics',
   standalone: true,
   imports: [CommonModule],
   template: `
     <div class="metrics-container">
-      <h2>Package Metrics</h2>
+      <div class="header">
+        <h2>{{ name + '@' + version }} Metrics</h2>
+      </div>
       <div *ngIf="rating" class="metrics-grid">
         <div class="metric-card">
           <h3>Net Score</h3>
@@ -69,10 +85,24 @@ import { environment } from '../../environments/environment';
   styles: [`
     .metrics-container {
       padding: 20px;
-      background: #1e1e1e;
-      color: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background: var(--background-dark);
+      color: var(--text-light);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .package-info {
+      text-align: right;
+      color: var(--accent-color);
+      display: flex;
+      gap: 10px;
     }
 
     .metrics-grid {
@@ -91,9 +121,9 @@ import { environment } from '../../environments/environment';
     .metric-card {
       padding: 15px;
       border-radius: 8px;
-      background: #2d2d2d;
+      background: rgba(255, 255, 255, 0.05);
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      border: 1px solid #3d3d3d;
+      border: 1px solid var(--accent-color);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
@@ -106,15 +136,15 @@ import { environment } from '../../environments/environment';
       font-size: 24px;
       font-weight: bold;
       margin: 10px 0;
-      color: #4ec9b0;
+      color: var (--accent-color);
     }
 
     .latency {
-      color: #808080;
+      color: var(--text-light);
     }
 
     .error {
-      color: #f14c4c;
+      color: var(--error-color);
       margin-top: 20px;
       font-weight: bold;
     }
@@ -122,7 +152,12 @@ import { environment } from '../../environments/environment';
 })
 export class MetricsComponent implements OnChanges {
   @Input() packageId: string = '';
+  @Input() name: string = '';
+  @Input() version: string = '';
   rating: PackageRating | null = null;
+  metrics: PackageMetrics | null = null; // Add this line
+
+  isLoading = false;
   error: string | null = null;
 
   constructor(private http: HttpClient) {}
@@ -133,11 +168,16 @@ export class MetricsComponent implements OnChanges {
     }
   }
 
+  ngOnInit() {
+    this.loadMetrics();
+  }
+
   private loadMetrics() {
     if (!this.packageId) {
       console.error('No package ID provided');
       return;
     }
+  
     
     console.log('Loading metrics for package:', this.packageId);
     this.error = null;
