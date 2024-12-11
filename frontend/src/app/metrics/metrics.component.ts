@@ -25,12 +25,7 @@ interface PackageMetrics {
   template: `
     <div class="metrics-container">
       <div class="header">
-        <h2>Package Metrics</h2>
-        <h4>
-          <span>{{ name }}</span>
-          <span>{{ version }}</span>
-          <span class="package-id">({{ packageId }})</span>
-        </h4>
+        <h2>{{ name + '@' + version }} Metrics</h2>
       </div>
       <div *ngIf="rating" class="metrics-grid">
         <div class="metric-card">

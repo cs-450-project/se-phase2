@@ -24,12 +24,12 @@
         <td>{{ pkg.Version }}</td>
         <td class="action-buttons">
           <button 
-            (click)="selectedPackageId = pkg.ID" 
+            (click)="selectPackage(pkg)" 
             [attr.aria-label]="'View metrics for ' + pkg.Name">
             View Metrics
           </button>
           <button 
-            (click)="selectedCostId = pkg.ID" 
+            (click)="selectCost(pkg)" 
             [attr.aria-label]="'View cost for ' + pkg.Name">
             View Cost
           </button>
@@ -71,14 +71,16 @@
   <app-metrics 
     *ngIf="selectedPackageId"
     [packageId]="selectedPackageId"
-    [name]="selectedPackageName || ''"
-    [version]="selectedPackageVersion || ''">
+    [name]="metricsPackageName || ''"
+    [version]="metricsPackageVersion || ''">
   </app-metrics>
 </section>
 
 <app-package-cost 
   *ngIf="selectedCostId" 
-  [packageId]="selectedCostId">
+  [packageId]="selectedCostId"
+  [name]="costPackageName || ''"
+  [version]="costPackageVersion || ''">
 </app-package-cost>
 
 <!-- Using global spinner -->

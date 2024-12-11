@@ -25,7 +25,7 @@ interface PackageCosts {
   template: `
     <div class="cost-card">
       <div class="header">
-        <h3>Package Costs</h3>
+        <h2>{{ name + '@' + version }} Costs</h2>
         <label class="toggle">
           <input type="checkbox" 
                  [(ngModel)]="showDependencies" 
@@ -170,6 +170,8 @@ interface PackageCosts {
 })
 export class PackageCostComponent {
   @Input() packageId: string = '';
+  @Input() name: string = '';
+  @Input() version: string = '';
   showDependencies = false;
   costs: PackageCosts | null = null;
   isLoading = false;
