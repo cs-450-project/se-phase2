@@ -256,8 +256,9 @@ export async function getNpmRepoUrlFromGithubUrl(url: string): Promise<string> {
      * @returns Base64 encoded zip content
      * @throws ApiError if URL is invalid or content cannot be fetched
      */
-export async function getContentZipBufferFromGithubUrl(version: string, owner: string, repo: string): Promise<Buffer> {
+export async function getContentZipBufferFromGithubUrl(version: string | null, owner: string, repo: string): Promise<Buffer> {
     try {
+
         const branchOrVersion = version || await getDefaultBranch(owner, repo);
 
         const normalizedURL = `https://github.com/${owner}/${repo}/archive/${branchOrVersion}.zip`;
@@ -271,14 +272,20 @@ export async function getContentZipBufferFromGithubUrl(version: string, owner: s
     } catch (error) {
         console.error('[PackageService] Failed to fetch GitHub content... retrying');
         if (axios.isAxiosError(error) && error.response?.status === 404 && version) {
-            // Add a 'v' prefix to the version and try again
-            const vVersion = version ? `v${version}` : '';
-            const normalizedURL = `https://github.com/${owner}/${repo}/archive/${vVersion}.zip`;
-            const response = await axios.get(normalizedURL, { 
-                responseType: 'arraybuffer',
-                timeout: 5000 // 5 second timeout
-            });
-            return Buffer.from(response.data);
+            try {
+                // Add a 'v' prefix to the version and try again
+                const vVersion = version ? `v${version}` : '';
+                const normalizedURL = `https://github.com/${owner}/${repo}/archive/${vVersion}.zip`;
+                const response = await axios.get(normalizedURL, { 
+                    responseType: 'arraybuffer',
+                    timeout: 5000 // 5 second timeout
+                });
+                return Buffer.from(response.data);
+            } catch (error) {
+                console.error('[PackageService] Failed to fetch GitHub content:', error);
+                throw new ApiError('Failed to fetch package content from GitHub', 400);
+            }
+            
         } else {
             console.error('[PackageService] Failed to fetch GitHub content:', error);
             throw new ApiError('Failed to fetch package content from GitHub', 400);

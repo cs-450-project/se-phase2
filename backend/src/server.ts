@@ -45,6 +45,12 @@ app.post('/packages', PackageController.getPackagesFromQueries);
 
 app.delete('/reset', PackageController.resetRegistry);
 
+app.get('/tracks', (req: Request, res: Response) => {
+  res.status(200).json({
+    "plannedTracks": []
+  });
+});
+
 // Sends a 505 status code for all other routes
 app.get('*', (req: Request, res: Response) => {
   res.status(505).json({ message: 'Bad Request' });

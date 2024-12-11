@@ -199,12 +199,14 @@ export class PackageUploadService {
             
             // Find first truthy value from request, package.json, and defaults
             const name = reqName || packageJsonName || repo;
-            const version = reqVersion || packageJsonVersion || '1.0.0';
+            const version = reqVersion || packageJsonVersion || null;
+
+            const verstionToCheck = version || '1.0.0';
 
             // Check for existing package
             const packageMetadataRepository = AppDataSource.getRepository(PackageMetadata);
             const existingMetadata = await packageMetadataRepository.findOne({ 
-                where: { name: name, version: version },
+                where: { name: name, version: verstionToCheck },
             });
 
             if (existingMetadata) {
@@ -224,7 +226,7 @@ export class PackageUploadService {
             const contentFromUrl = await getContentZipBufferFromGithubUrl(version, owner, repo);
 
             // Save metadata
-            const metadata = packageMetadataRepository.create({ name: name, version: version });
+            const metadata = packageMetadataRepository.create({ name: name, version: verstionToCheck });
             await packageMetadataRepository.save(metadata);
             console.log(`[PackageService] Saved metadata for ${name}@${version}`);
 
