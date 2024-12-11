@@ -1,5 +1,6 @@
 # ACME Corporation: A Trustworthy Module Registry
 
+
 Welcome to the Trustworthy Module Registry API! This API is part of the CSCI 450 - Fall 2024 Project Phase 2 and is designed to interact with a package registry for managing and analyzing software modules. Below is a comprehensive guide to the API's capabilities, features, and endpoints.
 
 ## Overview
